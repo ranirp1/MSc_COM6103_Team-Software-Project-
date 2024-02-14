@@ -1,4 +1,4 @@
-# Team_Name (E-Waste Hub)
+# Team Titans (E-Waste Hub)
 
 #### Feature
 
