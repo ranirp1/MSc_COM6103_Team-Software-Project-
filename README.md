@@ -27,3 +27,9 @@
   > Strpi Integration felt its bit complicated
 
 ---
+
+##### Courses
+- Flask Course - Python Web Application Development : https://youtu.be/Qr4QMBUPxWo?feature=shared
+- Learn Flask for Python - Full Tutorial: https://youtu.be/Z1RJmh_OqeA?feature=shared
+
+
