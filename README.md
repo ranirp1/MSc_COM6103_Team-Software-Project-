@@ -1,6 +1,14 @@
 # Team Titans (E-Waste Hub)
 
-#### Feature
+#### How to run
+
+##### To Run Front-end i,e client
+
+```
+cd client
+npm install
+npm run start
+```
 
 ---
 
@@ -23,11 +31,12 @@
 - CeX API doc : https://github.com/Dionakra/webuy-api?tab=readme-ov-file#categories
 - QR code generator API : https://goqr.me/api/
 - Paypal Integration : https://medium.com/nerd-for-tech/integrating-paypal-sandbox-with-react-js-project-191caf0a7b53
-- Stripe integration : https://docs.stripe.com/stripe-js/react?locale=en-GB 
+- Stripe integration : https://docs.stripe.com/stripe-js/react?locale=en-GB
 
 ---
 
 ##### Courses
+
 - Flask Course - Python Web Application Development : https://youtu.be/Qr4QMBUPxWo?feature=shared
 - Learn Flask for Python - Full Tutorial: https://youtu.be/Z1RJmh_OqeA?feature=shared
-- Tailwind (A MUST WATCH VIDEO)  - https://www.youtube.com/watch?v=X6FIydgCzzY 
+- Tailwind (A MUST WATCH VIDEO) - https://www.youtube.com/watch?v=X6FIydgCzzY
