@@ -23,8 +23,7 @@
 - CeX API doc : https://github.com/Dionakra/webuy-api?tab=readme-ov-file#categories
 - QR code generator API : https://goqr.me/api/
 - Paypal Integration : https://medium.com/nerd-for-tech/integrating-paypal-sandbox-with-react-js-project-191caf0a7b53
-- Strpi integration : https://medium.com/@zalun/payment-link-strapi-plugin-part-1-the-server-6fcbbb7a0f8a
-  > Strpi Integration felt its bit complicated
+- Stripe integration : https://docs.stripe.com/stripe-js/react?locale=en-GB 
 
 ---
 
