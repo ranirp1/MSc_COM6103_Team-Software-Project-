@@ -1,11 +1,11 @@
 import React from "react";
-import logo from "../../logo.svg";
+import introWaste from "../../assets/intro_waste.svg";
 
-const HomePage: React.FC = () => {
+const AboutPage: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        <img src={introWaste} className="h-80 w-80 m-4" alt="logo" />
         <p>
           Edit <code>src/App.tsx</code> and save to reload.
         </p>
@@ -15,4 +15,4 @@ const HomePage: React.FC = () => {
   );
 };
 
-export default HomePage;
+export default AboutPage;
