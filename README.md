@@ -42,3 +42,4 @@ npm run start
 - Flask Course - Python Web Application Development : https://youtu.be/Qr4QMBUPxWo?feature=shared
 - Learn Flask for Python - Full Tutorial: https://youtu.be/Z1RJmh_OqeA?feature=shared
 - Tailwind (A MUST WATCH VIDEO) - https://www.youtube.com/watch?v=X6FIydgCzzY
+- Flask + React integration - https://www.youtube.com/watch?v=7LNl2JlZKHA
