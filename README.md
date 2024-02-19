@@ -1,8 +1,29 @@
 # Team Titans (E-Waste Hub)
 
+![Image](./image.png)
+
+
 #### How to run
 
 ##### To Run Front-end i,e client
+
+```
+
+cd client
+npm install
+npm run start
+
+```
+
+##### To Run Front-end i,e client
+
+step:1 Install flask 
+
+```
+pip3 install Flask
+```
+
+step:1 Install flask 
 
 ```
 
