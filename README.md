@@ -6,25 +6,22 @@
 
 ##### To Run Client
 
-    ```
     cd client
 
     npm install
 
     npm run start
-    ```
 
 ##### To Run Server
 
 1.  Install flask
 
     ```
-
     pip3 install Flask
 
     ```
 
-2.  create python environment
+2.  create and activate python environment
 
     ```
     cd server
@@ -33,6 +30,7 @@
 
     // in windows
     .venv\Scripts\activate
+
     // in mac
     source .venv/bin/activate
     ```
