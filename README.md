@@ -35,6 +35,10 @@
     source .venv/bin/activate
     ```
 
+4.  Install the requirment 
+    ```
+    pip3 install -r requirements.txt
+    ```
 3.  run the flask app
 
     ```
