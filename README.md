@@ -42,7 +42,7 @@
 3.  run the flask app
 
     ```
-    flask --app app run
+    flask run
     ```
 
 ---
