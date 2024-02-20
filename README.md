@@ -1,4 +1,4 @@
-# Team Titans (E-Waste Hub)
+# Tech Titans (E-Waste Hub)
 
 ![Image](./image.png)
 
