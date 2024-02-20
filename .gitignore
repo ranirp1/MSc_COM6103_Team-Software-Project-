@@ -1,4 +1,5 @@
 .venv/
 # build file
 /build
+.DS_Store
 
