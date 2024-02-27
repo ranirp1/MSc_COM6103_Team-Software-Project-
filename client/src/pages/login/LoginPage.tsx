@@ -6,9 +6,10 @@ const LoginPage = () => {
 
     //New code
     //Handles the user input and sends the data to the server to authenticate user
-    
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showToast, setShowToast] = useState(0);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
@@ -22,9 +23,17 @@ const LoginPage = () => {
             });
 
             if(response.ok){
+                setShowToast(1);
+                setTimeout(() => {
+                    setShowToast(0);
+                }, 3000);
                 console.log("Login Successful");
             } 
             else{
+                setShowToast(2)
+                setTimeout(() => {
+                    setShowToast(0);
+                }, 3000);
                 console.log("Login Error");
             }
         } catch (error) {
@@ -61,6 +70,20 @@ const LoginPage = () => {
                     </div>
                 </div>
             </div>
+            {showToast === 1 && (
+            <div className="toast toast-center">
+                <div className="alert alert-success">
+                    <span>Login Successful</span>
+                </div>
+            </div>
+            )}
+            {showToast === 2 && (
+            <div className="toast toast-center">
+                <div className="alert alert-error">
+                    <span>Invalid Credentials</span>
+                </div>
+            </div>
+            )}
         </div>
     );
 };
