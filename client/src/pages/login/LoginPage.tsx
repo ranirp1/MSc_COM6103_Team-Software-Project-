@@ -1,8 +1,37 @@
-import React from "react";
+import React, { useState } from "react";
 import Navigation from "../../Navigation";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 
 const LoginPage = () => {
+
+    //New code
+    //Handles the user input and sends the data to the server to authenticate user
+    
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
+        e.preventDefault();
+        try {
+            const response = await fetch('/api/login',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })                
+            });
+
+            if(response.ok){
+                console.log("Login Successful");
+            } 
+            else{
+                console.log("Login Error");
+            }
+        } catch (error) {
+            console.log('Error:', error);
+        }
+    };
+
     return (
         <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(169, 52%, 80%)' }}>
             <Navigation backgroundColor="hsl(169, 52%, 80%)" />
@@ -20,9 +49,9 @@ const LoginPage = () => {
                         </div>
                         
                         <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Log In to Your Account</h2>
-                        <form className="space-y-6">
-                            <input type="email" placeholder="Email" className="input input-bordered w-full bg-gray-50" />
-                            <input type="password" placeholder="Password" className="input input-bordered w-full bg-gray-50" />
+                        <form className="space-y-6" onSubmit={handleSubmit}>
+                            <input type="email" placeholder="Email" className="input input-bordered w-full bg-gray-50" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <input type="password" placeholder="Password" className="input input-bordered w-full bg-gray-50" value={password} onChange={(e) => setPassword(e.target.value)} />
                             
                             {/* Action Buttons */}
                             <div className="flex flex-col sm:flex-row sm:justify-between mt-6">
