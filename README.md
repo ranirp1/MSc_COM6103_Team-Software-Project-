@@ -1,4 +1,4 @@
-# Team Titans (E-Waste Hub)
+# Tech Titans (E-Waste Hub)
 
 ![Image](./image.png)
 
@@ -35,10 +35,14 @@
     source .venv/bin/activate
     ```
 
+4.  Install the requirment 
+    ```
+    pip3 install -r requirements.txt
+    ```
 3.  run the flask app
 
     ```
-    flask --app app run
+    flask run
     ```
 
 ---

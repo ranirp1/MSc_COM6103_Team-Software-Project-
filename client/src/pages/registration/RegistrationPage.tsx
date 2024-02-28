@@ -1,4 +1,3 @@
-import React from "react";
 import Navigation from "../../Navigation";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 
