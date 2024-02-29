@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent  } from 'react';
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import { RiUserSettingsFill } from 'react-icons/ri';
 import { RiUserSharedLine } from 'react-icons/ri';
+import { RiFilter3Line } from 'react-icons/ri';
+import { RiLogoutBoxRLine } from 'react-icons/ri'; 
 
 type UserType = 'employee' | 'endUser';
 
@@ -15,6 +17,7 @@ interface User {
   role: UserType;
 }
 
+//Added data for testing
 const AdminDashboard = () => {
   const [employees, setEmployees] = useState<User[]>([
     {
@@ -83,6 +86,23 @@ const AdminDashboard = () => {
     };
     
 
+    const [filterOpen, setFilterOpen] = useState(false);
+
+    // Function to toggle filter dropdown
+    const toggleFilterDropdown = () => {
+      setFilterOpen(!filterOpen);
+    };
+
+    const handleFilterOptionChange = (event: ChangeEvent<HTMLInputElement>) => {
+      const option = event.target.value; // Extract the value from the event target
+      console.log(option); // Log the selected filter option value
+    
+      setFilterOpen(false); // Close the filter dropdown
+    };
+    
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+
   const [currentList, setCurrentList] = useState<'employees' | 'endUsers'>('employees');
 
   const showList = (listType: 'employees' | 'endUsers') => {
@@ -99,39 +119,69 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="sidebar bg-white text-black w-60 space-y-6 py-7 px-2">
-        <div className="flex items-center space-x-2 px-4">
-          <img src={EWasteHubImage} alt="E-Waste Hub Logo" className="w-28 h-28 mx-auto" />
+      <div className="flex h-screen bg-gray-100">
+        {/* Sidebar */}
+        <div className="sidebar bg-white text-black w-60 py-7 px-0 relative">
+          <div className="flex items-center justify-center pb-10">
+            <img src={EWasteHubImage} alt="E-Waste Hub Logo" className="w-28 h-28" />
+          </div>
+
+          {/* Position nav at the bottom of the sidebar */}
+          <nav className="absolute top-56 w-full">
+            <h5 className="text-xl font-medium mb-4 text-center">Users</h5>
+            <button onClick={() => showList('employees')} className={`btn ${currentList === 'employees' ? 'btn-primary' : 'btn-ghost'} btn-block normal-case`}>
+              <RiUserSharedLine className="text-lg mr-4" /> Employees
+            </button>
+            <button onClick={() => showList('endUsers')} className={`btn ${currentList === 'endUsers' ? 'btn-primary' : 'btn-ghost'} btn-block normal-case`}>
+              <RiUserSettingsFill className="text-lg mr-2" /> End Users
+            </button>
+          </nav>
         </div>
 
-        <nav>
-          <br></br><br></br><h5 className="text-black text-xl font-medium px-4 mb-4">Users</h5>
-          <button onClick={() => showList('employees')} className={`btn ${currentList === 'employees' ? 'btn-primary' : 'btn-ghost'} btn-block`}>
-            <RiUserSharedLine className="mr-2" /> Employees
-          </button>
-          <button onClick={() => showList('endUsers')} className={`btn ${currentList === 'endUsers' ? 'btn-primary' : 'btn-ghost'} btn-block`}>
-            <RiUserSettingsFill className="mr-2" /> End Users
-          </button>
-        </nav>
+      {/* Content area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex justify-between items-center p-4 shadow bg-gray-100">
+        <h3 className="text-gray-700 text-3xl font-medium flex-1 text-center">Admin Dashboard</h3>
+        <button
+          className="btn btn-ghost ml-4"
+          onClick={() => setShowLogoutModal(true)}
+        >
+          <RiLogoutBoxRLine className="text-lg mr-2" /> Logout
+        </button>
       </div>
 
-         {/* Content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-      <br/><br/><h3 className="text-gray-700 text-3xl font-medium text-center">Admin Dashboard</h3><br/>
-        {/* Header with search input */}
-        <header className="flex justify-between items-center p-4 shadow bg-gray-100">
-          <form className="flex-1 min-w-0" onSubmit={handleSearchSubmit}>
-            <input
-              type="search"
-              placeholder="Search"
-              className="input input-bordered bg-white text-black border-2 w-full"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </form>
-        </header>
+      {/* Header with search input and filter button */}
+      <header className="flex justify-between items-center p-4 shadow bg-gray-100">
+        <form className="flex-1" onSubmit={handleSearchSubmit}>
+          <input
+            type="search"
+            placeholder="Search"
+            className="input input-bordered bg-white text-black w-full"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </form>
+        <div className="dropdown dropdown-end ml-4">
+          <label tabIndex={0} className="btn btn-ghost cursor-pointer">
+            <RiFilter3Line className="text-lg" /> Filter
+          </label>
+          <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+            <li>
+              <label className="label cursor-pointer flex items-center">
+                <input type="radio" name="filter" className="radio radio-primary" value="asc" onChange={handleFilterOptionChange} />
+                <span className="label-text ml-2">Ascending</span>
+              </label>
+            </li>
+            <li>
+              <label className="label cursor-pointer flex items-center">
+                <input type="radio" name="filter" className="radio radio-primary" value="desc" onChange={handleFilterOptionChange} />
+                <span className="label-text ml-2">Descending</span>
+              </label>
+            </li>
+            {/* Additional filter options */}
+          </ul>
+        </div>
+      </header>   
 
         {/* Main content */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
@@ -160,7 +210,7 @@ const AdminDashboard = () => {
                       <select
                         value={user.role}
                         onChange={(e) => handleRoleChange(user.id, currentList, e.target.value as UserType)}
-                        className="select select-bordered w-full max-w-xs bg-blue-200 text-black"
+                        className="select select-bordered select-primary w-full max-w-xs"
                       >
                         {currentList === 'employees' && (
                           <>
@@ -171,13 +221,12 @@ const AdminDashboard = () => {
                         )}
                         {currentList === 'endUsers' && (
                           <>
-                            <option value="endUser">End User</option> 
+                            <option value="endUser">End User</option>
                             <option value="employee">Employee</option>
                             <option value="admin">Admin</option>
                           </>
                         )}
                       </select>
-
                       </td>
                     </tr>
                   ))}
@@ -187,6 +236,31 @@ const AdminDashboard = () => {
           </div>
         </main>
       </div>
+     {/* Logout Confirmation Modal */}
+     {showLogoutModal && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Are you sure you want to logout?</h3>
+            <div className="modal-action">
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  // Handle the logout logic here
+                  setShowLogoutModal(false);
+                }}
+              >
+                Yes
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
