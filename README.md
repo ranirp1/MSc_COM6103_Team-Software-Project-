@@ -45,6 +45,23 @@
     flask run
     ```
 
+##### To Run DB-Server 
+
+1. Install MySql in the system 
+
+2. Start mysql server 
+
+    ```
+    mysql -u root -p
+    ```
+
+3. Create DB named 
+
+    ```
+    CREATE DATABASE test_db;
+    exit
+    ```
+
 ---
 
 #### Resource
