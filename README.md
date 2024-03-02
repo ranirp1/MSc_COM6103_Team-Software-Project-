@@ -86,3 +86,57 @@
 - Tailwind (A MUST WATCH VIDEO) - https://www.youtube.com/watch?v=X6FIydgCzzY
 
 - Flask + React integration - https://www.youtube.com/watch?v=7LNl2JlZKHA
+
+
+---
+
+# API Documentation
+
+## Endpoints
+
+### 1. Retrieve All Users
+**Description:** Retrieve all users from the database and return them as JSON.
+
+**URL:** `/api/getAllUsers`
+
+**Method:** `POST`
+
+**Example Request:**
+```http
+POST /api/getAllUsers
+Host: api.yourdomain.com ( as of now its local host)
+Content-Type: application/json
+```
+
+
+### 2. Update User to Staff
+**Description:** Update a user's status to staff.
+
+**URL:** `/api/updateUserToStaff`
+
+**Method:** `POST`
+
+**Parameters:**
+- `email` (string): The email of the user to update.
+
+**Example Request:**
+```http
+POST /api/updateUserToStaff
+Host: api.yourdomain.com
+Content-Type: application/json
+
+{
+    "email": "john@example.com"
+}
+```
+
+
+### 3. Update User to Admin
+**Description:** Update a user's role to admin.
+
+**URL:** `/api/updateUserToAdmin`
+
+**Method:** `POST`
+
+**Parameters:**
+- `email` (string): The email of the user to update.
