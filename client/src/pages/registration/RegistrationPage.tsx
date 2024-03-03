@@ -51,53 +51,6 @@ const CreateAccount = () => {
     };
 
 
-    // Adapted from LoginPage.tsx
-    // not entirely sure what this toast thing is, but I've used it as best I could...
-
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [first_name, setFirstName] = useState("");
-    const [last_name, setLastName] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState(0);
-    const [terms, setTerms] = useState(0);
-
-    const [showToast, setShowToast] = useState(0);
-    const [errorMessage, setErrorMessage] = useState("");
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
-        e.preventDefault();
-        try {
-            const response = await fetch('/api/register',{
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password, first_name, last_name, phoneNumber, terms })
-            });
-
-            if(response.ok){
-                setShowToast(1);
-                setTimeout(() => {
-                    setShowToast(0);
-                }, 3000);
-                console.log("Registration Successful");
-            }
-            else{
-                setShowToast(2)
-                setTimeout(() => {
-                    setShowToast(0);
-                }, 3000);
-                console.log("Registration Error");
-
-                // get the error message from the server and save it to show in toast
-                const errorMessage = await response.json();
-                setErrorMessage(errorMessage.message);
-            }
-        } catch (error) {
-            console.log('Error:', error);
-        }
-    };
-
     return (
         <div className="min-h-screen flex flex-col justify-center items-center" style={{ backgroundColor: 'hsl(169, 52%, 80%)' }}>
             <Navigation backgroundColor="hsl(169, 52%, 80%)" />
