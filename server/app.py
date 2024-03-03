@@ -19,6 +19,8 @@ class User(db.Model):
     last_name = db.Column(db.String(60), unique=False, nullable=False)
     phoneNumber = db.Column(db.String(20), unique=False, nullable=False)
     password = db.Column(db.String(120), nullable=False)
+    isStaff = db.Column(db.Boolean, default=False)
+    isAdmin = db.Column(db.Boolean, default=False)
 
 
 # Create the tables when Flask starts up
@@ -89,3 +91,53 @@ def register():
         # code from https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
         return jsonify({'message': 'Database Error'}), 500
     return jsonify({'message': 'Login Successful'}), 200
+
+
+@app.route('/api/getAllUsers', methods=['POST'])
+def getAllUsers():
+    """
+    Retrieve all users from the database and return them as JSON.
+
+    Returns:
+        A JSON response containing the serialized data of all users.
+    """
+    users = User.query.all()
+    return jsonify([user.serialize() for user in users]), 200
+
+@app.route('/api/updateUserToStaff', methods=['POST'])
+def updateUserToStaff():
+    """
+    Update a user's status to staff.
+
+    Returns:
+        A JSON response with a success message if the user is found and updated successfully.
+        A JSON response with an error message and status code 404 if the user is not found.
+    """
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    user.isStaff = True
+    db.session.commit()
+    return jsonify({'message': 'User updated to staff'}), 200
+
+@app.route('/api/updateUserToAdmin', methods=['POST'])
+def updateUserToAdmin():
+    """
+    Update a user's role to admin.
+    Args:
+        email (str): The email of the user to update.
+    Returns:
+        A JSON response with a success message if the user is successfully updated to admin.
+        A JSON response with an error message if the user is not found in the database.
+    """
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    user.isAdmin = True
+    db.session.commit()
+    return jsonify({'message': 'User updated to admin'}), 200
+   
