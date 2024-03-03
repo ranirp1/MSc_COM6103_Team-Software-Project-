@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Navigation from "../../Navigation";
+import EWasteHubImage from "../../assets/EWasteHub.jpg";
 
 const CreateAccount = () => {
 
@@ -10,7 +11,7 @@ const CreateAccount = () => {
     const [password, setPassword] = useState("");
     const [first_name, setFirstName] = useState("");
     const [last_name, setLastName] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState(0);
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [terms, setTerms] = useState(0);
 
     const [showToast, setShowToast] = useState(0);
@@ -57,7 +58,7 @@ const CreateAccount = () => {
             <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex lg:flex-row flex-col-reverse">
                 {/* Image Section */}
                 <div className="lg:w-1/2 flex justify-center items-center">
-                    <div className="h-96 w-full bg-cover bg-no-repeat bg-center" style={{ backgroundImage: 'url(${EWasteHubImage})', backgroundSize: 'contain', backgroundPosition: 'center' }}></div>
+                    <div className="h-96 w-full bg-cover bg-no-repeat bg-center" style={{ backgroundImage: `url(${EWasteHubImage})`, backgroundSize: 'contain', backgroundPosition: 'center' }}></div>
                 </div>
 
                 {/* Form Section */}
@@ -70,11 +71,9 @@ const CreateAccount = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <input type="text" placeholder="First Name" className="input input-bordered w-full bg-gray-50" value={first_name} onChange={(e => setFirstName(e.target.value))}/>
                             <input type="text" placeholder="Last Name" className="input input-bordered w-full bg-gray-50" value={last_name} onChange={(e => setLastName(e.target.value))}/>
-                            <input type="text" placeholder="First Name" className="input input-bordered w-full bg-gray-50" value={first_name} onChange={(e => setFirstName(e.target.value))}/>
-                            <input type="text" placeholder="Last Name" className="input input-bordered w-full bg-gray-50" value={last_name} onChange={(e => setLastName(e.target.value))}/>
                         </div>
                         <input type="email" placeholder="Email" className="input input-bordered w-full bg-gray-50" value={email} onChange={(e => setEmail(e.target.value))}/>
-                        <input type="tel" placeholder="Phone Number" className="input input-bordered w-full bg-gray-50" value={phoneNumber} onChange={(e => setPhoneNumber(Number(e.target.value)))}/>
+                        <input type="tel" placeholder="Phone Number" className="input input-bordered w-full bg-gray-50" value={phoneNumber} onChange={(e => setPhoneNumber((e.target.value)))}/>
                         <input type="password" placeholder="Password" className="input input-bordered w-full bg-gray-50" value={password} onChange={(e => setPassword(e.target.value))}/>
 
 
