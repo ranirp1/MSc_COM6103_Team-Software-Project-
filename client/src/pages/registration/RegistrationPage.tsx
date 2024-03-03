@@ -1,8 +1,55 @@
 import React, { useState } from "react";
 import Navigation from "../../Navigation";
-import EWasteHubImage from "../../assets/EWasteHub.jpg";
 
 const CreateAccount = () => {
+
+    // Adapted from LoginPage.tsx
+    // not entirely sure what this toast thing is, but I've used it as best I could...
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [first_name, setFirstName] = useState("");
+    const [last_name, setLastName] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState(0);
+    const [terms, setTerms] = useState(0);
+
+    const [showToast, setShowToast] = useState(0);
+    const [errorMessage, setErrorMessage] = useState("");
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
+        e.preventDefault();
+        try {
+            const response = await fetch('/api/register',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password, first_name, last_name, phoneNumber, terms })
+            });
+
+            if(response.ok){
+                setShowToast(1);
+                setTimeout(() => {
+                    setShowToast(0);
+                }, 3000);
+                console.log("Registration Successful");
+            }
+            else{
+                setShowToast(2)
+                setTimeout(() => {
+                    setShowToast(0);
+                }, 3000);
+                console.log("Registration Error");
+
+                // get the error message from the server and save it to show in toast
+                const errorMessage = await response.json();
+                setErrorMessage(errorMessage.message);
+            }
+        } catch (error) {
+            console.log('Error:', error);
+        }
+    };
+
 
     // Adapted from LoginPage.tsx
     // not entirely sure what this toast thing is, but I've used it as best I could...
@@ -70,6 +117,8 @@ const CreateAccount = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <input type="text" placeholder="First Name" className="input input-bordered w-full bg-gray-50" value={first_name} onChange={(e => setFirstName(e.target.value))}/>
                             <input type="text" placeholder="Last Name" className="input input-bordered w-full bg-gray-50" value={last_name} onChange={(e => setLastName(e.target.value))}/>
+                            <input type="text" placeholder="First Name" className="input input-bordered w-full bg-gray-50" value={first_name} onChange={(e => setFirstName(e.target.value))}/>
+                            <input type="text" placeholder="Last Name" className="input input-bordered w-full bg-gray-50" value={last_name} onChange={(e => setLastName(e.target.value))}/>
                         </div>
                         <input type="email" placeholder="Email" className="input input-bordered w-full bg-gray-50" value={email} onChange={(e => setEmail(e.target.value))}/>
                         <input type="tel" placeholder="Phone Number" className="input input-bordered w-full bg-gray-50" value={phoneNumber} onChange={(e => setPhoneNumber(Number(e.target.value)))}/>
@@ -94,6 +143,21 @@ const CreateAccount = () => {
                     </form>
                 </div>
             </div>
+            {showToast === 1 && (
+            <div className="toast toast-center">
+                <div className="alert alert-success">
+                    <span>Registration Successful</span>
+                </div>
+            </div>
+            )}
+            {showToast === 2 && (
+            <div className="toast toast-center">
+                <div className="alert alert-error">
+                    {/* Show the error message */}
+                    <span>{errorMessage}</span>
+                </div>
+            </div>
+            )}
             {showToast === 1 && (
             <div className="toast toast-center">
                 <div className="alert alert-success">
