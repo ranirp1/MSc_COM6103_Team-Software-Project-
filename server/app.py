@@ -21,6 +21,12 @@ class User(db.Model):
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
 
+class CustomerDevice(db.Model):
+    tablename = 'customer_device'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    device_info = db.Column(db.String(255), nullable=False)
+
 
 # Create the tables when Flask starts up
 with app.app_context():
@@ -139,4 +145,22 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
-   
+
+@app.route('/api/customer_device', methods=['POST'])
+def customer_device():
+    data = request.json
+    email = data.get('email')
+    device_info = data.get('device_info')
+
+    user = User.query.filter_by(email=email).first()
+    if user:
+        customer_device = CustomerDevice(user_id=user.id, device_info=device_info)
+        db.session.add(customer_device)
+        db.session.commit()
+        return jsonify({'message': 'Device information saved successfully'}), 200
+    else:
+        return jsonify({'message': 'User not found'}), 404
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
