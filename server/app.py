@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
-from sqlalche my.sql import func
+from sqlalchemy import func
 from sqlalchemy import text
+
 from flask import Flask, render_template, redirect, url_for, request, jsonify
 import jwt
 from datetime import datetime, timedelta
