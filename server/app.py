@@ -139,4 +139,22 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
-   
+
+
+@app.route('/api/move_classification', methods=['PUT'])
+def move_classification():
+    data = request.json
+    email = data.get('email')
+    new_classification = data.get('new_classification')
+
+    user = User.query.filter_by(email=email).first()
+    if user:
+        customer_device = CustomerDevice.query.filter_by(user_id=user.id).first()
+        if customer_device:
+            customer_device.classification = new_classification
+            db.session.commit()
+            return jsonify({'message': 'Classification moved successfully'}), 200
+        else:
+            return jsonify({'message': 'Device information not found for the user'}), 404
+    else:
+        return jsonify({'message': 'User not found'}), 404
