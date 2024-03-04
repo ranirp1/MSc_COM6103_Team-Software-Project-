@@ -1,5 +1,9 @@
 .venv/
+.projectenv/
 # build file
 /build
 .DS_Store
+.vs
 
+node_modules
+server/.projectenv
