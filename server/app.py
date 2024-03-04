@@ -42,7 +42,7 @@ def token_required(f):
 def index():
     return render_template('login.html')
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
     username = request.form['username']
     password = request.form['password']
