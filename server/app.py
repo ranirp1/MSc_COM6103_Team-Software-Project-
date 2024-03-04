@@ -12,6 +12,10 @@ dummy_user = {'username': 'example_user', 'password': 'example_password'}
 # JWT expiration time (in seconds)
 jwt_exp_seconds = 3600  # 1 hour
 
+@app.route("/")
+def hello_world():
+    return "<p>Hello, World!</p>"
+
 def generate_token(username):
     payload = {
         'username': username,
