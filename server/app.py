@@ -22,7 +22,7 @@ class User(db.Model):
     isAdmin = db.Column(db.Boolean, default=False)
 
 class CustomerDevice(db.Model):
-    tablename = 'customer_device'
+    __tablename__ = 'customer_device'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     device_info = db.Column(db.String(255), nullable=False)
