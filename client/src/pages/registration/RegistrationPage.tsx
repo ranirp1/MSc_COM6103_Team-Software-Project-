@@ -1,6 +1,7 @@
+import React, { useState } from "react";
 import Navigation from "../../Navigation";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
-import React, {useState} from "react";
+import { API_URL } from "../../constants/constant";
 
 const CreateAccount = () => {
 
@@ -20,7 +21,7 @@ const CreateAccount = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
         try {
-            const response = await fetch('/api/register',{
+            const response = await fetch(`${API_URL}/api/register`,{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
