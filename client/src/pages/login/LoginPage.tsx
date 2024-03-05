@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
+import { API_URL } from "../../constants/constant";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -9,7 +10,7 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/login", {
+      const response = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
