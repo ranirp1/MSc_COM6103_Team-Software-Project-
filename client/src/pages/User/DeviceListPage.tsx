@@ -108,6 +108,7 @@ import React, {useState} from "react";
                                                 <td className="font-bold">{device.name}</td>
                                                 <td className="text-sm opacity-50">{device.phoneNumber}</td>
                                                 <td className="text-sm opacity-50">{device.createdAt}</td>
+                                                <td className="badge badge-success gap-2"></td>
                                                 <td className="text-sm opacity-50">{device.verified}</td>
                                                 <th>
                                                     <button className="btn btn-link">details</button>
