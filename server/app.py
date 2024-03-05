@@ -30,6 +30,11 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
+class CustomerDevice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    classification = db.Column(db.String(50))
+
 
 @app.route("/")
 def hello_world():
@@ -145,7 +150,9 @@ def updateUserToAdmin():
     return jsonify({'message': 'User updated to admin'}), 200
 
 
-@app.route('/api/move_classification', methods=['PUT'])
+
+
+@app.route('/api/move_classification', methods=['POST'])
 def move_classification():
     data = request.json
     email = data.get('email')
