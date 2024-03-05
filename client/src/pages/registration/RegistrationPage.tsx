@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Navigation from "../../Navigation";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
+import { API_URL } from "../../constants/constant";
 
 const CreateAccount = () => {
 
@@ -20,7 +21,7 @@ const CreateAccount = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
         try {
-            const response = await fetch('/api/register',{
+            const response = await fetch(`${API_URL}/api/register`,{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -74,13 +75,11 @@ const CreateAccount = () => {
                         <input type="email" placeholder="Email" className="input input-bordered w-full bg-gray-50" value={email} onChange={(e => setEmail(e.target.value))}/>
                         <input type="tel" placeholder="Phone Number" className="input input-bordered w-full bg-gray-50" value={phoneNumber} onChange={(e => setPhoneNumber(Number(e.target.value)))}/>
                         <input type="password" placeholder="Password" className="input input-bordered w-full bg-gray-50" value={password} onChange={(e => setPassword(e.target.value))}/>
-
-
-
+                        
                         {/* Terms & Conditions */}
                         <label className="label cursor-pointer justify-start space-x-2">
                             <input type="checkbox" className="checkbox checkbox-primary" value={0} onChange={(e => setTerms(e.target.checked? 1: 0))}/>
-                            <span className="">I agree to the <a href="#" className="text-primary link">Terms & Conditions</a></span>
+                            <span className="label-text">I agree to the <a href="#" className="text-blue-600 hover:underline">Terms & Conditions</a></span>
                         </label>
 
                         <div className="text-right mb-5">
@@ -88,8 +87,8 @@ const CreateAccount = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col">
-                            <button className="btn btn-primary flex">Register</button>
+                        <div className="flex flex-col sm:flex-row sm:justify-between mt-6">
+                            <button className="btn bg-blue-200 hover:bg-blue-300 text-blue-900 w-full sm:w-auto mb-2 sm:mb-0">Register</button>
                         </div>
                     </form>
                 </div>
