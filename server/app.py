@@ -25,6 +25,20 @@ class User(db.Model):
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
 
+class newDevice(db.Model):
+    __tablename__ = 'userDevice'
+    userDeviceID = db.Column(db.Integer, primary_key=True)
+    userID = db.Column(db.Integer, nullable=False)
+    deviceID = db.Column(db.Integer, nullable=True)
+    deviceType = db.Column(db.String(120), nullable=True)
+    brand = db.Column(db.String(120), nullable=True)
+    model = db.Column(db.String(120), nullable=True)
+    imageUrl = db.Column(db.String(120), nullable=True)
+    qrCodeUrl = db.Column(db.String(120), nullable=True)
+    dateOfRelease = db.Column(db.Date, nullable=True)
+    dateOfPurchase = db.Column(db.Date, nullable=True)
+    isVerified = db.Column(db.Boolean, default=True)
+    
 
 # Create the tables when Flask starts up
 with app.app_context():
@@ -32,7 +46,7 @@ with app.app_context():
 
 
 @app.route("/")
-def hello_world():
+def check_sql_connection():
     try:
         db.session.execute(text("SELECT 1"))
         return 'Connection to MySQL is successful!'
@@ -143,4 +157,43 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
-   
+
+@app.route('/api/createDevice/', methods=['POST'])
+def createDevice():
+    data = request.json
+    userID = data.get('userID')
+    deviceID = data.get('deviceID')
+    deviceType = data.get('deviceType')
+    brand = data.get('brand')
+    model = data.get('model')
+    imageUrl = data.get('imageUrl')
+    qrCodeUrl = data.get('qrCodeUrl')
+    dateOfRelease = data.get('dateOfRelease')
+    dateOfPurchase = data.get('dateOfPurchase')
+    
+    if(deviceID == "" or deviceType == "" or brand == "" or model == "" or not dateOfPurchase or imageUrl == "" or qrCodeUrl == ""):
+        isVerified = False
+    else:
+        isVerified = True
+    
+    newUserDevice = newDevice(
+        userID = userID,
+        deviceID = deviceID,
+        deviceType = deviceType,
+        brand = brand,
+        model = model,
+        imageUrl = imageUrl,
+        qrCodeUrl = qrCodeUrl,
+        dateOfRelease = dateOfRelease,
+        dateOfPurchase = dateOfPurchase,
+        isVerified = isVerified
+    )
+    
+    try:
+        db.session.add(newUserDevice)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'User device creation error'}), 500
+    return jsonify({'message': 'Device creation successful'}), 200
