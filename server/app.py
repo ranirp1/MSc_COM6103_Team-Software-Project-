@@ -56,6 +56,12 @@ def check_sql_connection():
 
 @app.route('/api/login', methods=['POST'])
 def login():
+    """
+    Login implementation. Compares the user supplied credentials with the database entries for authentication.
+
+    Returns:
+        A JSON response depending on the correct or invalid credentials.
+    """
     data = request.json
     email = data.get('email')
     password = data.get('password')
