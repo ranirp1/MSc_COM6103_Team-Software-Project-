@@ -12,7 +12,7 @@ const CreateAccount = () => {
     const [password, setPassword] = useState("");
     const [first_name, setFirstName] = useState("");
     const [last_name, setLastName] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState(0);
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [terms, setTerms] = useState(0);
 
     const [showToast, setShowToast] = useState(0);
@@ -52,13 +52,14 @@ const CreateAccount = () => {
         }
     };
 
+
     return (
         <div className="min-h-screen flex flex-col justify-center items-center" style={{ backgroundColor: 'hsl(169, 52%, 80%)' }}>
             <Navigation backgroundColor="hsl(169, 52%, 80%)" />
             <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex lg:flex-row flex-col-reverse">
                 {/* Image Section */}
                 <div className="lg:w-1/2 flex justify-center items-center">
-                    <div className="h-96 w-full bg-cover bg-no-repeat bg-center" style={{ backgroundImage: 'url(${EWasteHubImage})', backgroundSize: 'contain', backgroundPosition: 'center' }}></div>
+                    <div className="h-96 w-full bg-cover bg-no-repeat bg-center" style={{ backgroundImage: `url(${EWasteHubImage})`, backgroundSize: 'contain', backgroundPosition: 'center' }}></div>
                 </div>
 
                 {/* Form Section */}
@@ -73,7 +74,7 @@ const CreateAccount = () => {
                             <input type="text" placeholder="Last Name" className="input input-bordered w-full bg-gray-50" value={last_name} onChange={(e => setLastName(e.target.value))}/>
                         </div>
                         <input type="email" placeholder="Email" className="input input-bordered w-full bg-gray-50" value={email} onChange={(e => setEmail(e.target.value))}/>
-                        <input type="tel" placeholder="Phone Number" className="input input-bordered w-full bg-gray-50" value={phoneNumber} onChange={(e => setPhoneNumber(Number(e.target.value)))}/>
+                        <input type="tel" placeholder="Phone Number" className="input input-bordered w-full bg-gray-50" value={phoneNumber} onChange={(e => setPhoneNumber((e.target.value)))}/>
                         <input type="password" placeholder="Password" className="input input-bordered w-full bg-gray-50" value={password} onChange={(e => setPassword(e.target.value))}/>
                         
                         {/* Terms & Conditions */}
@@ -87,12 +88,27 @@ const CreateAccount = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row sm:justify-between mt-6">
-                            <button className="btn bg-blue-200 hover:bg-blue-300 text-blue-900 w-full sm:w-auto mb-2 sm:mb-0">Register</button>
+                        <div className="flex flex-col">
+                            <button className="btn btn-primary flex">Register</button>
                         </div>
                     </form>
                 </div>
             </div>
+            {showToast === 1 && (
+            <div className="toast toast-center">
+                <div className="alert alert-success">
+                    <span>Registration Successful</span>
+                </div>
+            </div>
+            )}
+            {showToast === 2 && (
+            <div className="toast toast-center">
+                <div className="alert alert-error">
+                    {/* Show the error message */}
+                    <span>{errorMessage}</span>
+                </div>
+            </div>
+            )}
             {showToast === 1 && (
             <div className="toast toast-center">
                 <div className="alert alert-success">
