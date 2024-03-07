@@ -1,1 +1,2 @@
 export var API_URL = "http://127.0.0.1:5000";
+export var STRIPE_PUBLIC_KEY = 'pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN';

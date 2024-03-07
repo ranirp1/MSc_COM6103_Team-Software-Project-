@@ -1,5 +1,6 @@
 import React from "react";
 import Navigation from "../../Navigation";
+import StripeContainer from '../../components/StripeContainer';
 
 const LandingPage: React.FC = () => {
   return (
@@ -9,6 +10,7 @@ const LandingPage: React.FC = () => {
       <div className="p-8">
         {/* Content specific to LandingPage */}
         {/* More content */}
+          <StripeContainer />
       </div>
     </div>
   );

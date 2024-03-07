@@ -4,7 +4,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
-
+import os
+from dotenv import load_dotenv
+import stripe
 
 
 app = Flask(__name__)
@@ -13,6 +15,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_
 db = SQLAlchemy(app)
 CORS(app)
 
+load_dotenv()
+app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
+
+STRIPE_PUBLIC_KEY = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN"
+
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -27,8 +35,8 @@ class User(db.Model):
 
 
 # Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
+# with app.app_context():
+#     db.create_all()
 
 
 @app.route("/")
@@ -143,4 +151,25 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
-   
+
+
+@app.route('/api/payment', methods=['POST'])
+# source: https://marketsplash.com/tutorials/flask/how-to-integrate-flask-with-stripe-for-payments/
+def createPayment():
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items = [{
+            'price_data': {
+                'currency': 'gbp',
+                'product_data': {
+                    'name': 'Data retrieval'
+                },
+                'unit_amount': 5000,
+            },
+            'quantity': 1,
+        }],
+        success_url="https://www.youtube.com",
+        cancel_url="https://www.kittenwars.com",
+        mode='payment'
+    )
+    return {'id': session.id}
