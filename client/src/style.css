@@ -1,0 +1,24 @@
+.badge-recycle {
+    background-color: #4caf50; 
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+.badge-rare {
+    background-color: #4b0517; 
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+.badge-current {
+    background-color: #b6d80d; 
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+.badge-unknown {
+    background-color: #05022e; 
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }

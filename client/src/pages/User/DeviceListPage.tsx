@@ -1,70 +1,115 @@
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
-import {RiFilter3Line, RiLogoutBoxRLine, RiUserSettingsFill, RiUserSharedLine} from "react-icons/ri";
-import React, {useState} from "react";
+import Samsung from "../../assets/Samsung.png";
+import IPhone from "../../assets/IPhone.png";
+import OnePlus from "../../assets/OnePlus.jpg";
+import {RiArrowDropLeftLine, RiArrowDropRightLine, RiFilter3Line, RiLogoutBoxRLine, RiUserSettingsFill, RiUserSharedLine} from "react-icons/ri";
+import React, {useState, ChangeEvent} from "react";
+import "../../style.css";
 
+interface Device {
+    image:string;
+    brand:string;
+    model:string;
+    createdAt:string;
+    isVerified:Boolean; 
+    deviceType:string;
+  }
     const UserDashboard = () => {
         //Adding details for testing
         const devices = [
         {
-            name: "Iphone",
-            phoneNumber: "09876543210",
+            image:IPhone,
+            brand: "Iphone",
+            model:"12",
             createdAt: "31 Jul 2022, 07:13 PM",
-            verified: "Yes"
+            isVerified: true,
+            deviceType:"Current"
         },
         {
-            name: "Samsung",
-            phoneNumber: "09865874728",
+            image:Samsung,
+            brand: "Samsung",
+            model:"S23",
             createdAt: "Jan 11, 2023 at 01:49 pm",
-            verified: "No"
+            isVerified: false,
+            deviceType:"Rare"
         },
         {
-            name: "One Plus",
-            phoneNumber: "097485632189",
+            image:OnePlus,
+            brand: "One Plus",
+            model:"10T",
             createdAt: "Mar 13, 2023 at 08:05 am",
-            verified: "Yes"
+            isVerified: true,
+            deviceType:"Recycle"
         },
         // Add more devices as needed
     ];
-
-    // Function to handle search input changes
+    const [sortOrder, setSortOrder] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [device, setDevices] = useState(devices);
+    const [expanded, setExpanded] = useState(false);
 
-    // Function to handle search input changes
-    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleToggleExpand = () => {
+        setExpanded(!expanded);
+    };
+    
+    const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(event.target.value.toLowerCase());
-        // Filter devices based on search query
-        const filteredDevices = devices.filter(device =>
-            device.name.toLowerCase().includes(event.target.value.toLowerCase())
+      };
+      const filterDevices = (devices: Device[]) => {
+        // Apply search filter
+        let filteredDevices = devices.filter(device =>
+            device.brand.toLowerCase().includes(searchQuery) ||
+            device.model.includes(searchQuery) ||
+            device.createdAt.toLowerCase().includes(searchQuery) ||
+            device.deviceType.includes(searchQuery)
         );
-        setDevices(filteredDevices);
-    };
 
-    const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        // No action is taken after preventing the default form behavior
-    };
+        // Apply sort filter
+        if (sortOrder === 'ascending') {
+            filteredDevices.sort((a, b) => a.brand.localeCompare(b.brand));
+        } else if (sortOrder === 'descending') {
+            filteredDevices.sort((a, b) => b.brand.localeCompare(a.brand));
+        }
 
+        return filteredDevices;
+    };
+    const getClassificationBadgeClass = (classification: string) => {
+        switch (classification) {
+          case "Current":
+            return "badge-current"; // Define badge-current in your CSS for the corresponding styling
+          case "Rare":
+            return "badge-rare"; // Define badge-rare in your CSS for the corresponding styling
+          case "Recycle":
+            return "badge-recycle"; // Define badge-recycle in your CSS for the corresponding styling
+          case "Unknown":
+            return "badge-unknown";
+        }
+      };
+
+      const handleFilterChange = (newSortOrder: string) => {
+        setSortOrder(newSortOrder);
+      };
+
+      const getFilteredDevices = () => {
+        return devices.filter(device =>
+          device.brand.toLowerCase().includes(searchQuery)
+        );
+      };
+
+      const filteredDevices = filterDevices(devices);
         return (
             <div className="flex h-screen bg-gray-100">
-                <div className="flex-1 flex flex-col overflow-hidden bg-white">
+          <div className="flex-1 flex flex-col overflow-hidden">
                     <div className="flex justify-between items-center p-4 shadow bg-gray-100">
-                        <h3 className="text-gray-700 text-3xl font-medium flex-1 text-center">List of Devices</h3>
+                    <img src={EWasteHubImage} alt="E-Waste Hub Logo" className="w-20 h-20 rounded-full" />
+                        <h3 className="text-gray-700 text-3xl font-medium text-center flex-1">Your Devices</h3>
                         <div className="flex dropdown dropdown-end">
-                            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-                                <div className="w-10 rounded-full">
-                                    <img alt="Tailwind CSS Navbar component"
-                                         src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"/>
-                                </div>
+                            <div>
+                            <button className="btn btn-primary">Add Device</button>
                             </div>
-                            <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
-                                <li><a>Profile</a></li>
-                                <li><a>Logout</a></li>
-                            </ul>
                         </div>
                     </div>
-                    <header className="flex justify-center items-center p-4 shadow bg-gray-100 px-40">
-                        <form className="flex-1" onSubmit={handleSearchSubmit}>
+                    <header className="flex p-4 shadow bg-gray-100">
+                        <form className="flex-1" onSubmit={(e) => e.preventDefault()}>
                             <input
                                 type="search"
                                 placeholder="Search"
@@ -78,15 +123,14 @@ import React, {useState} from "react";
                                 <RiFilter3Line className="text-lg"/> Filter
                             </label>
                             <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
-                                <li><a>Ascending</a></li>
-                                <li><a>Descending</a></li>
-                                {/* Additional filter options */}
+                            <li><a onClick={() => handleFilterChange('ascending')}>Ascending</a></li>
+                            <li><a onClick={() => handleFilterChange('descending')}>Descending</a></li>
                             </ul>
                         </div>
                     </header>
                     {/* Main content */}
-                    <main className="flex-1 overflow-x-hidden overflow-y-auto">
-                    <div className="container mx-auto px-6 py-8">
+                    <main className="overflow-x-hidden overflow-y-auto">
+                    <div className="mx-auto px-6 py-8">
                             <h5 className="text-black text-3xl font-medium mb-6"></h5>
 
                             <div className="overflow-x-auto">
@@ -95,40 +139,43 @@ import React, {useState} from "react";
                                         {/* head */}
                                         <thead>
                                         <tr>
-                                            <th className="font-bold text-base min-w-[200px]">Device Name</th>
-                                            <th className="font-bold text-base min-w-[200px]">Phone Number</th>
-                                            <th className="font-bold text-base min-w-[200px]">CreatedAt</th>
-                                            <th className="font-bold text-base min-w-[200px]">Verified</th>
+                                            <th className="font-bold text-base min-w-[150px]">Image</th>
+                                            <th className="font-bold text-base min-w-[150px]">Device Name</th>
+                                            <th className="font-bold text-base min-w-[100px]">Model</th>
+                                            <th className="font-bold text-base min-w-[150px]">CreatedAt</th>
+                                            <th className="font-bold text-base min-w-[150px]">Verified</th>
+                                            <th className="font-bold text-base min-w-[150px]">Classification</th>
                                             <th></th>
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        {devices.map((device, index) =>
+                                        {filteredDevices.map((deviceList, index) =>
                                             <tr key={index}>
-                                                <td className="font-bold">{device.name}</td>
-                                                <td className="text-sm opacity-50">{device.phoneNumber}</td>
-                                                <td className="text-sm opacity-50">{device.createdAt}</td>
-                                                <td className="badge badge-success gap-2"></td>
-                                                <td className="text-sm opacity-50">{device.verified}</td>
+                                                <td><img src={deviceList.image} style={{ width: '100px', height: '100px', objectFit: 'cover' }} /></td>
+                                                <td className="font-bold">{deviceList.brand}</td>
+                                                <td className="text-sm">{deviceList.model}</td>
+                                                <td className="text-sm">{deviceList.createdAt}</td>
+                                                <td className="justify-center" style={{ alignItems: "center" }}>
+                                                    <div className={`badge ${deviceList.isVerified ? "badge-success" : "badge-error"}`}>
+                                                        {deviceList.isVerified ? "Verified" : "Not Verified"}
+                                                    </div>
+                                                </td>
+                                                <td className="text-sm">
+                                                    <span className={`badge ${getClassificationBadgeClass(deviceList.deviceType)}`}>
+                                                    {deviceList.deviceType}
+                                                    </span>
+                                                </td>
                                                 <th>
-                                                    <button className="btn btn-link">details</button>
+                                                    <button onClick={handleToggleExpand}>
+                                                        {expanded ? <RiArrowDropLeftLine size={32}/> : <RiArrowDropRightLine size={32}/>}
+                                                    </button>
                                                 </th>
                                             </tr>
                                         )}
                                         </tbody>
-
                                     </table>
                                 </div>
                             </div>
-                        </div>
-                        <div className="flex justify-end items-center px-20 py-20">
-                            <button className="btn btn-circle" style={{ backgroundColor: 'blue', color: 'white' }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                     stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                </svg>
-                            </button>
                         </div>
                     </main>
                 </div>
