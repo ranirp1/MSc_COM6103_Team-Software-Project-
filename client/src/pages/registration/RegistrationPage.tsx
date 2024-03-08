@@ -62,7 +62,7 @@ const CreateAccount = () => {
                 </div>
   
                 {/* Form Section */}
-                <div className="lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center items-center"> {/* Centering form content */}
+                <div className="lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center items-center">
                     {/* Sign In Hyperlink */}
                     <div className="text-right mb-6">
                         <a href="/login" className="text-sm text-blue-600 hover:underline">Already have an account? Sign in here</a>

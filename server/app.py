@@ -47,9 +47,11 @@ def login():
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and user.password == password:
-        return jsonify({'message': 'Login Successful'}), 200
+        user_role = 'admin' if user.isAdmin else ('staff' if user.isStaff else 'endUser')
+        return jsonify({'message': 'Login Successful', 'role': user_role}), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
+
 
 
 @app.route('/api/register', methods=['POST'])
@@ -96,16 +98,23 @@ def register():
     return jsonify({'message': 'Login Successful'}), 200
 
 
-@app.route('/api/getAllUsers', methods=['POST'])
+@app.route('/api/getAllUsers', methods=['GET']) 
 def getAllUsers():
     """
     Retrieve all users from the database and return them as JSON.
-
-    Returns:
-        A JSON response containing the serialized data of all users.
     """
     users = User.query.all()
-    return jsonify([user.serialize() for user in users]), 200
+    user_data = [
+        {
+            'id': user.id,
+            'name': f"{user.first_name} {user.last_name}",
+            'email': user.email,
+            'phone': user.phone,
+            'role': 'endUser' if not user.isAdmin else 'admin'
+        } for user in users
+    ]
+    return jsonify(user_data)
+
 
 @app.route('/api/updateUserToStaff', methods=['POST'])
 def updateUserToStaff():
@@ -144,3 +153,15 @@ def updateUserToAdmin():
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
    
+@app.route('/api/downgradeToUser', methods=['POST'])
+def updateUserToEndUser():
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    user.isAdmin = False
+    user.isStaff = False
+    db.session.commit()
+    return jsonify({'message': 'User downgraded to end user'}), 200
