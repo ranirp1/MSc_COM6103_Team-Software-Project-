@@ -26,7 +26,7 @@ class User(db.Model):
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
 
-class newDevice(db.Model):
+class NewDevice(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
     deviceType = db.Column(db.String(120), nullable=True)
@@ -35,7 +35,7 @@ class newDevice(db.Model):
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
 
-class newUserDevice(db.Model):
+class NewUserDevice(db.Model):
     __tablename__ = 'userDevice'
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, nullable=False)
@@ -200,7 +200,7 @@ def createDevice():
     
     if(deviceID is None):
         try:
-            newDeviceAdded = newDevice(
+            newDeviceAdded = NewDevice(
                 deviceType=deviceType,
                 brand=brand,
                 model=model,
@@ -215,7 +215,7 @@ def createDevice():
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
     
-    newUserDeviceAdded = newUserDevice(
+    newUserDeviceAdded = NewUserDevice(
         userID = userID,
         deviceID = deviceID,
         dateOfPurchase = dateOfPurchase,
