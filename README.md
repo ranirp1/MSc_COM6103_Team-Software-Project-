@@ -141,3 +141,5 @@
 
 **Parameters:**
 - `email` (string): The email of the user to update.
+
+### 4. Delete User 
