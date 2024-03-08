@@ -155,3 +155,22 @@ def updateUserToAdmin():
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
    
+@app.route('/api/deleteUser', methods=['POST'])
+def deleteUser():
+    """
+    Delete a user from the database.
+    Args:
+        email (str): The email of the user to delete.
+    Returns:
+        A JSON response with a success message if the user is successfully deleted.
+        A JSON response with an error message if the user is not found in the database.
+    """
+    # TODO : Add a check to see if the user calling this api is an admin before deleting
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted'}), 200
