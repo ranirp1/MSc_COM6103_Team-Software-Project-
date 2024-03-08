@@ -152,15 +152,32 @@ def updateUserToAdmin():
 
 
 
-@app.route('/api/move_classification', methods=['POST'])
-def move_classification():
+@app.route('/api/moveDeviceClassification', methods=['POST'])
+def move_device_classification():
+    """
+    Move device classification for a user by staff.
+
+    Returns:
+        A JSON response with a success message if the classification is moved successfully.
+        A JSON response with an error message if the user, device, or new classification is not found.
+    """
     data = request.json
     email = data.get('email')
     new_classification = data.get('new_classification')
 
+    # Check if the staff user is authenticated
+    # You might want to implement proper authentication logic here
+
+    staff_user = User.query.filter_by(email='staff@example.com').first()  # Adjust the email as per your staff user
+
+    if not staff_user or not staff_user.isStaff:
+        return jsonify({'message': 'Unauthorized access'}), 403
+
     user = User.query.filter_by(email=email).first()
+
     if user:
         customer_device = CustomerDevice.query.filter_by(user_id=user.id).first()
+
         if customer_device:
             customer_device.classification = new_classification
             db.session.commit()
