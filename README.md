@@ -143,3 +143,11 @@
 - `email` (string): The email of the user to update.
 
 ### 4. Delete User 
+**Description:** Delete user.
+
+**URL:** `/api/deleteUser`
+
+**Method:** `POST`
+
+**Parameters:**
+- `email` (string): The email of the user whose details need to be deleted.
