@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
+from datetime import datetime
 
 
 
@@ -26,20 +27,26 @@ class User(db.Model):
     isAdmin = db.Column(db.Boolean, default=False)
 
 class newDevice(db.Model):
+    __tablename__ = 'device'
+    deviceID = db.Column(db.Integer, primary_key=True, unique=True)
+    deviceType = db.Column(db.String(120), nullable=True)
+    brand = db.Column(db.String(120), nullable=True)
+    model = db.Column(db.String(120), unique=True, nullable=True)
+    dateOfRelease = db.Column(db.Date, nullable=True)
+    isVerified = db.Column(db.Boolean, default=False)
+
+class newUserDevice(db.Model):
     __tablename__ = 'userDevice'
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, nullable=False)
     deviceID = db.Column(db.Integer, nullable=True)
-    deviceType = db.Column(db.String(120), nullable=True)
-    brand = db.Column(db.String(120), nullable=True)
-    model = db.Column(db.String(120), nullable=True)
+    dateOfPurchase = db.Column(db.Date, nullable=True)
     imageUrl = db.Column(db.String(120), nullable=True)
     qrCodeUrl = db.Column(db.String(120), nullable=True)
-    dateOfRelease = db.Column(db.Date, nullable=True)
-    dateOfPurchase = db.Column(db.Date, nullable=True)
-    isVerified = db.Column(db.Boolean, default=True)
+    dateOfCreation = db.Column(db.Date, nullable=True)
+    dataRetrievalID = db.Column(db.Integer, nullable=True)
+    estimatedValue = db.Column(db.String(120), nullable=True)
     
-
 # Create the tables when Flask starts up
 with app.app_context():
     db.create_all()
@@ -166,10 +173,18 @@ def updateUserToAdmin():
 
 @app.route('/api/createDevice/', methods=['POST'])
 def createDevice():
+    """
+    Create device API
+    If user wants to add a new device which is not already listed in the db, it will create a new device entry
+    Associates the device with the user by userID
+    Returns:
+        A JSON response with a success message if the device is successfully created; A JSON response with an error message if the device model already exists in the database.
+        A JSON response with a success message if the device is successfully associated with the user; A JSON response with an error message if any problems arrives.
+    """
     data = request.json
     userID = data.get('userID')
-    deviceID = data.get('deviceID')
     deviceType = data.get('deviceType')
+    deviceID = data.get('deviceID')
     brand = data.get('brand')
     model = data.get('model')
     imageUrl = data.get('imageUrl')
@@ -177,29 +192,46 @@ def createDevice():
     dateOfRelease = data.get('dateOfRelease')
     dateOfPurchase = data.get('dateOfPurchase')
     
-    if(deviceID == "" or deviceType == "" or brand == "" or model == "" or not dateOfPurchase or imageUrl == "" or qrCodeUrl == ""):
+    """Need to finalize if the isVerified is added in the device or userDevice table"""
+    if not all([dateOfPurchase, imageUrl]):
         isVerified = False
     else:
         isVerified = True
     
-    newUserDevice = newDevice(
+    if(deviceID is None):
+        try:
+            newDeviceAdded = newDevice(
+                deviceType=deviceType,
+                brand=brand,
+                model=model,
+                dateOfRelease=dateOfRelease,
+                isVerified=False            
+            )
+            db.session.add(newDeviceAdded)
+            db.session.commit()
+            deviceID = newDeviceAdded.deviceID
+        except Exception as e:
+            db.session.rollback()
+            db.session.flush()
+            return jsonify({'message': 'Device creation error'}), 500
+    
+    newUserDeviceAdded = newUserDevice(
         userID = userID,
         deviceID = deviceID,
-        deviceType = deviceType,
-        brand = brand,
-        model = model,
+        dateOfPurchase = dateOfPurchase,
         imageUrl = imageUrl,
         qrCodeUrl = qrCodeUrl,
-        dateOfRelease = dateOfRelease,
-        dateOfPurchase = dateOfPurchase,
-        isVerified = isVerified
+        dateOfCreation = datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        dataRetrievalID = 0,
+        estimatedValue = ""
     )
     
     try:
-        db.session.add(newUserDevice)
+        db.session.add(newUserDeviceAdded)
         db.session.commit()
+        return jsonify({'message': 'User Device creation successful'}), 200
     except Exception as e:
+        print(e)
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'User device creation error'}), 500
-    return jsonify({'message': 'Device creation successful'}), 200
