@@ -24,6 +24,17 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'phoneNumber': self.phoneNumber,
+            'isStaff': self.isStaff,
+            'isAdmin': self.isAdmin
+        }
 
 
 # Create the tables when Flask starts up
@@ -47,7 +58,7 @@ def login():
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and user.password == password:
-        return jsonify({'message': 'Login Successful'}), 200
+        return jsonify(user.serialize()), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
 
