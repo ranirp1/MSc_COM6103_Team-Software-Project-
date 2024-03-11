@@ -22,11 +22,27 @@ class User(db.Model):
     isAdmin = db.Column(db.Boolean, default=False)
 
 
-class CustomerDevice(db.Model):
-    __tablename__ = 'customer_device'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    device_info = db.Column(db.String(255), nullable=False)
+class Device(db.Model):
+    __tablename__ = 'device'
+    deviceID = db.Column(db.Integer, primary_key=True)
+    deviceType = db.Column(db.String(50), nullable=False)
+    brand = db.Column(db.String(50), nullable=False)
+    model = db.Column(db.String(50), nullable=False)
+    dateOfRelease = db.Column(db.Date, nullable=True)
+    isVerified = db.Column(db.Boolean, default=False)
+
+
+class UserDeviceTable(db.Model):
+    __tablename__ = 'user_device_table'
+    userID = db.Column(db.Integer, nullable=False)
+    deviceID = db.Column(db.Integer, nullable=False)
+    userDeviceID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    dateOfPurchase = db.Column(db.Date, nullable=True)
+    imageUrl = db.Column(db.String(255), nullable=True)
+    qrCodeUrl = db.Column(db.String(255), nullable=True)
+    dateOfCreation = db.Column(db.Date, nullable=True)
+    dataRetrievalID = db.Column(db.Integer, nullable=True)
+    estimatedValue = db.Column(db.String(255), nullable=True)
 
 
 # Create the tables when Flask starts up
@@ -170,8 +186,8 @@ def create_customer_device():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        # Assuming you have a one-to-one relationship between User and CustomerDevice
-        customer_device = CustomerDevice(
+        # Assuming you have a one-to-many relationship between User and UserDeviceTable
+        customer_device = UserDeviceTable(
             user_id=user.id,
             device_type=device_info.get('device_type'),
             brand=device_info.get('brand'),
