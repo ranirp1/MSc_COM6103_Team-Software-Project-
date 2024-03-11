@@ -30,10 +30,44 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
+class Device(db.Model):
+    deviceID = db.Column(db.Integer, primary_key=True)
+    deviceType = db.Column(db.String(50))
+    brand = db.Column(db.String(50))
+    model = db.Column(db.String(50))
+    dateOfRelease = db.Column(db.Date)
+    isVerified = db.Column(db.Boolean, default=False)
+    classification = db.Column(db.String(50))  # Added classification column
+
 class CustomerDevice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('device.deviceID'), nullable=False)
     classification = db.Column(db.String(50))
+
+# Establish relationship with the User model
+    user = db.relationship('User', backref=db.backref('customer_devices', lazy=True))
+# Establish relationship with the Device model
+    device = db.relationship('Device', backref=db.backref('customer_devices', lazy=True))
+
+# Access customer_devices for a user
+# user_instance.customer_devices(Returns a list of associated CustomerDevice instances)
+# Access the user for a customer_device
+# customer_device_instance.user (Returns the associated User instance)
+
+# the serialize method is used for the CustomerDevice model to convert instances of the model into a serializable format
+# When you need to return a JSON response for a CustomerDevice instance, you can use this method:
+# Assuming `customer_device` is an instance of CustomerDevice --> serialized_data = customer_device.serialize()
+    def serialize(self):
+        return {
+            'deviceID': self.deviceID,
+            'deviceType': self.deviceType,
+            'brand': self.brand,
+            'model': self.model,
+            'dateOfRelease': self.dateOfRelease,
+            'isVerified': self.isVerified,
+            'classification': self.classification,
+        }
 
 
 @app.route("/")
@@ -150,8 +184,6 @@ def updateUserToAdmin():
     return jsonify({'message': 'User updated to admin'}), 200
 
 
-
-
 @app.route('/api/moveDeviceClassification', methods=['POST'])
 def move_device_classification():
     """
@@ -162,12 +194,14 @@ def move_device_classification():
         A JSON response with an error message if the user, device, or new classification is not found.
     """
     data = request.json
+
+    # Input Validation
     email = data.get('email')
     new_classification = data.get('new_classification')
+    if not email or not new_classification:
+        return jsonify({'error': 'Invalid request data'}), 400
 
     # Check if the staff user is authenticated
-    # You might want to implement proper authentication logic here
-
     staff_user = User.query.filter_by(email='staff@example.com').first()  # Adjust the email as per your staff user
 
     if not staff_user or not staff_user.isStaff:
