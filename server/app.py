@@ -21,6 +21,7 @@ class User(db.Model):
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
 
+
 class CustomerDevice(db.Model):
     __tablename__ = 'customer_device'
     id = db.Column(db.Integer, primary_key=True)
@@ -109,6 +110,7 @@ def getAllUsers():
     users = User.query.all()
     return jsonify([user.serialize() for user in users]), 200
 
+
 @app.route('/api/updateUserToStaff', methods=['POST'])
 def updateUserToStaff():
     """
@@ -126,6 +128,7 @@ def updateUserToStaff():
     user.isStaff = True
     db.session.commit()
     return jsonify({'message': 'User updated to staff'}), 200
+
 
 @app.route('/api/updateUserToAdmin', methods=['POST'])
 def updateUserToAdmin():
@@ -145,6 +148,7 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
+
 
 @app.route('/api/customer_device', methods=['POST'])
 def create_customer_device():
