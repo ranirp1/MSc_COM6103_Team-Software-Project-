@@ -5,8 +5,6 @@ from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
 
-
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
@@ -24,7 +22,7 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
-    
+
     def serialize(self):
         return {
             'id': self.id,
@@ -35,6 +33,18 @@ class User(db.Model):
             'isStaff': self.isStaff,
             'isAdmin': self.isAdmin
         }
+
+
+class CustomerDevice(db.Model):
+    __tablename__ = 'customer_device'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('device.deviceID'), nullable=False)
+    classification = db.Column(db.String(50))
+    device_type = db.Column(db.String(50), nullable=False)
+    brand = db.Column(db.String(50), nullable=False)
+    model = db.Column(db.String(50), nullable=False)
+    visible = db.Column(db.Boolean, default=True)
 
 
 # Create the tables when Flask starts up
@@ -118,6 +128,7 @@ def getAllUsers():
     users = User.query.all()
     return jsonify([user.serialize() for user in users]), 200
 
+
 @app.route('/api/updateUserToStaff', methods=['POST'])
 def updateUserToStaff():
     """
@@ -135,6 +146,7 @@ def updateUserToStaff():
     user.isStaff = True
     db.session.commit()
     return jsonify({'message': 'User updated to staff'}), 200
+
 
 @app.route('/api/updateUserToAdmin', methods=['POST'])
 def updateUserToAdmin():
@@ -154,7 +166,8 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
-   
+
+
 @app.route('/api/deleteUser', methods=['POST'])
 def deleteUser():
     """
@@ -174,3 +187,45 @@ def deleteUser():
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User deleted'}), 200
+
+
+@app.route('/api/updateDeviceVisibility', methods=['POST'])
+def update_device_visibility():
+    """
+    Update device visibility for a user by staff.
+
+    Returns:
+        A JSON response with a success message if the visibility is updated successfully.
+        A JSON response with an error message if the user or device is not found.
+    """
+    data = request.json
+
+    # Input Validation
+    email = data.get('email')
+    device_id = data.get('device_id')
+    is_visible = data.get('is_visible')
+
+    if not email or not device_id or is_visible is None:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    # Check if the staff user is authenticated
+    staff_user = User.query.filter_by(email='staff@example.com',
+                                      isStaff=True).first()  # Adjust the email as per your staff user
+
+    if not staff_user:
+        return jsonify({'message': 'Unauthorized access'}), 403
+
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        customer_device = CustomerDevice.query.filter_by(user_id=user.id, id=device_id).first()
+
+        if customer_device:
+            # Update the device visibility
+            customer_device.visible = is_visible
+            db.session.commit()
+            return jsonify({'message': 'Device visibility updated successfully'}), 200
+        else:
+            return jsonify({'message': 'Device not found for the user'}), 404
+    else:
+        return jsonify({'message': 'User not found'}), 404
