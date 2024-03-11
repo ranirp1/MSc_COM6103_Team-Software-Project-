@@ -75,6 +75,7 @@ class CustomerDevice(db.Model):
             'dateOfRelease': self.dateOfRelease,
             'isVerified': self.isVerified,
             'classification': self.classification,
+            'visible': self.visible
         }
 
 
