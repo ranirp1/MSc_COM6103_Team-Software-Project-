@@ -4,6 +4,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -34,17 +37,55 @@ class User(db.Model):
             'isAdmin': self.isAdmin
         }
 
-
-class CustomerDevice(db.Model):
-    __tablename__ = 'customer_device'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    device_id = db.Column(db.Integer, db.ForeignKey('device.deviceID'), nullable=False)
-    classification = db.Column(db.String(50))
-    device_type = db.Column(db.String(50), nullable=False)
+class Device(db.Model):
+    __tablename__ = 'device'
+    deviceID = db.Column(db.Integer, primary_key=True)
+    deviceType = db.Column(db.String(50), nullable=False)
     brand = db.Column(db.String(50), nullable=False)
     model = db.Column(db.String(50), nullable=False)
-    visible = db.Column(db.Boolean, default=True)
+    dateOfRelease = db.Column(db.Date, nullable=True)
+    isVerified = db.Column(db.Boolean, default=False)
+
+    def serialize(self):
+        return {
+            'deviceID': self.deviceID,
+            'deviceType': self.deviceType,
+            'brand': self.brand,
+            'model': self.model,
+            'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
+            'isVerified': self.isVerified
+        }
+
+
+class UserDeviceTable(db.Model):
+    __tablename__ = 'user_device_table'
+    userDeviceID = db.Column(db.Integer, primary_key=True)
+    userID = db.Column(db.Integer, ForeignKey('user.id'),nullable=False)
+    deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    dateOfPurchase = db.Column(db.Date)
+    imageUrl = db.Column(db.String(255))
+    qrCodeUrl = db.Column(db.String(255))
+    dateOfCreation = db.Column(db.Date)
+    dataRetrievalID = db.Column(db.Integer, nullable=True)
+    estimatedValue = db.Column(db.String(255))
+
+    # Define foreign key relationships
+    user = relationship('User', backref='user_device_table', foreign_keys=[userID])
+    device = relationship('Device', backref='user_device_table', foreign_keys=[deviceID])
+
+    def serialize(self):
+        return {
+            'userDeviceID': self.userDeviceID,
+            'deviceID': self.deviceID,
+            'dateOfPurchase': str(self.dateOfPurchase),
+            'imageUrl': self.imageUrl,
+            'qrCodeUrl': self.qrCodeUrl,
+            'dateOfCreation': str(self.dateOfCreation),
+            'dataRetrievalID': self.dataRetrievalID,
+            'estimatedValue': self.estimatedValue
+        }
+
+
 
 
 # Create the tables when Flask starts up
@@ -218,14 +259,15 @@ def update_device_visibility():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        customer_device = CustomerDevice.query.filter_by(user_id=user.id, id=device_id).first()
+        user_device = UserDeviceTable.query.filter_by(user_id=user.id, device_id=device_id).first()
 
-        if customer_device:
+        if user_device:
             # Update the device visibility
-            customer_device.visible = is_visible
+            user_device.visible = is_visible
             db.session.commit()
             return jsonify({'message': 'Device visibility updated successfully'}), 200
         else:
             return jsonify({'message': 'Device not found for the user'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
+
