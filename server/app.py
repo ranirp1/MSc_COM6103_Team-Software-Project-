@@ -5,8 +5,6 @@ from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
 
-
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
@@ -30,6 +28,7 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
+
 class Device(db.Model):
     deviceID = db.Column(db.Integer, primary_key=True)
     deviceType = db.Column(db.String(50))
@@ -38,6 +37,7 @@ class Device(db.Model):
     dateOfRelease = db.Column(db.Date)
     isVerified = db.Column(db.Boolean, default=False)
     classification = db.Column(db.String(50))  # Added classification column
+
 
 class CustomerDevice(db.Model):
     __tablename__ = 'customer_device'
@@ -49,19 +49,19 @@ class CustomerDevice(db.Model):
     brand = db.Column(db.String(50), nullable=False)
     model = db.Column(db.String(50), nullable=False)
 
-# Establish relationship with the User model
+    # Establish relationship with the User model
     user = db.relationship('User', backref=db.backref('customer_devices', lazy=True))
-# Establish relationship with the Device model
+    # Establish relationship with the Device model
     device = db.relationship('Device', backref=db.backref('customer_devices', lazy=True))
 
-# Access customer_devices for a user
-# user_instance.customer_devices(Returns a list of associated CustomerDevice instances)
-# Access the user for a customer_device
-# customer_device_instance.user (Returns the associated User instance)
+    # Access customer_devices for a user
+    # user_instance.customer_devices(Returns a list of associated CustomerDevice instances)
+    # Access the user for a customer_device
+    # customer_device_instance.user (Returns the associated User instance)
 
-# the serialize method is used for the CustomerDevice model to convert instances of the model into a serializable format
-# When you need to return a JSON response for a CustomerDevice instance, you can use this method:
-# Assuming `customer_device` is an instance of CustomerDevice --> serialized_data = customer_device.serialize()
+    # the serialize method is used for the CustomerDevice model to convert instances of the model into a serializable format
+    # When you need to return a JSON response for a CustomerDevice instance, you can use this method:
+    # Assuming `customer_device` is an instance of CustomerDevice --> serialized_data = customer_device.serialize()
     def serialize(self):
         return {
             'user_id': self.user_id,
@@ -151,6 +151,7 @@ def getAllUsers():
     users = User.query.all()
     return jsonify([user.serialize() for user in users]), 200
 
+
 @app.route('/api/updateUserToStaff', methods=['POST'])
 def updateUserToStaff():
     """
@@ -168,6 +169,7 @@ def updateUserToStaff():
     user.isStaff = True
     db.session.commit()
     return jsonify({'message': 'User updated to staff'}), 200
+
 
 @app.route('/api/updateUserToAdmin', methods=['POST'])
 def updateUserToAdmin():
@@ -203,6 +205,8 @@ def move_device_classification():
     # Input Validation
     email = data.get('email')
     new_classification = data.get('new_classification')
+
+    # Check for missing data in the request
     if not email or not new_classification:
         return jsonify({'error': 'Invalid request data'}), 400
 
@@ -212,12 +216,15 @@ def move_device_classification():
     if not staff_user or not staff_user.isStaff:
         return jsonify({'message': 'Unauthorized access'}), 403
 
+    # Check if the user exists
     user = User.query.filter_by(email=email).first()
 
     if user:
+        # Retrieve the user's device for classification update
         customer_device = CustomerDevice.query.filter_by(user_id=user.id).first()
 
         if customer_device:
+            # Update the device classification
             customer_device.classification = new_classification
             db.session.commit()
             return jsonify({'message': 'Classification moved successfully'}), 200
