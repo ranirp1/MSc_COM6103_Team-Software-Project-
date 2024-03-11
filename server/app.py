@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -31,18 +34,44 @@ class Device(db.Model):
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
 
+    def serialize(self):
+        return {
+            'deviceID': self.deviceID,
+            'deviceType': self.deviceType,
+            'brand': self.brand,
+            'model': self.model,
+            'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
+            'isVerified': self.isVerified
+        }
+
 
 class UserDeviceTable(db.Model):
     __tablename__ = 'user_device_table'
-    userID = db.Column(db.Integer, nullable=False)
-    deviceID = db.Column(db.Integer, nullable=False)
-    userDeviceID = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    dateOfPurchase = db.Column(db.Date, nullable=True)
-    imageUrl = db.Column(db.String(255), nullable=True)
-    qrCodeUrl = db.Column(db.String(255), nullable=True)
-    dateOfCreation = db.Column(db.Date, nullable=True)
+    userDeviceID = db.Column(db.Integer, primary_key=True)
+    userID = db.Column(db.Integer, ForeignKey('user.id'),nullable=False)
+    deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    dateOfPurchase = db.Column(db.Date)
+    imageUrl = db.Column(db.String(255))
+    qrCodeUrl = db.Column(db.String(255))
+    dateOfCreation = db.Column(db.Date)
     dataRetrievalID = db.Column(db.Integer, nullable=True)
-    estimatedValue = db.Column(db.String(255), nullable=True)
+    estimatedValue = db.Column(db.String(255))
+
+    # Define foreign key relationships
+    user = relationship('User', backref='user_device_table', foreign_keys=[userID])
+    device = relationship('Device', backref='user_device_table', foreign_keys=[deviceID])
+
+    def serialize(self):
+        return {
+            'userDeviceID': self.userDeviceID,
+            'deviceID': self.deviceID,
+            'dateOfPurchase': str(self.dateOfPurchase),
+            'imageUrl': self.imageUrl,
+            'qrCodeUrl': self.qrCodeUrl,
+            'dateOfCreation': str(self.dateOfCreation),
+            'dataRetrievalID': self.dataRetrievalID,
+            'estimatedValue': self.estimatedValue
+        }
 
 
 # Create the tables when Flask starts up
