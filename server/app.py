@@ -7,7 +7,6 @@ from flask_cors import CORS
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
@@ -37,6 +36,7 @@ class User(db.Model):
             'isAdmin': self.isAdmin
         }
 
+
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True)
@@ -60,7 +60,7 @@ class Device(db.Model):
 class UserDeviceTable(db.Model):
     __tablename__ = 'user_device_table'
     userDeviceID = db.Column(db.Integer, primary_key=True)
-    userID = db.Column(db.Integer, ForeignKey('user.id'),nullable=False)
+    userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
     dateOfPurchase = db.Column(db.Date)
     imageUrl = db.Column(db.String(255))
@@ -84,8 +84,6 @@ class UserDeviceTable(db.Model):
             'dataRetrievalID': self.dataRetrievalID,
             'estimatedValue': self.estimatedValue
         }
-
-
 
 
 # Create the tables when Flask starts up
@@ -270,4 +268,3 @@ def update_device_visibility():
             return jsonify({'message': 'Device not found for the user'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
-
