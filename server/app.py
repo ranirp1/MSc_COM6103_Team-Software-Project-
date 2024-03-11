@@ -147,16 +147,31 @@ def updateUserToAdmin():
     return jsonify({'message': 'User updated to admin'}), 200
 
 @app.route('/api/customer_device', methods=['POST'])
-def customer_device():
+def create_customer_device():
+    """
+        Create and Save device information for a user.
+
+        Returns:
+            A JSON response with a success message if the device information is saved successfully.
+            A JSON response with an error message if the user is not found.
+        """
     data = request.json
     email = data.get('email')
     device_info = data.get('device_info')
 
     user = User.query.filter_by(email=email).first()
     if user:
-        customer_device = CustomerDevice(user_id=user.id, device_info=device_info)
+        # Assuming you have a one-to-one relationship between User and CustomerDevice
+        customer_device = CustomerDevice(
+            user_id=user.id,
+            device_type=device_info.get('device_type'),
+            brand=device_info.get('brand'),
+            model=device_info.get('model'),
+        )
+
         db.session.add(customer_device)
         db.session.commit()
+
         return jsonify({'message': 'Device information saved successfully'}), 200
     else:
         return jsonify({'message': 'User not found'}), 404
