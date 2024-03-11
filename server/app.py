@@ -163,7 +163,12 @@ def create_customer_device():
     email = data.get('email')
     device_info = data.get('device_info')
 
+    # Input validation: Check if email and device_info are present
+    if not email or not device_info:
+        return jsonify({'error': 'Invalid request data'}), 400
+
     user = User.query.filter_by(email=email).first()
+
     if user:
         # Assuming you have a one-to-one relationship between User and CustomerDevice
         customer_device = CustomerDevice(
@@ -172,6 +177,10 @@ def create_customer_device():
             brand=device_info.get('brand'),
             model=device_info.get('model'),
         )
+
+        # Input validation: Check if essential device information is present
+        if not customer_device.device_type or not customer_device.brand or not customer_device.model:
+            return jsonify({'error': 'Incomplete device information'}), 400
 
         db.session.add(customer_device)
         db.session.commit()
