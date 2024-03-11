@@ -37,6 +37,7 @@ class Device(db.Model):
     dateOfRelease = db.Column(db.Date)
     isVerified = db.Column(db.Boolean, default=False)
     classification = db.Column(db.String(50))  # Added classification column
+    visible = db.Column(db.Boolean, default=True)  # Added visible column
 
 
 class CustomerDevice(db.Model):
@@ -48,6 +49,8 @@ class CustomerDevice(db.Model):
     device_type = db.Column(db.String(50), nullable=False)
     brand = db.Column(db.String(50), nullable=False)
     model = db.Column(db.String(50), nullable=False)
+    visible = db.Column(db.Boolean, default=True)
+
 
     # Establish relationship with the User model
     user = db.relationship('User', backref=db.backref('customer_devices', lazy=True))
