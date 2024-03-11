@@ -40,10 +40,14 @@ class Device(db.Model):
     classification = db.Column(db.String(50))  # Added classification column
 
 class CustomerDevice(db.Model):
+    __tablename__ = 'customer_device'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     device_id = db.Column(db.Integer, db.ForeignKey('device.deviceID'), nullable=False)
     classification = db.Column(db.String(50))
+    device_type = db.Column(db.String(50), nullable=False)
+    brand = db.Column(db.String(50), nullable=False)
+    model = db.Column(db.String(50), nullable=False)
 
 # Establish relationship with the User model
     user = db.relationship('User', backref=db.backref('customer_devices', lazy=True))
@@ -60,6 +64,7 @@ class CustomerDevice(db.Model):
 # Assuming `customer_device` is an instance of CustomerDevice --> serialized_data = customer_device.serialize()
     def serialize(self):
         return {
+            'user_id': self.user_id,
             'deviceID': self.deviceID,
             'deviceType': self.deviceType,
             'brand': self.brand,
