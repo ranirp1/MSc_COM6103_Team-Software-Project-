@@ -4,6 +4,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -30,52 +32,50 @@ with app.app_context():
 
 
 class Device(db.Model):
+    __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True)
-    deviceType = db.Column(db.String(50))
-    brand = db.Column(db.String(50))
-    model = db.Column(db.String(50))
-    dateOfRelease = db.Column(db.Date)
-    isVerified = db.Column(db.Boolean, default=False)
-    classification = db.Column(db.String(50))  # Added classification column
-    visible = db.Column(db.Boolean, default=True)  # Added visible column
-
-
-class CustomerDevice(db.Model):
-    __tablename__ = 'customer_device'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    device_id = db.Column(db.Integer, db.ForeignKey('device.deviceID'), nullable=False)
-    classification = db.Column(db.String(50))
-    device_type = db.Column(db.String(50), nullable=False)
+    deviceType = db.Column(db.String(50), nullable=False)
     brand = db.Column(db.String(50), nullable=False)
     model = db.Column(db.String(50), nullable=False)
-    visible = db.Column(db.Boolean, default=True)
+    dateOfRelease = db.Column(db.Date, nullable=True)
+    isVerified = db.Column(db.Boolean, default=False)
 
-
-    # Establish relationship with the User model
-    user = db.relationship('User', backref=db.backref('customer_devices', lazy=True))
-    # Establish relationship with the Device model
-    device = db.relationship('Device', backref=db.backref('customer_devices', lazy=True))
-
-    # Access customer_devices for a user
-    # user_instance.customer_devices(Returns a list of associated CustomerDevice instances)
-    # Access the user for a customer_device
-    # customer_device_instance.user (Returns the associated User instance)
-
-    # the serialize method is used for the CustomerDevice model to convert instances of the model into a serializable format
-    # When you need to return a JSON response for a CustomerDevice instance, you can use this method:
-    # Assuming `customer_device` is an instance of CustomerDevice --> serialized_data = customer_device.serialize()
     def serialize(self):
         return {
-            'user_id': self.user_id,
             'deviceID': self.deviceID,
             'deviceType': self.deviceType,
             'brand': self.brand,
             'model': self.model,
-            'dateOfRelease': self.dateOfRelease,
-            'isVerified': self.isVerified,
-            'classification': self.classification,
-            'visible': self.visible
+            'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
+            'isVerified': self.isVerified
+        }
+
+class UserDeviceTable(db.Model):
+    __tablename__ = 'user_device_table'
+    userDeviceID = db.Column(db.Integer, primary_key=True)
+    userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
+    deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    dateOfPurchase = db.Column(db.Date)
+    imageUrl = db.Column(db.String(255))
+    qrCodeUrl = db.Column(db.String(255))
+    dateOfCreation = db.Column(db.Date)
+    dataRetrievalID = db.Column(db.Integer, nullable=True)
+    estimatedValue = db.Column(db.String(255))
+
+    # Define foreign key relationships
+    user = relationship('User', backref='user_device_table', foreign_keys=[userID])
+    device = relationship('Device', backref='user_device_table', foreign_keys=[deviceID])
+
+    def serialize(self):
+        return {
+            'userDeviceID': self.userDeviceID,
+            'deviceID': self.deviceID,
+            'dateOfPurchase': str(self.dateOfPurchase),
+            'imageUrl': self.imageUrl,
+            'qrCodeUrl': self.qrCodeUrl,
+            'dateOfCreation': str(self.dateOfCreation),
+            'dataRetrievalID': self.dataRetrievalID,
+            'estimatedValue': self.estimatedValue
         }
 
 
@@ -225,11 +225,11 @@ def move_device_classification():
 
     if user:
         # Retrieve the user's device for classification update
-        customer_device = CustomerDevice.query.filter_by(user_id=user.id).first()
+        user_device = UserDeviceTable.query.filter_by(user_id=user.id).first()
 
-        if customer_device:
+        if user_device:
             # Update the device classification
-            customer_device.classification = new_classification
+            user_device.classification = new_classification
             db.session.commit()
             return jsonify({'message': 'Classification moved successfully'}), 200
         else:
