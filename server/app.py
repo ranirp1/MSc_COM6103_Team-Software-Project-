@@ -112,6 +112,10 @@ def register():
 def getAllUsers():
     """
     Retrieve all users from the database and return them as JSON.
+    The role is determined based on the isAdmin and isStaff flags:
+    - isAdmin: True -> 'admin'
+    - isStaff: True -> 'employee'
+    - Neither: -> 'endUser'
     """
     users = User.query.all()
     user_data = [
@@ -119,8 +123,8 @@ def getAllUsers():
             'id': user.id,
             'name': f"{user.first_name} {user.last_name}",
             'email': user.email,
-            'phone': user.phone,
-            'role': 'endUser' if not user.isAdmin else 'admin'
+            'phone': user.phoneNumber,
+            'role': 'admin' if user.isAdmin else ('employee' if user.isStaff else 'endUser')
         } for user in users
     ]
     return jsonify(user_data)
