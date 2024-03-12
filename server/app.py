@@ -7,6 +7,8 @@ from flask_cors import CORS
 from datetime import datetime
 
 
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -63,6 +65,54 @@ class NewUserDevice(db.Model):
 # Create the tables when Flask starts up
 with app.app_context():
     db.create_all()
+
+
+class Device(db.Model):
+    __tablename__ = 'device'
+    deviceID = db.Column(db.Integer, primary_key=True)
+    deviceType = db.Column(db.String(50), nullable=False)
+    brand = db.Column(db.String(50), nullable=False)
+    model = db.Column(db.String(50), nullable=False)
+    dateOfRelease = db.Column(db.Date, nullable=True)
+    isVerified = db.Column(db.Boolean, default=False)
+
+    def serialize(self):
+        return {
+            'deviceID': self.deviceID,
+            'deviceType': self.deviceType,
+            'brand': self.brand,
+            'model': self.model,
+            'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
+            'isVerified': self.isVerified
+        }
+
+class UserDeviceTable(db.Model):
+    __tablename__ = 'user_device_table'
+    userDeviceID = db.Column(db.Integer, primary_key=True)
+    userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
+    deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    dateOfPurchase = db.Column(db.Date)
+    imageUrl = db.Column(db.String(255))
+    qrCodeUrl = db.Column(db.String(255))
+    dateOfCreation = db.Column(db.Date)
+    dataRetrievalID = db.Column(db.Integer, nullable=True)
+    estimatedValue = db.Column(db.String(255))
+
+    # Define foreign key relationships
+    user = relationship('User', backref='user_device_table', foreign_keys=[userID])
+    device = relationship('Device', backref='user_device_table', foreign_keys=[deviceID])
+
+    def serialize(self):
+        return {
+            'userDeviceID': self.userDeviceID,
+            'deviceID': self.deviceID,
+            'dateOfPurchase': str(self.dateOfPurchase),
+            'imageUrl': self.imageUrl,
+            'qrCodeUrl': self.qrCodeUrl,
+            'dateOfCreation': str(self.dateOfCreation),
+            'dataRetrievalID': self.dataRetrievalID,
+            'estimatedValue': self.estimatedValue
+        }
 
 
 @app.route("/")
@@ -177,6 +227,7 @@ def updateUserToStaff():
     db.session.commit()
     return jsonify({'message': 'User updated to staff'}), 200
 
+
 @app.route('/api/updateUserToAdmin', methods=['POST'])
 def updateUserToAdmin():
     """
@@ -228,6 +279,51 @@ def updateUserToEndUser():
     user.isStaff = False
     db.session.commit()
     return jsonify({'message': 'User downgraded to end user'}), 200
+
+
+@app.route('/api/moveDeviceClassification', methods=['POST'])
+def move_device_classification():
+    """
+    Move device classification for a user by staff.
+
+    Returns:
+        A JSON response with a success message if the classification is moved successfully.
+        A JSON response with an error message if the user, device, or new classification is not found.
+    """
+    data = request.json
+
+    # Input Validation
+    email = data.get('email')
+    new_classification = data.get('new_classification')
+
+    # Check for missing data in the request
+    if not email or not new_classification:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    # Check if the staff user is authenticated
+    staff_user = User.query.filter_by(email='staff@example.com').first()  # Adjust the email as per your staff user
+
+    if not staff_user or not staff_user.isStaff:
+        return jsonify({'message': 'Unauthorized access'}), 403
+
+    # Check if the user exists
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        # Retrieve the user's device for classification update
+        user_device = UserDeviceTable.query.filter_by(user_id=user.id).first()
+
+        if user_device:
+            # Update the device classification
+            user_device.classification = new_classification
+            db.session.commit()
+            return jsonify({'message': 'Classification moved successfully'}), 200
+        else:
+            return jsonify({'message': 'Device information not found for the user'}), 404
+    else:
+        return jsonify({'message': 'User not found'}), 404
+
+
 
 @app.route('/api/createDevice/', methods=['POST'])
 def createDevice():
