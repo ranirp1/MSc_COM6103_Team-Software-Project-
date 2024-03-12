@@ -6,6 +6,7 @@ import RegistrationPage from "./pages/registration/RegistrationPage";
 import LoginPage from "./pages/login/LoginPage";
 import AdminPage from "./pages/admin/AdminPage";
 import DeviceListPage from "./pages/User/DeviceListPage";
+import DeviceCreationForm from "./pages/User/DeviceCreationForm";
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/user" element={<DeviceListPage />} />
+          <Route path="/deviceform" element={<DeviceCreationForm />} />
         </Routes>
       </BrowserRouter>
     </html>

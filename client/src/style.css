@@ -22,3 +22,15 @@
     padding: 4px 8px;
     border-radius: 4px;
   }
+.badge-verified {
+    background-color: #025a18; 
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }  
+.badge-notverified {
+    background-color: #c40404; 
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
