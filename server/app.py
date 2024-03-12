@@ -24,6 +24,17 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'phoneNumber': self.phoneNumber,
+            'isStaff': self.isStaff,
+            'isAdmin': self.isAdmin
+        }
 
 
 # Create the tables when Flask starts up
@@ -95,9 +106,10 @@ def login():
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and user.password == password:
-        return jsonify({'message': 'Login Successful'}), 200
+        return jsonify(user.serialize()), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
+
 
 
 @app.route('/api/register', methods=['POST'])
@@ -144,16 +156,26 @@ def register():
     return jsonify({'message': 'Login Successful'}), 200
 
 
-@app.route('/api/getAllUsers', methods=['POST'])
+@app.route('/api/getAllUsers', methods=['GET']) 
 def getAllUsers():
     """
     Retrieve all users from the database and return them as JSON.
-
-    Returns:
-        A JSON response containing the serialized data of all users.
+    The role is determined based on the isAdmin and isStaff flags:
+    - isAdmin: True -> 'admin'
+    - isStaff: True -> 'employee'
+    - Neither: -> 'endUser'
     """
     users = User.query.all()
-    return jsonify([user.serialize() for user in users]), 200
+    user_data = [
+        {
+            'id': user.id,
+            'name': f"{user.first_name} {user.last_name}",
+            'email': user.email,
+            'phone': user.phoneNumber,
+            'role': 'admin' if user.isAdmin else ('employee' if user.isStaff else 'endUser')
+        } for user in users
+    ]
+    return jsonify(user_data)
 
 
 @app.route('/api/updateUserToStaff', methods=['POST'])
@@ -193,6 +215,39 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
+   
+@app.route('/api/deleteUser', methods=['POST'])
+def deleteUser():
+    """
+    Delete a user from the database.
+    Args:
+        email (str): The email of the user to delete.
+    Returns:
+        A JSON response with a success message if the user is successfully deleted.
+        A JSON response with an error message if the user is not found in the database.
+    """
+    # TODO : Add a check to see if the user calling this api is an admin before deleting
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted'}), 200
+   
+@app.route('/api/downgradeToUser', methods=['POST'])
+def updateUserToEndUser():
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    user.isAdmin = False
+    user.isStaff = False
+    db.session.commit()
+    return jsonify({'message': 'User downgraded to end user'}), 200
 
 
 @app.route('/api/moveDeviceClassification', methods=['POST'])
