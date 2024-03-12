@@ -1,70 +1,50 @@
-import React, { useState, ChangeEvent  } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
-import { RiUserSettingsFill } from 'react-icons/ri';
-import { RiUserSharedLine } from 'react-icons/ri';
-import { RiFilter3Line } from 'react-icons/ri';
-import { RiLogoutBoxRLine } from 'react-icons/ri'; 
+import { RiUserSettingsFill, RiUserSharedLine, RiFilter3Line, RiLogoutBoxRLine, RiShieldUserLine } from 'react-icons/ri'; 
+import { API_URL } from "../../constants/constant";
+import { useNavigate } from 'react-router-dom';
 
-type UserType = 'employee' | 'endUser';
+type UserType = 'employee' | 'endUser' | 'admin';
 
 interface User {
   id: number;
   name: string;
   email: string;
   phone: string;
-  createdAt: string;
-  isActive: boolean;
   role: UserType;
 }
 
-//Added data for testing
 const AdminDashboard = () => {
-  const [employees, setEmployees] = useState<User[]>([
-    {
-      id: 1,
-      name: 'Mario Luigi',
-      email: 'info@jomamanagement.co',
-      phone: '09876543210',
-      createdAt: '31 Jul 2022, 07:13 PM',
-      isActive: true,
-      role: 'employee',
-    },
-    {
-      id: 2,
-      name: 'Esther Miles',
-      email: 'eoporia.vounp@example.com',
-      phone: '09865874728',
-      createdAt: '11 Jan 2023 at 01:49 pm',
-      isActive: true,
-      role: 'employee',
-    },
-  ]);
-
-  const [endUsers, setEndUsers] = useState<User[]>([
-    {
-      id: 1,
-      name: 'Damon Spectre',
-      email: 'info@jomamanagement.co',
-      phone: '09876543210',
-      createdAt: '31 Jul 2022, 07:13 PM',
-      isActive: true,
-      role: 'endUser',
-    },
-    {
-      id: 2,
-      name: 'Miles Morales',
-      email: 'eoporia.vounp@example.com',
-      phone: '09865874728',
-      createdAt: '11 Jan 2023 at 01:49 pm',
-      isActive: true,
-      role: 'endUser',
-    },
-  ]);
-
+  const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterBy, setFilterBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | ''>('');
-  const [currentList, setCurrentList] = useState<'employees' | 'endUsers'>('employees');
+  const [currentList, setCurrentList] = useState<'employees' | 'endUsers' | 'admins'>('employees');
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/getAllUsers`, { 
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+  
+        const data = await response.json();
+        setUsers(data); // Update your state with the fetched users
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+  
+    fetchUsers();
+  }, []);
+  
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
@@ -73,40 +53,103 @@ const AdminDashboard = () => {
     setSortOrder(newSortOrder);
   };
 
+  // Define a type that includes all possible filter keys
+  type FilterKeys = 'name' | 'email' | 'phone';
+
+  // Type guard to check if a string is a key of User
+  function isFilterKey(key: any): key is FilterKeys {
+    return ['name', 'email', 'phone'].includes(key);
+  }
+
   const getSortedAndFilteredUsers = (users: User[]) => {
     return users
-      .filter((user) =>
-        user.name.toLowerCase().includes(searchQuery) ||
-        user.email.toLowerCase().includes(searchQuery) ||
-        user.phone.includes(searchQuery)
-      )
+      .filter(user => {
+        if (isFilterKey(filterBy)) {
+          const value = user[filterBy].toString().toLowerCase();
+          return value.includes(searchQuery);
+        }
+        return false;
+      })
       .sort((a, b) => {
-        if (sortOrder === 'asc') {
-          return a.name.localeCompare(b.name);
-        } else if (sortOrder === 'desc') {
-          return b.name.localeCompare(a.name);
+        if (isFilterKey(filterBy)) {
+          let firstValue = a[filterBy].toString().toLowerCase();
+          let secondValue = b[filterBy].toString().toLowerCase();
+
+          if (sortOrder === 'asc') {
+            return firstValue.localeCompare(secondValue);
+          } else if (sortOrder === 'desc') {
+            return secondValue.localeCompare(firstValue);
+          }
         }
         return 0;
       });
   };
 
-  const handleRoleChange = (userId: number, newRole: UserType) => {
-    const updateFunction = currentList === 'employees' ? setEmployees : setEndUsers;
-    updateFunction((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === userId ? { ...user, role: newRole } : user
-      )
-    );
+  
+  const handleRoleChange = async (userId: number, newRole: UserType) => {
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) return;
+    
+    let endpoint = '';
+    switch (newRole) {
+      case 'admin':
+        endpoint = `${API_URL}/api/updateUserToAdmin`;
+        break;
+      case 'employee':
+        endpoint = `${API_URL}/api/updateUserToStaff`;
+        break;
+      case 'endUser':
+        endpoint = `${API_URL}/api/downgradeToUser`;
+        break;
+      default:
+        console.log('Invalid role');
+        return;
+    }
+  
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: users[userIndex].email }),
+      });
+  
+      if (response.ok) {
+        const updatedUsers = [...users];
+        updatedUsers[userIndex] = { ...updatedUsers[userIndex], role: newRole };
+        setUsers(updatedUsers);
+        console.log('Role updated successfully');
+      } else {
+        console.error('Failed to update user role');
+      }
+    } catch (error) {
+      console.error('Error updating user role:', error);
+    }
   };
+  
 
-  const filteredAndSortedUsers = currentList === 'employees' ? getSortedAndFilteredUsers(employees) : getSortedAndFilteredUsers(endUsers);
+  const filteredAndSortedUsers = getSortedAndFilteredUsers(users).filter(user => {
+    switch (currentList) {
+      case 'employees':
+        return user.role === 'employee';
+      case 'endUsers':
+        return user.role === 'endUser';
+      case 'admins':
+        return user.role === 'admin';
+      default:
+        return false;
+    }
+  });
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Function to switch between employees and end users list
-  const showList = (listType: 'employees' | 'endUsers') => {
+  const showList = (listType: 'employees' | 'endUsers' | 'admins') => {
     setCurrentList(listType);
   };
+
+  const navigate = useNavigate();
+
 
   return (
       <div className="flex h-screen bg-gray-100">
@@ -119,15 +162,18 @@ const AdminDashboard = () => {
 
           {/* Position nav at the bottom of the sidebar */}
           <nav className="absolute top-56 w-full">
-            <h5 className="text-xl font-medium mb-4 text-center">Users</h5>
-            <button onClick={() => showList('employees')} className={`btn ${currentList === 'employees' ? 'btn-primary' : 'btn-ghost'} btn-block normal-case`}>
-              <RiUserSharedLine className="text-lg mr-4" /> Employees
-            </button>
-            <button onClick={() => showList('endUsers')} className={`btn ${currentList === 'endUsers' ? 'btn-primary' : 'btn-ghost'} btn-block normal-case`}>
-              <RiUserSettingsFill className="text-lg mr-2" /> End Users
-            </button>
-          </nav>
-        </div>
+          <h5 className="text-xl font-medium mb-4 text-center">Users</h5>
+          <button onClick={() => showList('employees')} className={`btn ${currentList === 'employees' ? 'btn-primary' : 'btn-ghost'} btn-block normal-case`}>
+            <RiUserSharedLine className="text-lg mr-4" /> Employees
+          </button>
+          <button onClick={() => showList('endUsers')} className={`btn ${currentList === 'endUsers' ? 'btn-primary' : 'btn-ghost'} btn-block normal-case`}>
+            <RiUserSettingsFill className="text-lg mr-2" /> End Users
+          </button>
+          <button onClick={() => showList('admins')} className={`btn ${currentList === 'admins' ? 'btn-primary' : 'btn-ghost'} btn-block normal-case`}>
+            <RiShieldUserLine className="text-lg mr-2" /> Admins
+          </button>
+        </nav>
+      </div>
 
 
         {/* Content area */}
@@ -144,25 +190,37 @@ const AdminDashboard = () => {
 
       {/* Header with search input and filter button */}
       <header className="flex justify-between items-center p-4 shadow bg-gray-100">
-          <form className="flex-1" onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="search"
-              placeholder="Search"
-              className="input input-bordered bg-white text-black w-full"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </form>
-          <div className="dropdown dropdown-end ml-4">
-            <label tabIndex={0} className="btn btn-ghost cursor-pointer">
-              <RiFilter3Line className="text-lg" /> Sort
-            </label>
-            <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
-              <li><a onClick={() => handleSortOrderChange('asc')}>Ascending</a></li>
-              <li><a onClick={() => handleSortOrderChange('desc')}>Descending</a></li>
-            </ul>
-          </div>
-        </header>
+        <form className="flex-1" onSubmit={(e) => e.preventDefault()}>
+          <input
+            type="search"
+            placeholder="Search"
+            className="input input-bordered bg-white text-black w-full"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </form>
+        <div className="dropdown dropdown-end ml-4">
+          <select
+            value={filterBy}
+            onChange={(e) => setFilterBy(e.target.value)}
+            className="select select-bordered"
+          >
+            <option value="name">Name</option>
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+          </select>
+        </div>
+        <div className="dropdown dropdown-end ml-4">
+          <label tabIndex={0} className="btn btn-ghost cursor-pointer">
+            <RiFilter3Line className="text-lg" /> Sort
+          </label>
+          <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+            <li><a onClick={() => handleSortOrderChange('asc')}>Ascending</a></li>
+            <li><a onClick={() => handleSortOrderChange('desc')}>Descending</a></li>
+          </ul>
+        </div>
+      </header>
+
 
         {/* Main content */}
         <main className="overflow-x-hidden overflow-y-auto">
@@ -178,7 +236,6 @@ const AdminDashboard = () => {
                     <th className="text-black min-w-[200px]">Name</th>
                     <th className="text-black min-w-[200px]">Email</th>
                     <th className="text-black min-w-[150px]">Phone</th>
-                    <th className="text-black min-w-[200px]">Created At</th>
                     <th className="text-black min-w-[150px]">Role</th>
                   </tr>
                 </thead>
@@ -188,7 +245,6 @@ const AdminDashboard = () => {
                       <td>{user.name}</td>
                       <td>{user.email}</td>
                       <td>{user.phone}</td>
-                      <td>{user.createdAt}</td>
                       <td>
                         <select
                           value={user.role}
@@ -210,27 +266,31 @@ const AdminDashboard = () => {
       </div>
 
       {/* Logout Confirmation Modal */}
-        {showLogoutModal && (
-          <div className="modal modal-open">
-            <div className="modal-box">
-              <h3 className="font-bold text-lg">Are you sure you want to logout?</h3>
-              <div className="modal-action">
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setShowLogoutModal(false)} // Close modal on 'Yes'
-                >
-                  Yes
-                </button>
-                <button
-                  className="btn btn-ghost"
-                  onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
-                >
-                  No
-                </button>
-              </div>
+      {showLogoutModal && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Are you sure you want to logout?</h3>
+            <div className="modal-action">
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setShowLogoutModal(false);
+                  navigate('/');
+                }}
+              >
+                Yes
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
+              >
+                No
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
+
       </div>
   );
 };
