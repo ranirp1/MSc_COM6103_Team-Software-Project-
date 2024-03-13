@@ -41,38 +41,12 @@ class User(db.Model):
 
 
 
-class NewDevice(db.Model):
+class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
     deviceType = db.Column(db.String(120), nullable=True)
     brand = db.Column(db.String(120), nullable=True)
     model = db.Column(db.String(120), unique=True, nullable=True)
-    dateOfRelease = db.Column(db.Date, nullable=True)
-    isVerified = db.Column(db.Boolean, default=False)
-
-class NewUserDevice(db.Model):
-    __tablename__ = 'userDevice'
-    userDeviceID = db.Column(db.Integer, primary_key=True)
-    userID = db.Column(db.Integer, nullable=False)
-    deviceID = db.Column(db.Integer, nullable=True)
-    dateOfPurchase = db.Column(db.Date, nullable=True)
-    imageUrl = db.Column(db.String(120), nullable=True)
-    qrCodeUrl = db.Column(db.String(120), nullable=True)
-    dateOfCreation = db.Column(db.Date, nullable=True)
-    dataRetrievalID = db.Column(db.Integer, nullable=True)
-    estimatedValue = db.Column(db.String(120), nullable=True)
-    
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
-
-
-class Device(db.Model):
-    __tablename__ = 'device'
-    deviceID = db.Column(db.Integer, primary_key=True)
-    deviceType = db.Column(db.String(50), nullable=False)
-    brand = db.Column(db.String(50), nullable=False)
-    model = db.Column(db.String(50), nullable=False)
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
 
@@ -85,7 +59,12 @@ class Device(db.Model):
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
             'isVerified': self.isVerified
         }
-
+    
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
+    
+    
 class UserDeviceTable(db.Model):
     __tablename__ = 'user_device_table'
     userDeviceID = db.Column(db.Integer, primary_key=True)
