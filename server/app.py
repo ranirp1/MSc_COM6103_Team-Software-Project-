@@ -4,6 +4,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
+from datetime import datetime
+
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -37,12 +40,13 @@ class User(db.Model):
         }
 
 
+
 class Device(db.Model):
     __tablename__ = 'device'
-    deviceID = db.Column(db.Integer, primary_key=True)
-    deviceType = db.Column(db.String(50), nullable=False)
-    brand = db.Column(db.String(50), nullable=False)
-    model = db.Column(db.String(50), nullable=False)
+    deviceID = db.Column(db.Integer, primary_key=True, unique=True)
+    deviceType = db.Column(db.String(120), nullable=True)
+    brand = db.Column(db.String(120), nullable=True)
+    model = db.Column(db.String(120), unique=True, nullable=True)
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
 
@@ -55,8 +59,12 @@ class Device(db.Model):
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
             'isVerified': self.isVerified
         }
-
-
+    
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
+    
+    
 class UserDeviceTable(db.Model):
     __tablename__ = 'user_device_table'
     userDeviceID = db.Column(db.Integer, primary_key=True)
@@ -86,13 +94,8 @@ class UserDeviceTable(db.Model):
         }
 
 
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
-
-
 @app.route("/")
-def hello_world():
+def check_sql_connection():
     try:
         db.session.execute(text("SELECT 1"))
         return 'Connection to MySQL is successful!'
@@ -102,6 +105,12 @@ def hello_world():
 
 @app.route('/api/login', methods=['POST'])
 def login():
+    """
+    Login implementation. Compares the user supplied credentials with the database entries for authentication.
+
+    Returns:
+        A JSON response depending on the correct or invalid credentials.
+    """
     data = request.json
     email = data.get('email')
     password = data.get('password')
@@ -110,6 +119,7 @@ def login():
         return jsonify(user.serialize()), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
+
 
 
 @app.route('/api/register', methods=['POST'])
@@ -156,16 +166,27 @@ def register():
     return jsonify({'message': 'Login Successful'}), 200
 
 
-@app.route('/api/getAllUsers', methods=['POST'])
+@app.route('/api/getAllUsers', methods=['GET']) 
 def getAllUsers():
     """
     Retrieve all users from the database and return them as JSON.
-
-    Returns:
-        A JSON response containing the serialized data of all users.
+    The role is determined based on the isAdmin and isStaff flags:
+    - isAdmin: True -> 'admin'
+    - isStaff: True -> 'employee'
+    - Neither: -> 'endUser'
     """
     users = User.query.all()
-    return jsonify([user.serialize() for user in users]), 200
+    user_data = [
+        {
+            'id': user.id,
+            'name': f"{user.first_name} {user.last_name}",
+            'email': user.email,
+            'phone': user.phoneNumber,
+            'role': 'admin' if user.isAdmin else ('employee' if user.isStaff else 'endUser')
+        } for user in users
+    ]
+    return jsonify(user_data)
+
 
 
 @app.route('/api/updateUserToStaff', methods=['POST'])

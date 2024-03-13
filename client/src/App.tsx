@@ -7,6 +7,7 @@ import LoginPage from "./pages/login/LoginPage";
 import AdminPage from "./pages/admin/AdminPage";
 import StaffPage from "./pages/staff/StaffPage";
 
+
 function App() {
   return (
     <html data-theme="mytheme">
@@ -17,6 +18,7 @@ function App() {
           <Route path="/register" element={<RegistrationPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/staff" element={<StaffPage />} />
           <Route path="/staff" element={<StaffPage />} />
         </Routes>
       </BrowserRouter>
