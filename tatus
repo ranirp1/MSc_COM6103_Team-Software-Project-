@@ -1,0 +1,19 @@
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex abe5fd1..3f49d51 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -1,4 +1,5 @@[m
+ .venv/[m
+[32m+[m[32m.projectenv/[m
+ # build file[m
+ /build[m
+ .DS_Store[m
+[1mdiff --git a/server/.projectenv/bin/python3.11 b/server/.projectenv/bin/python3.11[m
+[1mindex 3cf1fbd..fef0c61 120000[m
+[1m--- a/server/.projectenv/bin/python3.11[m
+[1m+++ b/server/.projectenv/bin/python3.11[m
+[36m@@ -1 +1 @@[m
+[31m-/opt/homebrew/opt/python@3.11/bin/python3.11[m
+\ No newline at end of file[m
+[32m+[m[32mC:/opt/homebrew/opt/python@3.11/bin/python3.11[m
+\ No newline at end of file[m

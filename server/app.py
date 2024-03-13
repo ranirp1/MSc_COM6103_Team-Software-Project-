@@ -3,14 +3,18 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
+from flask_cors import CORS
+from datetime import datetime
+
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
-
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
+CORS(app)
 
 
 class User(db.Model):
@@ -23,14 +27,26 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'phoneNumber': self.phoneNumber,
+            'isStaff': self.isStaff,
+            'isAdmin': self.isAdmin
+        }
+
 
 
 class Device(db.Model):
     __tablename__ = 'device'
-    deviceID = db.Column(db.Integer, primary_key=True)
-    deviceType = db.Column(db.String(50), nullable=False)
-    brand = db.Column(db.String(50), nullable=False)
-    model = db.Column(db.String(50), nullable=False)
+    deviceID = db.Column(db.Integer, primary_key=True, unique=True)
+    deviceType = db.Column(db.String(120), nullable=True)
+    brand = db.Column(db.String(120), nullable=True)
+    model = db.Column(db.String(120), unique=True, nullable=True)
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
 
@@ -43,12 +59,16 @@ class Device(db.Model):
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
             'isVerified': self.isVerified
         }
-
-
+    
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
+    
+    
 class UserDeviceTable(db.Model):
     __tablename__ = 'user_device_table'
     userDeviceID = db.Column(db.Integer, primary_key=True)
-    userID = db.Column(db.Integer, ForeignKey('user.id'),nullable=False)
+    userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
     dateOfPurchase = db.Column(db.Date)
     imageUrl = db.Column(db.String(255))
@@ -74,13 +94,8 @@ class UserDeviceTable(db.Model):
         }
 
 
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
-
-
 @app.route("/")
-def hello_world():
+def check_sql_connection():
     try:
         db.session.execute(text("SELECT 1"))
         return 'Connection to MySQL is successful!'
@@ -90,14 +105,21 @@ def hello_world():
 
 @app.route('/api/login', methods=['POST'])
 def login():
+    """
+    Login implementation. Compares the user supplied credentials with the database entries for authentication.
+
+    Returns:
+        A JSON response depending on the correct or invalid credentials.
+    """
     data = request.json
     email = data.get('email')
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and user.password == password:
-        return jsonify({'message': 'Login Successful'}), 200
+        return jsonify(user.serialize()), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
+
 
 
 @app.route('/api/register', methods=['POST'])
@@ -144,16 +166,27 @@ def register():
     return jsonify({'message': 'Login Successful'}), 200
 
 
-@app.route('/api/getAllUsers', methods=['POST'])
+@app.route('/api/getAllUsers', methods=['GET']) 
 def getAllUsers():
     """
     Retrieve all users from the database and return them as JSON.
-
-    Returns:
-        A JSON response containing the serialized data of all users.
+    The role is determined based on the isAdmin and isStaff flags:
+    - isAdmin: True -> 'admin'
+    - isStaff: True -> 'employee'
+    - Neither: -> 'endUser'
     """
     users = User.query.all()
-    return jsonify([user.serialize() for user in users]), 200
+    user_data = [
+        {
+            'id': user.id,
+            'name': f"{user.first_name} {user.last_name}",
+            'email': user.email,
+            'phone': user.phoneNumber,
+            'role': 'admin' if user.isAdmin else ('employee' if user.isStaff else 'endUser')
+        } for user in users
+    ]
+    return jsonify(user_data)
+
 
 
 @app.route('/api/updateUserToStaff', methods=['POST'])
@@ -235,5 +268,68 @@ def create_customer_device():
         return jsonify({'message': 'User not found'}), 404
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
+@app.route('/api/createDevice/', methods=['POST'])
+def createDevice():
+    """
+    Create device API
+    If user wants to add a new device which is not already listed in the db, it will create a new device entry
+    Associates the device with the user by userID
+    Returns:
+        A JSON response with a success message if the device is successfully created; A JSON response with an error message if the device model already exists in the database.
+        A JSON response with a success message if the device is successfully associated with the user; A JSON response with an error message if any problems arrives.
+    """
+    data = request.json
+    userID = data.get('userID')
+    deviceType = data.get('deviceType')
+    deviceID = data.get('deviceID')
+    brand = data.get('brand')
+    model = data.get('model')
+    imageUrl = data.get('imageUrl')
+    qrCodeUrl = data.get('qrCodeUrl')
+    dateOfRelease = data.get('dateOfRelease')
+    dateOfPurchase = data.get('dateOfPurchase')
+    
+    """Need to finalize if the isVerified is added in the device or userDevice table"""
+    if not all([dateOfPurchase, imageUrl]):
+        isVerified = False
+    else:
+        isVerified = True
+    
+    if(deviceID is None):
+        try:
+            newDeviceAdded = NewDevice(
+                deviceType=deviceType,
+                brand=brand,
+                model=model,
+                dateOfRelease=dateOfRelease,
+                isVerified=False            
+            )
+            db.session.add(newDeviceAdded)
+            db.session.commit()
+            deviceID = newDeviceAdded.deviceID
+        except Exception as e:
+            db.session.rollback()
+            db.session.flush()
+            return jsonify({'message': 'Device creation error'}), 500
+    
+    newUserDeviceAdded = NewUserDevice(
+        userID = userID,
+        deviceID = deviceID,
+        dateOfPurchase = dateOfPurchase,
+        imageUrl = imageUrl,
+        qrCodeUrl = qrCodeUrl,
+        dateOfCreation = datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        dataRetrievalID = 0,
+        estimatedValue = ""
+    )
+    
+    try:
+        db.session.add(newUserDeviceAdded)
+        db.session.commit()
+        return jsonify({'message': 'User Device creation successful'}), 200
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'User device creation error'}), 500
