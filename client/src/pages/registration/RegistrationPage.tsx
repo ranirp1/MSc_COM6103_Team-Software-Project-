@@ -20,6 +20,7 @@ const CreateAccount = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
+        
         try {
             const response = await fetch(`${API_URL}/api/register`,{
                 method: 'POST',
@@ -31,10 +32,8 @@ const CreateAccount = () => {
 
             if(response.ok){
                 setShowToast(1);
-                setTimeout(() => {
-                    setShowToast(0);
-                }, 3000);
                 console.log("Registration Successful");
+                window.location.href = '/login?register=success';
             }
             else{
                 setShowToast(2)
@@ -62,7 +61,7 @@ const CreateAccount = () => {
                 </div>
   
                 {/* Form Section */}
-                <div className="lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center items-center"> {/* Centering form content */}
+                <div className="lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center items-center">
                     {/* Sign In Hyperlink */}
                     <div className="text-right mb-6">
                         <a href="/login" className="text-sm text-blue-600 hover:underline">Already have an account? Sign in here</a>
