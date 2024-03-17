@@ -141,3 +141,11 @@
 
 **Parameters:**
 - `email` (string): The email of the user to update.
+
+# Payment card
+Fake card for payment with stripe:
+
+* 4000008260000000
+* any MM/YY in future
+* any CVC
+* and valid UK post code

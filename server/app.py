@@ -152,24 +152,22 @@ def updateUserToAdmin():
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
 
+# Source: https://github.com/Vuka951/tutorial-code/tree/master/react-flask-stripe/payment-and-hooks
+@app.route('/api/create-payment-intent', methods=['POST'])
+def pay():
+    email = request.json.get('email', None)
 
-@app.route('/api/payment', methods=['POST'])
-# source: https://marketsplash.com/tutorials/flask/how-to-integrate-flask-with-stripe-for-payments/
-def createPayment():
-    session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
-        line_items = [{
-            'price_data': {
-                'currency': 'gbp',
-                'product_data': {
-                    'name': 'Data retrieval'
-                },
-                'unit_amount': 5000,
-            },
-            'quantity': 1,
-        }],
-        success_url="https://www.youtube.com",
-        cancel_url="https://www.kittenwars.com",
-        mode='payment'
+    if not email:
+        print("email is blank")
+        return 'You need to send an Email!', 400
+
+    print(f"email is: {email}")
+
+    intent = stripe.PaymentIntent.create(
+        amount=500,
+        currency='gbp',
+        receipt_email=email
     )
-    return {'id': session.id}
+
+    return {"client_secret": intent['client_secret']}, 200
+    # return jsonify({'id': session.id}), 200
