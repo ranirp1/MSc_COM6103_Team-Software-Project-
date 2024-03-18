@@ -4,14 +4,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
-<<<<<<< HEAD
 import os
 from dotenv import load_dotenv
 import stripe
-=======
 from datetime import datetime
-
->>>>>>> main
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
@@ -73,10 +69,6 @@ class Device(db.Model):
         }
     
 # Create the tables when Flask starts up
-<<<<<<< HEAD
-# with app.app_context():
-#     db.create_all()
-=======
 with app.app_context():
     db.create_all()
     
@@ -108,8 +100,6 @@ class UserDeviceTable(db.Model):
             'dataRetrievalID': self.dataRetrievalID,
             'estimatedValue': self.estimatedValue
         }
->>>>>>> main
-
 
 @app.route("/")
 def check_sql_connection():
