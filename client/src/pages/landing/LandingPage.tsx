@@ -20,6 +20,9 @@ const LandingPage: React.FC = () => {
             <br/>
             <br/>
             <br/>
+            <div>
+                <h3>Card number: 4000008260000000</h3>
+            </div>
             <div className="justify-center items-center p-8 bg-neutral-300">
                 <Elements stripe={stripePromise}>
                     <CardPayment />
