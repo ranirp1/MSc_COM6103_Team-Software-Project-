@@ -24,7 +24,14 @@ function CardPayment() {
       return;
     }
 
-    const res = await axios.post(`${API_URL}/api/create-payment-intent`, {email: email});
+    let res;
+    try {
+      res = await axios.post(`${API_URL}/api/create-payment-intent`, {email: email});
+    } catch (error) {
+      console.log(error);
+      window.location.href = '/payment/failure';
+      return;
+    }
 
     const clientSecret = res.data['client_secret'];
 
@@ -40,6 +47,7 @@ function CardPayment() {
     if (result.error) {
       // Show error to your customer (e.g., insufficient funds)
       console.log(result.error.message);
+      window.location.href = '/payment/failure';
     } else {
       // The payment has been processed!
       if (result.paymentIntent.status === 'succeeded') {
@@ -48,7 +56,7 @@ function CardPayment() {
         // execution. Set up a webhook or plugin to listen for the
         // payment_intent.succeeded event that handles any business critical
         // post-payment actions.
-        console.log('You got 500$!');
+        window.location.href = '/payment/success';
       }
     }
   };

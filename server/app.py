@@ -240,7 +240,7 @@ def pay():
 
     if not email:
         print("email is blank")
-        return 'You need to send an Email!', 400
+        return {'message': 'You need to send an Email!', 'error':True}, 400
 
     print(f"email is: {email}")
 
