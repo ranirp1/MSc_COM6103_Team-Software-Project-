@@ -1,6 +1,7 @@
 import Navigation from "../../Navigation";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import React, {useState} from "react";
+import { Link } from 'react-router-dom';
 
 const CreateAccount = () => {
 
@@ -52,8 +53,7 @@ const CreateAccount = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center" style={{ backgroundColor: 'hsl(169, 52%, 80%)' }}>
-            <Navigation backgroundColor="hsl(169, 52%, 80%)" />
+        <div className="">
             <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex lg:flex-row flex-col-reverse">
                 {/* Image Section */}
                 <div className="lg:w-1/2 flex justify-center items-center">
@@ -64,7 +64,9 @@ const CreateAccount = () => {
                 <div className="lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center items-center"> {/* Centering form content */}
                     {/* Sign In Hyperlink */}
                     <div className="text-right mb-6">
-                        <a href="/login" className="text-sm text-blue-600 hover:underline">Already have an account? Sign in here</a>
+                        {/* <a href="/login" className="text-sm text-blue-600 hover:underline">Already have an account? Sign in here</a> */}
+                        {/* <Link to="/login" className="text-sm text-blue-600 hover:underline">Already have an account? Sign in here</Link> */}
+
                     </div>
                     
                     <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Create Your Account</h2>
@@ -92,16 +94,16 @@ const CreateAccount = () => {
             </div>
             {showToast === 1 && (
             <div className="toast toast-center">
-                <div className="alert alert-success">
+                <div className="alert alert-success flex items-center justify-center">
                     <span>Registration Successful</span>
                 </div>
             </div>
             )}
             {showToast === 2 && (
             <div className="toast toast-center">
-                <div className="alert alert-error">
+                <div className="alert alert-error flex items-center justify-center">
                     {/* Show the error message */}
-                    <span>{errorMessage}</span>
+                    <span>Registration failed: {errorMessage}</span>
                 </div>
             </div>
             )}

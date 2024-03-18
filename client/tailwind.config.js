@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        customGreen: 'rgb(40, 115, 90)',
+        customGreen: '#28D250',
         customDarkGreen: 'rgb(27, 86, 67)'
       },
       animation: {

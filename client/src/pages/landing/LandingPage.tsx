@@ -1,323 +1,335 @@
 import React from "react";
-import Navigation from "../../Navigation";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
+import backgroundImage from "../../assets/bg-3.png";
+import eWasteImage from "../../assets/recycle.jpg";
+import environmentImage from "../../assets/environmental_impact.jpg";
+import eWasteLandfillsImage from "../../assets/e-waste landfills.jpg";
+import dataRetrievalImage from "../../assets/data_retrieval.jpg";
+import dataSecurityImage from "../../assets/data_security.jpg";
+import diversePaymentImage from "../../assets/diverse_payment.jpg";
+import earnCashImage from "../../assets/earn_cash.jpg";
+import { useState } from 'react';
 
 const LandingPage: React.FC = () => {
+  
   return (
-    <div className="container mx-auto min-h-screen">
-      {/* <Navigation backgroundColor="hsl(169, 52%, 80%)" /> */}
-      <NavBar></NavBar>
-      {/* LandingPage content goes here */}
-      <div className="p-8 bg-orange-50">
-        <div className="my-5 mx-5">
-          <div className="overflow-x-auto">
-            <div className="flex flex-col md:flex-row w-full">
-              {/* Content */}
-              <div className="w-full md:w-60%">
-                <h1 className="text-3xl md:text-5xl font-bold text-gray-800">
-                  Transforming{" "}
-                  <span className="text-customDarkGreen">E-Waste</span>
-                  <br />
-                  into environmental impact
-                </h1>
-                <br />
-                <br />
-                <h1 className="text-lg md:text-xl text-gray-800">
-                  Turn your old gadgets into green: earn, recycle, and
-                  contribute to a sustainable future
-                </h1>
-                <div>
-                  <button className=" my-5 btn btn-success bg-customDarkGreen text-white">
-                    Sell your e-waste
-                  </button>
+    <div
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        overflow: "hidden",
+        fontFamily: "palatino"
+      }}
+    >
+      <div className="container mx-auto min-h-screen">
+        {/* <Navigation backgroundColor="hsl(169, 52%, 80%)" /> */}
+        <NavBar></NavBar>
+        {/* LandingPage content goes here */}
+        <div className="flex flex-col md:flex-row w-full">
+          {/* Carousel */}
+          <div className="md:w-1/2 relative">
+            <div className="carousel h-screen overflow-hidden rounded-lg">
+              <div className="carousel-inner flex">
+                <div
+                  id="item1"
+                  className="carousel-item h-full w-full relative"
+                >
+                  <img
+                    src={eWasteImage}
+                    className="h-full w-full"
+                    alt="item 1"
+                  />
+                  <div className="absolute bottom-0 left-0 p-10">
+                    <div className="text-white">
+                      <h2 className="text-4xl font-bold">
+                        What is{" "}
+                        <span className="text-green-600">E-Waste?</span>
+                      </h2>
+                      <p>
+                        Electronic waste(e-waste) is all the old types od old,
+                        end-of-life or discared electrical and electronic
+                        equipment
+                      </p>
+                      <a href="https://www.who.int/news-room/fact-sheets/detail/electronic-waste-(e-waste)"
+                        className="btn bg-green-600 my-3"
+                      >
+                        Learn More
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  id="item2"
+                  className="carousel-item h-full w-full relative"
+                >
+                  <img
+                    src={environmentImage}
+                    className="h-full w-full"
+                    alt="item 2"
+                  />
+                  <div className="absolute bottom-0 left-0 p-10">
+                    <div className="text-white">
+                      <h2 className="text-4xl font-bold">
+                        <span className="text-green-600">
+                          Environmental
+                        </span> Impact
+                      </h2>
+                      <p className="">
+                        Every device contains valuable materials that can be
+                        recycled, reducing the demand for new resources and
+                        minimizing environmental degradation
+                      </p>
+                      {/* <a href="https://earth.org/environmental-impact-of-e-waste/" className="btn bg-green-600 my-3">
+                        Learn More
+                      </a> */}
+                    </div>
+                  </div>
+                </div>
+                <div
+                  id="item3"
+                  className="carousel-item h-full w-full relative"
+                >
+                  <img
+                    src={eWasteLandfillsImage}
+                    className="h-full w-full"
+                    alt="item 3"
+                  />
+                  <div className="absolute bottom-0 left-0 p-10">
+                    <div className="text-white">
+                      <h2 className="text-4xl font-bold">
+                      <span className="text-green-600">Help</span> reduce landfills
+                      </h2>
+                      <p>
+                        Electronic waste in landfills poses significant
+                        environmental risks. By selling your e-waste, you
+                        contribute to the reduction of landfills.
+                      </p>
+                      {/* <a href="https://www.theworldcounts.com/stories/electronic-waste-facts" className="btn bg-green-600 my-3">
+                        Learn More
+                      </a> */}
+                    </div>
+                  </div>
+                </div>
+                <div
+                  id="item4"
+                  className="carousel-item h-full w-full relative"
+                >
+                  <img
+                    src={dataRetrievalImage}
+                    className="h-full w-full"
+                    alt="item 4"
+                  />
+                  <div className="absolute bottom-0 left-0 p-10">
+                    <div className="text-white">
+                      <h2 className="text-4xl font-bold">
+                        Easy <span className="text-green-600">data retrieval</span>
+                      </h2>
+                      <p>
+                        We offer secure data retrieval services, ensuring that
+                        sensitive information stored on your electronic devices
+                        is securely recovered and protected.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="item5"
+                  className="carousel-item h-full w-full relative"
+                >
+                  <img
+                    src={dataSecurityImage}
+                    className="h-full w-full"
+                    alt="item 5"
+                  />
+                  <div className="absolute bottom-0 left-0 p-10">
+                    <div className="text-white">
+                      <h2 className="text-4xl font-bold">Data <span className="text-green-600">security</span></h2>
+                      <p>
+                        Selling your old electronics through a reputable
+                        platform ensures secure data destruction. Protect your
+                        personal information and sensitive information easily.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="item6"
+                  className="carousel-item h-full w-full relative"
+                >
+                  <img
+                    src={diversePaymentImage}
+                    className="h-full w-full"
+                    alt="item 6"
+                  />
+                  <div className="absolute bottom-0 left-0 p-10">
+                    <div className="text-white">
+                      <h2 className="text-4xl font-bold">
+                        <span className="text-green-600">Diverse</span> payment options
+                      </h2>
+                      <p>
+                        We provide a diverse array of payment options on our
+                        e-waste website, ensuring convenience and flexibility
+                        for our users. From traditional methods like credit and
+                        debit cards to modern alternatives such as digital
+                        wallets.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="item7"
+                  className="carousel-item h-full w-full relative"
+                >
+                  <img
+                    src={earnCashImage}
+                    className="h-full w-full"
+                    alt="item 7"
+                  />
+                  <div className="absolute bottom-0 left-0 p-10">
+                    <div className="text-white">
+                      <h2 className="text-4xl font-bold">
+                        <span className="text-green-600">Earn cash</span> for your clutter
+                      </h2>
+                      <p>
+                        Selling your e-waste not only clears up space in your
+                        home or office but also puts money in your pocket
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              {/* Image */}
-              <div className="hidden flex-col md:block md:w-40%">
-                <div className="w-full md:w-96 bg-base-100 shadow-xl rounded-full">
-                  <figure style={{ borderRadius: "50% / 30%" }}>
-                    <img
-                      className="w-full h-full object-cover rounded-full"
-                      src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                      alt="Album"
-                    />
-                  </figure>
+            </div>
+            {/* Buttons */}
+            <div className="flex justify-center items-center">
+              <div className="flex gap-2">
+                <a
+                  href="#item1"
+                  className="btn btn-xs btn-outline btn-primary btn-circle"
+                ></a>
+                <a
+                  href="#item2"
+                  className="btn btn-xs btn-outline btn-primary btn-circle"
+                ></a>
+                <a
+                  href="#item3"
+                  className="btn btn-xs btn-outline btn-primary btn-circle"
+                ></a>
+                <a
+                  href="#item4"
+                  className="btn btn-xs btn-outline btn-primary btn-circle"
+                ></a>
+                <a
+                  href="#item5"
+                  className="btn btn-xs btn-outline btn-primary btn-circle"
+                ></a>
+                <a
+                  href="#item6"
+                  className="btn btn-xs btn-outline btn-primary btn-circle"
+                ></a>
+                <a
+                  href="#item7"
+                  className="btn btn-xs btn-outline btn-primary btn-circle"
+                ></a>
+              </div>
+            </div>
+          </div>
+
+          {/* Check device */}
+          <div className="md:w-1/2 h-screen">
+            <div className="hero h-full">
+              <div className="hero-content flex flex-col lg:flex-row-reverse h-full">
+                <div className="text-center flex flex-col justify-center items-center lg:text-left">
+                  <h1 className="text-5xl text-customDarkGreen font-bold">
+                    Check now!
+                  </h1>
+                  <p className="py-6 text-customDarkGreen">
+                    Check if your device needs to be recycled!
+                  </p>
+                  <div className="card shrink-0 w-full md:w-[550px] max-w-[550px] max-w-sm shadow-2xl bg-base-100">
+                    <form className="card-body rounded-lg">
+                      {/* Device details */}
+                      {/* Device type */}
+                      <div className="flex flex-col justify-center">
+                        <label className="label ">
+                          <span className="label-text">
+                            Select the device type
+                          </span>
+                        </label>
+                        <div className="dropdown">
+                          <div tabIndex={0} role="button" className="btn m-1">
+                            Device type
+                          </div>
+                          <ul
+                            tabIndex={0}
+                            className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+                          >
+                            <li>
+                              <a>Mobile</a>
+                            </li>
+                            <li>
+                              <a>Laptop</a>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      {/* Device Brand */}
+                      <div className="form-control">
+                        <label className="label">
+                          <span className="label-text">Brand</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Brand"
+                          className="input input-bordered"
+                          required
+                        />
+                      </div>
+                      {/* Device model */}
+                      <div className="form-control">
+                        <label className="label">
+                          <span className="label-text">Model</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Model"
+                          className="input input-bordered"
+                          required
+                        />
+                      </div>
+
+                      {/* Device date of purchase */}
+                      <div className="form-control">
+                        <label className="label">
+                          <span className="label-text">Date of purchase</span>
+                        </label>
+                        <input
+                          type="date"
+                          placeholder="date of purchase"
+                          className="input input-bordered"
+                          required
+                        />
+                      </div>
+
+                      {/*  */}
+
+                      <div className="form-control mt-6">
+                        <button className="btn btn-primary">Check</button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        {/* Content specific to LandingPage */}
-        {/* More content */}
+        <Footer></Footer>
       </div>
-
-      {/* Why to sell? */}
-
-      <div className="bg-customGreen py-5">
-        <div className="mx-10">
-          <div className="my-5">
-            <h1 className="text-white text-3xl md:text-3xl font-bold text-gray-800">
-              Why sell E-waste?
-            </h1>
-          </div>
-          <div className="text-white my-5 py-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {/* Card 1 */}
-              <div className="card bg-customDarkGreen shadow-xl">
-                <div className="card-body">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-10 h-10"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"
-                    />
-                  </svg>
-                  <h2 className="card-title">Environmental impact</h2>
-                  <p>If a dog chews shoes whose shoes does he choose?</p>
-                </div>
-              </div>
-
-              {/* Card 2 */}
-              <div className="card bg-customDarkGreen shadow-xl">
-                <div className="card-body">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-10 h-10"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"
-                    />
-                  </svg>
-                  <h2 className="card-title">Earn cash for your waste</h2>
-                  <p>If a dog chews shoes whose shoes does he choose?</p>
-                </div>
-              </div>
-
-              {/* Card 3 */}
-              <div className="card bg-customDarkGreen shadow-xl">
-                <div className="card-body">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-10 h-10"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
-                    />
-                  </svg>
-
-                  <h2 className="card-title">Stay tech-savy</h2>
-                  <p>If a dog chews shoes whose shoes does he choose?</p>
-                </div>
-              </div>
-
-              {/* Card 4 */}
-              <div className="card bg-customDarkGreen shadow-xl">
-                <div className="card-body">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-10 h-10"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
-                    />
-                  </svg>
-                  <h2 className="card-title">Data security</h2>
-                  <p>If a dog chews shoes whose shoes does he choose?</p>
-                </div>
-              </div>
-
-              {/* Card 5 */}
-              <div className="card bg-customDarkGreen shadow-xl">
-                <div className="card-body">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-10 h-10"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
-                    />
-                  </svg>
-                  <h2 className="card-title">Reduce e-waste dumps</h2>
-                  <p>If a dog chews shoes whose shoes does he choose?</p>
-                </div>
-              </div>
-
-              {/* Card 6 */}
-              <div className="card bg-customDarkGreen shadow-xl">
-                <div className="card-body">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-10 h-10"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
-                    />
-                  </svg>
-                  <h2 className="card-title">Educate & Inspire</h2>
-                  <p>If a dog chews shoes whose shoes does he choose?</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Features */}
-
-      <div className="p-8 bg-orange-50">
-        <div className="my-5 mx-5">
-          <div className="overflow-x-auto">
-            <div className="flex flex-col md:flex-row w-full">
-              {/* Content */}
-              <div className="w-full md:w-60%">
-                <h1 className="text-3xl md:text-3xl font-bold text-gray-800">
-                  Features
-                </h1>
-                {/* Collapse 1 */}
-                <div
-                  tabIndex={0}
-                  className="collapse collapse-arrow border border-base-300 mt-5 rounded-none" style={{borderLeft: 'none', borderRight: 'none', borderBottom:'none' ,borderColor: "rgb(40, 115, 90)"}}
-                >
-                  <div className="collapse-title text-xl font-medium">
-                    Convenient pickup and drop-off options
-                  </div>
-                  <div className="collapse-content">
-                    <p>
-                      tabIndex={0} attribute is necessary to make the div
-                      focusable
-                    </p>
-                  </div>
-                </div>
-
-                {/* Collapse 2 */}
-                <div
-                  tabIndex={0}
-                  className="collapse collapse-arrow border border-base-300 rounded-none" style={{borderLeft: 'none', borderRight: 'none', borderBottom:'none',borderColor: "rgb(40, 115, 90)"}}
-                >
-                  <div className="collapse-title text-xl font-medium">
-                    Disverse payment method
-                  </div>
-                  <div className="collapse-content">
-                    <p>
-                      tabIndex={0} attribute is necessary to make the div
-                      focusable
-                    </p>
-                  </div>
-                </div>
-
-                {/* Collapse 3 */}
-                <div
-                  tabIndex={0}
-                  className="collapse collapse-arrow border border-base-300 rounded-none" style={{borderLeft: 'none', borderRight: 'none', borderBottom: 'none',borderColor: "rgb(40, 115, 90)"}}
-                >
-                  <div className="collapse-title text-xl font-medium">
-                    Instant valuation algorithm
-                  </div>
-                  <div className="collapse-content">
-                    <p>
-                      tabIndex={0} attribute is necessary to make the div
-                      focusable
-                    </p>
-                  </div>
-                </div>
-
-                {/* Collapse 4 */}
-                <div
-                  tabIndex={0}
-                  className="collapse collapse-arrow border border-base-300 rounded-none" style={{borderLeft: 'none', borderRight: 'none', borderBottom: 'none',borderColor: "rgb(40, 115, 90)"}}
-                >
-                  <div className="collapse-title text-xl font-medium">
-                    Secure data destruction services
-                  </div>
-                  <div className="collapse-content">
-                    <p>
-                      tabIndex={0} attribute is necessary to make the div
-                      focusable
-                    </p>
-                  </div>
-                </div>
-
-                {/* Collapse 5 */}
-                <div
-                  tabIndex={0}
-                  className="collapse collapse-arrow border border-base-300 rounded-none" style={{borderLeft: 'none', borderRight: 'none', borderColor: "rgb(40, 115, 90)"}}
-                >
-                  <div className="collapse-title text-xl font-medium">
-                    Environmental impact report
-                  </div>
-                  <div className="collapse-content">
-                    <p>
-                      tabIndex={0} attribute is necessary to make the div
-                      focusable
-                    </p>
-                  </div>
-                </div>
-
-                {/* Button */}
-                <div>
-                  <button className=" my-5 btn btn-success bg-customDarkGreen text-white">
-                    Sell your e-waste
-                  </button>
-                </div>
-              </div>
-              {/* Image */}
-              <div className="hidden flex-col md:flex md:w-40%">
-                <div className="w-full md:w-96 bg-base-100 shadow-xl rounded-full flex items-center justify-center">
-                  <figure style={{ borderRadius: "50% / 30%" }}>
-                    <img
-                      className="w-full h-full object-cover rounded-full"
-                      src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                      alt="Album"
-                    />
-                  </figure>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Content specific to LandingPage */}
-        {/* More content */}
-      </div>
-
-      <Footer></Footer>
     </div>
   );
 };
