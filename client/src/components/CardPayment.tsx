@@ -10,8 +10,12 @@ function CardPayment() {
   const stripe = useStripe();
   const elements = useElements();
 
+  const [buttonText, setButtonText] = useState('Pay');
+
   // const handleSubmitPay = async (e: React.MouseEvent<HTMLButtonElement>) => {
   const handleSubmitPay = async () => {
+
+    setButtonText("Working...");
 
     if (!stripe || !elements) {
       // Stripe.js has not yet loaded.
@@ -69,8 +73,8 @@ function CardPayment() {
         <input type="text" placeholder={"Email"} className={"input w-full"} onChange={(e) => setEmail(e.target.value)}/>
         <CardInput />
         <div>
-          <button onClick={handleSubmitPay}>
-            Pay
+          <button className={"btn"} onClick={handleSubmitPay}>
+            {buttonText}
           </button>
         </div>
       </div>
