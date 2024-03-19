@@ -659,17 +659,17 @@ const StaffDashboard = () => {
           </details>
         </header>
 
-        <div role="tablist" className="tabs tabs-lifted tabs-lg">
+        <div role="tablist" className="tabs tabs-lifted tabs-lg  shadow-2xl mx-5">
           <a
             role="tab"
-            className={`tab ${showVerified ? "bg-primary text-white" : ""}`}
+            className={`tab ${showVerified ? "bg-primary text-white" : "text-primary border border-primary "}`}
             onClick={() => setShowVerified(true)}
           >
             Verified
           </a>
           <a
             role="tab"
-            className={`tab ${!showVerified ? " bg-primary text-white" : ""}`}
+            className={`tab ${!showVerified ? " bg-primary text-white" : "text-primary border border-primary "}`}
             onClick={() => {
               setShowVerified(false);
             }}
@@ -679,7 +679,7 @@ const StaffDashboard = () => {
         </div>
 
         {/* Devices Table */}
-        <div className="main-content flex-grow p-4">
+        <div className="main-content flex-grow px-10 pt-5 ">
           <h5 className="text-black text-3xl font-medium mb-6">
             {showVerified ? "Verified Devices" : "Non-Verified Devices"}
           </h5>
@@ -714,7 +714,7 @@ const StaffDashboard = () => {
                   <th className="text-black text-lg font-bold min-w-[200px]">
                     Status
                   </th>
-                  <th>Expand</th>
+                  <th className="text-black text-lg font-bold ">Expand</th>
                 </tr>
               </thead>
               <tbody>
