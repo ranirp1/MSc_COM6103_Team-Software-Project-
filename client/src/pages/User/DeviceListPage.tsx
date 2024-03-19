@@ -10,7 +10,8 @@ import {
   RiUserSettingsFill,
   RiUserSharedLine,
 } from "react-icons/ri";
-import React, { useState, ChangeEvent } from "react";
+import image1 from "../../assets/image1.jpg";
+import React, { useState, ChangeEvent, useEffect, useRef } from "react";
 import "../../style.css";
 import { Navigate, useNavigate } from "react-router-dom";
 import { API_URL } from "../../constants/constant";
@@ -42,6 +43,7 @@ interface DeviceDetails {
 const UserDashboard = () => {
   const [devices, setDevices] = useState<Device[]>([]);
 
+  const radioPackage = useRef();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const [deviceId, setDeviceId] = useState("");
@@ -61,8 +63,40 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState<Boolean>(false);
 
+  useEffect(() => {
+    fetchDevices();
+  }, []);
+
+  const fetchDevices = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/getListOfDevices`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        console.log("getListOfDevices api success");
+        var data = await response.json();
+        console.log("data", data);
+        setDevices(data);
+        console.log("Role updated sucessfully");
+      } else {
+        console.error("getListOfDevices api failed");
+      }
+    } catch (error) {
+      console.error("Error getListOfDevices user role:", error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    
     e.preventDefault();
+    // if(e.target.checked && e.target.value === "Yes"){
+    //   setShowPopup(true);
+    //   return;
+    // }
     try {
       const response = await fetch(`${API_URL}/api/createDevice`, {
         method: "POST",
@@ -84,7 +118,7 @@ const UserDashboard = () => {
       if (response.ok) {
         console.log(response);
         console.log("Creation Successful");
-        // window.location.href = '/user';
+        window.location.href = '/user';
       } else {
         console.log("Creation Error");
 
@@ -109,7 +143,13 @@ const UserDashboard = () => {
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setDataRetrieval(e.target.checked && e.target.value === "Yes");
+    console.log("e.target.checked", e.target.checked);
+    if(e.target.checked && e.target.value === "Yes"){
+      setDataRetrieval(e.target.checked && e.target.value === "Yes");
+      setShowPopup(true);
+      return;
+    }
+    
   };
 
   const handleCancel = () => {
@@ -263,7 +303,7 @@ const UserDashboard = () => {
             {/* Adjust width here */}
             {/* Larger image size */}
             <img
-              src={device.image}
+              src={image1}
               alt="{${device.brand} ${device.model}}"
               className="w-full h-auto rounded"
             />
@@ -461,7 +501,7 @@ const UserDashboard = () => {
                         <tr key={index}>
                           <td>
                             <img
-                              src={deviceList.image}
+                              src={image1}
                               style={{
                                 width: "100px",
                                 height: "100px",

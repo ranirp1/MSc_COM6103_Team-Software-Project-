@@ -349,7 +349,7 @@ def createDevice():
             db.session.commit()
             
             # Read the device ID from the database for the newly inserted device
-            deviceID = newDeviceAdded.deviceID
+
             deviceID = newDeviceAdded.deviceID
             print('deviceID',deviceID)
         except Exception as e:
@@ -365,7 +365,7 @@ def createDevice():
         dateOfPurchase = dateOfPurchase,
         imageUrl = imageUrl,
         qrCodeUrl = qrCodeUrl,
-        dateOfCreation = datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        dateOfCreation = dateOfRelease,
         dataRetrievalID = 0,
         estimatedValue = ""
     )
