@@ -294,7 +294,7 @@ def move_device_classification():
 
     if user:
         # Retrieve the user's device for classification update
-        user_device = UserDeviceTable.query.filter_by(user_id=user.id).first()
+        user_device = UserDevice.query.filter_by(user_id=user.id).first()
 
         if user_device:
             # Update the device classification
@@ -380,19 +380,22 @@ def createDevice():
         return jsonify({'message': 'User device creation error'}), 500
 
 
-@app.route('/api/getListOfDevices/', methods=['GET'])
+@app.route('/api/getListOfDevices', methods=['GET'])
 def getListOfDevices():
-    # combine the device and UserDeviceTable tables to get the list of devices
-    devices = Device.query.join(UserDeviceTable, UserDeviceTable.deviceID == Device.deviceID).all()
+    # combine the device and UserDevice tables to get the list of devices
+    print('inside get list of devices')
+    devices = Device.query.join(UserDevice, UserDevice.deviceID == Device.deviceID).all()
     device_list = []
+    print('devices',devices)
     for device in devices:
+        print('device',device.serialize())
         device_data = {
             'id': device.deviceID,
-            'manufacturer': device.brand,
+            'brand': device.brand,
             'model': device.model,
             'createdAt': device.dateOfRelease.strftime("%Y-%m-%d"),
             'verified': device.isVerified,
-            'image': device.imageUrl,
+            'image': '',
             'storage': '',
             'color': '',
             'dataRecovered': None,

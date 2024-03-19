@@ -10,11 +10,12 @@ import {
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import image1 from "../../assets/image1.jpg";
 import image2 from "../../assets/image2.jpg";
+import emptyListImage from "../../assets/empty_list.svg"
 import { API_URL } from "../../constants/constant";
 
 class Device {
   id: number;
-  manufacturer: string;
+  brand: string;
   model: string;
   createdAt: string;
   verified: boolean;
@@ -43,7 +44,7 @@ class Device {
     dataRetrievalTimeLeft: string
   ) {
     this.id = id;
-    this.manufacturer = manufacturer;
+    this.brand = manufacturer;
     this.model = model;
     this.createdAt = createdAt;
     this.verified = verified;
@@ -77,294 +78,27 @@ class Device {
 }
 
 const StaffDashboard = () => {
-  const [devices, setDevices] = useState<Device[]>([
-    {
-      id: 1,
-      manufacturer: "Iphone",
-      model: "10",
-      createdAt: "31 Jul 2023, 07:13 PM",
-      verified: true,
-      image: image2,
-      storage: "64GB",
-      color: "Silver",
-      dataRecovered: null,
-      condition: "good",
-      classification: "Current",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "Not applicable",
-    },
-    {
-      id: 2,
-      manufacturer: "Samsung",
-      model: "S23",
-      createdAt: "12 Jan 2024, 01:49 PM",
-      verified: false,
-      image: image1,
-      storage: "64GB",
-      color: "Red",
-      dataRecovered: true,
-      condition: "bad",
-      classification: "Recycle",
-      dataRetrievalRequested: true,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 3,
-      manufacturer: "Samsung",
-      model: "s22",
-      createdAt: "31 Jul 2022, 07:13 PM",
-      verified: true,
-      image: image1,
-      storage: "128GB",
-      color: "Blue",
-      dataRecovered: null,
-      condition: "bad",
-      classification: "Current",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 4,
-      manufacturer: "Samsung",
-      model: "s10",
-      createdAt: "11 Jan 2023, 01:49 PM",
-      verified: false,
-      image: image1,
-      storage: "64GB",
-      color: "Silver",
-      dataRecovered: null,
-      condition: "good",
-      classification: "Rare",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
+  const [devices, setDevices] = useState<Device[]>([]);
 
-    {
-      id: 5,
-      manufacturer: "Iphone",
-      model: "15 Pro Max",
-      createdAt: "31 Jul 2022, 07:13 PM",
-      verified: true,
-      image: image2,
-      storage: "64GB",
-      color: "Pink",
-      dataRecovered: true,
-      condition: "excellent",
-      classification: "Recycle",
-      dataRetrievalRequested: true,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 6,
-      manufacturer: "Samsung",
-      model: "S24 Ultra",
-      createdAt: "11 Jan 2023, 01:49 PM",
-      verified: false,
-      image: image1,
-      storage: "64GB",
-      color: "Silver",
-      dataRecovered: null,
-      condition: "good",
-      classification: "Current",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 7,
-      manufacturer: "Iphone",
-      model: "10",
-      createdAt: "31 Jul 2022, 07:13 PM",
-      verified: true,
-      image: image2,
-      storage: "128GB",
-      color: "Red",
-      dataRecovered: null,
-      condition: "excellent",
-      classification: "Rare",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 8,
-      manufacturer: "Samsung",
-      model: "S23",
-      createdAt: "11 Jan 2023, 01:49 PM",
-      verified: false,
-      image: image1,
-      storage: "64GB",
-      color: "Black",
-      dataRecovered: null,
-      condition: "bad",
-      classification: "Rare",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 9,
-      manufacturer: "Samsung",
-      model: "s22",
-      createdAt: "31 Jul 2022, 07:13 PM",
-      verified: true,
-      image: image1,
-      storage: "256GB",
-      color: "Silver",
-      dataRecovered: null,
-      condition: "excellent",
-      classification: "Current",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
-
-    {
-      id: 10,
-      manufacturer: "Samsung",
-      model: "s10",
-      createdAt: "11 Jan 2023, 01:49 PM",
-      verified: false,
-      image: image1,
-      storage: "64GB",
-      color: "Red",
-      dataRecovered: false,
-      condition: "excellent",
-      classification: "Recycle",
-      dataRetrievalRequested: true,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 11,
-      manufacturer: "Iphone",
-      model: "15 Pro Max",
-      createdAt: "31 Jul 2022, 07:13 PM",
-      verified: true,
-      image: image2,
-      storage: "64GB",
-      color: "Pink",
-      dataRecovered: null,
-      condition: "excellent",
-      classification: "Current",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 12,
-      manufacturer: "Samsung",
-      model: "S24 Ultra",
-      createdAt: "11 Jan 2023, 01:49 PM",
-      verified: false,
-      image: image1,
-      storage: "64GB",
-      color: "Silver",
-      dataRecovered: false,
-      condition: "good",
-      classification: "Recycle",
-      dataRetrievalRequested: false,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 13,
-      manufacturer: "Iphone",
-      model: "10",
-      createdAt: "31 Jul 2022, 07:13 PM",
-      verified: true,
-      image: image2,
-      storage: "512GB",
-      color: "Blue",
-      dataRecovered: false,
-      condition: "excellent",
-      classification: "Recycle",
-      dataRetrievalRequested: true,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 14,
-      manufacturer: "Samsung",
-      model: "S23",
-      createdAt: "11 Jan 2023, 01:49 PM",
-      verified: false,
-      image: image1,
-      storage: "64GB",
-      color: "Silver",
-      dataRecovered: false,
-      condition: "good",
-      classification: "Recycle",
-      dataRetrievalRequested: false,
-      dataRetrievalTimeLeft: "",
-    },
-
-    {
-      id: 15,
-      manufacturer: "Samsung",
-      model: "s22",
-      createdAt: "31 Jul 2022, 07:13 PM",
-      verified: true,
-      image: image1,
-      storage: "128GB",
-      color: "Black",
-      dataRecovered: null,
-      condition: "bad",
-      classification: "Current",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 16,
-      manufacturer: "Samsung",
-      model: "s10",
-      createdAt: "11 Jan 2023, 01:49 PM",
-      verified: false,
-      image: image1,
-      storage: "64GB",
-      color: "Blue",
-      dataRecovered: false,
-      condition: "excellent",
-      classification: "Recycle",
-      dataRetrievalRequested: true,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 17,
-      manufacturer: "Iphone",
-      model: "10",
-      createdAt: "31 Jul 2022, 07:13 PM",
-      verified: true,
-      image: image2,
-      storage: "512GB",
-      color: "Blue",
-      dataRecovered: false,
-      condition: "excellent",
-      classification: "Recycle",
-      dataRetrievalRequested: true,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 18,
-      manufacturer: "Samsung",
-      model: "S24 Ultra",
-      createdAt: "11 Jan 2023, 01:49 PM",
-      verified: false,
-      image: image1,
-      storage: "256GB",
-      color: "Black",
-      dataRecovered: null,
-      condition: "good",
-      classification: "Current",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
-  ]);
+  useEffect(() => {
+    fetchDevices();
+  }, []);
 
   const fetchDevices = async () => {
     try {
       const response = await fetch(`${API_URL}/api/getListOfDevices`, {
-        method: "POST",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
       });
 
       if (response.ok) {
-        setDevices(await response.json());
-        console.log("Role updated successfully");
+        console.log("getListOfDevices api success");
+        var data = await response.json();
+        console.log("data", data);
+        setDevices(data);
+        console.log("Role updated sucessfully");
       } else {
         console.error("getListOfDevices api failed");
       }
@@ -392,13 +126,9 @@ const StaffDashboard = () => {
     const sortDevices = () => {
       let sortedDevices = [...devices];
       if (sortOrder === "ascending") {
-        sortedDevices.sort((a, b) =>
-          a.manufacturer.localeCompare(b.manufacturer)
-        );
+        sortedDevices.sort((a, b) => a.brand.localeCompare(b.brand));
       } else if (sortOrder === "descending") {
-        sortedDevices.sort((a, b) =>
-          b.manufacturer.localeCompare(a.manufacturer)
-        );
+        sortedDevices.sort((a, b) => b.brand.localeCompare(a.brand));
       }
       return sortedDevices;
     };
@@ -430,7 +160,7 @@ const StaffDashboard = () => {
   const getFilteredDevices = () => {
     return devices.filter(
       (device) =>
-        device.manufacturer.toLowerCase().includes(searchQuery) &&
+        device.brand.toLowerCase().includes(searchQuery) &&
         device.verified === showVerified
     );
   };
@@ -458,7 +188,7 @@ const StaffDashboard = () => {
         device.classification === "Current"
       ) {
         const cexUrl = createCexSearchUrl(
-          device.manufacturer,
+          device.brand,
           device.model,
           device.storage,
           device.color
@@ -523,7 +253,7 @@ const StaffDashboard = () => {
       <div className="bg-white p-5 rounded-lg shadow-md">
         {/* Manufacturer and model name above the photo */}
         <h3 className="text-2xl font-bold mb-4">
-          {device.manufacturer} {device.model}
+          {device.brand} {device.model}
         </h3>
         <div className="mt-3">
           <span
@@ -542,8 +272,8 @@ const StaffDashboard = () => {
             {/* Adjust width here */}
             {/* Larger image size */}
             <img
-              src={device.image}
-              alt={`${device.manufacturer} ${device.model}`}
+              src={image1}
+              alt={`${device.brand} ${device.model}`}
               className="w-full h-auto rounded"
             />
           </div>
@@ -578,8 +308,7 @@ const StaffDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p>
-                <strong>Model Name:</strong> {device.manufacturer}{" "}
-                {device.model}
+                <strong>Model Name:</strong> {device.brand} {device.model}
               </p>
               <p>
                 <strong>Created At:</strong> {device.createdAt}
@@ -659,17 +388,28 @@ const StaffDashboard = () => {
           </details>
         </header>
 
-        <div role="tablist" className="tabs tabs-lifted tabs-lg  shadow-2xl mx-5">
+        <div
+          role="tablist"
+          className="tabs tabs-lifted tabs-lg  shadow-2xl mx-5"
+        >
           <a
             role="tab"
-            className={`tab ${showVerified ? "bg-primary text-white" : "text-primary border border-primary "}`}
+            className={`tab ${
+              showVerified
+                ? "bg-primary text-white"
+                : "text-primary border border-primary "
+            }`}
             onClick={() => setShowVerified(true)}
           >
             Verified
           </a>
           <a
             role="tab"
-            className={`tab ${!showVerified ? " bg-primary text-white" : "text-primary border border-primary "}`}
+            className={`tab ${
+              !showVerified
+                ? " bg-primary text-white"
+                : "text-primary border border-primary "
+            }`}
             onClick={() => {
               setShowVerified(false);
             }}
@@ -691,83 +431,99 @@ const StaffDashboard = () => {
               scrollbarColor: "white grey",
             }}
           >
-            {" "}
-            {/* Added scrollbarWidth and scrollbarColor */}
-            <table className="table w-full text-black ">
-              <thead>
-                <tr>
-                  <th className="text-black text-lg font-bold min-w-[150px] ">
-                    Image
-                  </th>
-                  <th className="text-black text-lg font-bold min-w-[200px]">
-                    Name
-                  </th>
-                  <th className="text-black text-lg font-bold min-w-[200px]">
-                    Model
-                  </th>
-                  <th className="text-black text-lg font-bold min-w-[150px]">
-                    Created At
-                  </th>
-                  <th className="text-black text-lg font-bold min-w-[200px]">
-                    Classification
-                  </th>
-                  <th className="text-black text-lg font-bold min-w-[200px]">
-                    Status
-                  </th>
-                  <th className="text-black text-lg font-bold ">Expand</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDevices.map((device) => (
-                  <tr key={device.id}>
-                    <td>
-                      <img
-                        src={device.image}
-                        alt={`${device.manufacturer} ${device.model}`}
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </td>
-                    <td>{device.manufacturer}</td>
-                    <td>{device.model}</td>
-                    <td>{device.createdAt}</td>
-                    <td>{device.classification}</td>
-                    <td>
-                      <div className="flex">
-                        <label
-                          htmlFor={`toggle-${device.id}`}
-                          className="relative flex  group p-2"
-                        >
-                          <span className="text-sm mr-3">
-                            {device.verified ? "Verified" : "Not Verified"}
-                          </span>
-                          <input
-                            type="checkbox"
-                            id={`toggle-${device.id}`}
-                            className="sr-only peer"
-                            checked={device.verified}
-                            onChange={() => toggleDeviceVerification(device.id)}
-                          />
-                          <span className="w-12 h-6 flex items-center flex-shrink-0 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-green-400 after:w-6 after:h-6 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-full"></span>
-                        </label>
-                      </div>
-                    </td>
-                    <td>
-                      <button onClick={() => toggleDeviceDetails(device.id)}>
-                        {selectedDeviceId === device.id ? (
-                          <RiArrowDropLeftLine />
-                        ) : (
-                          <RiArrowDropRightLine />
-                        )}
-                      </button>
-                    </td>
+            {filteredDevices.length == 0 ? (
+              <div className="flex flex-col  w-full h-full items-center mt-32">
+                <h3 className="text-2xl font-bold text-center">
+                  No Devices Found
+                </h3>
+                <img src={emptyListImage} className="h-80 w-80"/>
+                
+              </div>
+            ) : (
+              <table className="table w-full text-black ">
+                <thead>
+                  <tr>
+                    <th className="text-black text-lg font-bold min-w-[150px] ">
+                      Image
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[200px]">
+                      Name
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[200px]">
+                      Model
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[150px]">
+                      Created At
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[200px]">
+                      Classification
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[200px]">
+                      Status
+                    </th>
+                    <th className="text-black text-lg font-bold ">Expand</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredDevices.length == 0
+                    ? "No List"
+                    : filteredDevices.map((device) => (
+                        <tr key={device.id}>
+                          <td>
+                            <img
+                              src={image1}
+                              alt={`${device.brand} ${device.model}`}
+                              style={{
+                                width: "100px",
+                                height: "100px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          </td>
+                          <td>{device.brand}</td>
+                          <td>{device.model}</td>
+                          <td>{device.createdAt}</td>
+                          <td>{device.classification}</td>
+                          <td>
+                            <div className="flex">
+                              <label
+                                htmlFor={`toggle-${device.id}`}
+                                className="relative flex  group p-2"
+                              >
+                                <span className="text-sm mr-3">
+                                  {device.verified
+                                    ? "Verified"
+                                    : "Not Verified"}
+                                </span>
+                                <input
+                                  type="checkbox"
+                                  id={`toggle-${device.id}`}
+                                  className="sr-only peer"
+                                  checked={device.verified}
+                                  onChange={() =>
+                                    toggleDeviceVerification(device.id)
+                                  }
+                                />
+                                <span className="w-12 h-6 flex items-center flex-shrink-0 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-green-400 after:w-6 after:h-6 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-full"></span>
+                              </label>
+                            </div>
+                          </td>
+                          <td>
+                            <button
+                              onClick={() => toggleDeviceDetails(device.id)}
+                            >
+                              {selectedDeviceId === device.id ? (
+                                <RiArrowDropLeftLine />
+                              ) : (
+                                <RiArrowDropRightLine />
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
