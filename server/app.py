@@ -368,3 +368,28 @@ def createDevice():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'User device creation error'}), 500
+
+
+@app.route('/api/getListOfDevices/', methods=['GET'])
+def getListOfDevices():
+    # combine the device and UserDeviceTable tables to get the list of devices
+    devices = Device.query.join(UserDeviceTable, UserDeviceTable.deviceID == Device.deviceID).all()
+    device_list = []
+    for device in devices:
+        device_data = {
+            'id': device.deviceID,
+            'manufacturer': device.brand,
+            'model': device.model,
+            'createdAt': device.dateOfRelease.strftime("%Y-%m-%d"),
+            'verified': device.isVerified,
+            'image': device.imageUrl,
+            'storage': '',
+            'color': '',
+            'dataRecovered': None,
+            'condition': '',
+            'classification': '',
+            'dataRetrievalRequested': None,
+            'dataRetrievalTimeLeft': ''
+        }
+        device_list.append(device_data)
+    return jsonify(device_list)
