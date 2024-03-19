@@ -364,7 +364,7 @@ const UserDashboard = () => {
           </h3>
 
           <button
-            className="btn btn-link bg-white text-primary ml-4"
+            className="btn btn-accent   ml-4"
             onClick={() => {
               const modal = document.getElementById(
                 "my_modal_5"
@@ -377,7 +377,7 @@ const UserDashboard = () => {
             <RiLogoutBoxRLine className="text-lg mr-2" /> Add Device
           </button>
 
-          <button className="btn btn-link bg-white text-primary ml-4">
+          <button className="btn btn-accent    ml-4">
             <RiLogoutBoxRLine className="text-lg mr-2" /> Logout
           </button>
         </div>

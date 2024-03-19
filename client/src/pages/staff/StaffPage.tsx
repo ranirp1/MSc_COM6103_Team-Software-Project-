@@ -620,7 +620,7 @@ const StaffDashboard = () => {
             Staff Dashboard
           </h3>
           <button
-            className="btn btn-link bg-white text-primary ml-4"
+            className="btn btn-accent   ml-4"
             onClick={() => setShowLogoutModal(true)}
           >
             <RiLogoutBoxRLine className="text-lg mr-2" /> Logout

@@ -26,6 +26,7 @@ module.exports = {
         mytheme: {
           primary: "#174058",
           "primary-content": "#ffffff",
+          "accent": "#ffffff"
         },
       },
       "dark",
