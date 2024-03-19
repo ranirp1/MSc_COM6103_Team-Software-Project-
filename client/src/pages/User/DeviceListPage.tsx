@@ -68,6 +68,7 @@ const UserDashboard = () => {
           headers: {
               'Content-Type': 'application/json'
           },
+          //TODO userID is hardcoded for now, need to get it from the session
           body: JSON.stringify({ brand, model, deviceType, dateofPurchase, imageUrl, dateofRelease,userID: 1})
       });
 
