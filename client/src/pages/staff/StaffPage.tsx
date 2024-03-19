@@ -12,6 +12,9 @@ import image1 from "../../assets/image1.jpg";
 import image2 from "../../assets/image2.jpg";
 import emptyListImage from "../../assets/empty_list.svg"
 import { API_URL } from "../../constants/constant";
+import { redirect } from "react-router-dom";
+
+
 
 class Device {
   id: number;
@@ -432,8 +435,8 @@ const StaffDashboard = () => {
             }}
           >
             {filteredDevices.length == 0 ? (
-              <div className="flex flex-col  w-full h-full items-center mt-32">
-                <h3 className="text-2xl font-bold text-center">
+              <div className="flex flex-col  w-full h-full items-center mt-16">
+                <h3 className="text-3xl font-bold text-center mb-5 ">
                   No Devices Found
                 </h3>
                 <img src={emptyListImage} className="h-80 w-80"/>
@@ -473,6 +476,7 @@ const StaffDashboard = () => {
                             <img
                               src={image1}
                               alt={`${device.brand} ${device.model}`}
+                              className="rounded-lg shadow-lg"
                               style={{
                                 width: "100px",
                                 height: "100px",
@@ -480,10 +484,10 @@ const StaffDashboard = () => {
                               }}
                             />
                           </td>
-                          <td>{device.brand}</td>
-                          <td>{device.model}</td>
-                          <td>{device.createdAt}</td>
-                          <td>{device.classification}</td>
+                          <td className="text-lg">{device.brand}</td>
+                          <td className="text-lg">{device.model}</td>
+                          <td className="text-lg">{device.createdAt}</td>
+                          <td className="text-lg">{device.classification || "Not Classified"}</td>
                           <td>
                             <div className="flex">
                               <label
@@ -504,7 +508,7 @@ const StaffDashboard = () => {
                                     toggleDeviceVerification(device.id)
                                   }
                                 />
-                                <span className="w-12 h-6 flex items-center flex-shrink-0 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-green-400 after:w-6 after:h-6 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-full"></span>
+                                <span className="w-12 h-6 flex items-center flex-shrink-0 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-primary after:w-6 after:h-6 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-full"></span>
                               </label>
                             </div>
                           </td>
@@ -551,15 +555,17 @@ const StaffDashboard = () => {
               <h3 className="font-bold text-lg">
                 Are you sure you want to logout?
               </h3>
-              <div className="modal-action">
+              <div className="modal-action flex flex-row">
                 <button
-                  className="btn btn-primary"
-                  onClick={() => setShowLogoutModal(false)} // Close modal on 'Yes'
+                  className="btn btn-primary w-1/2 mr-1"
+                  onClick={() => {
+                    window.location.href = "/login";
+                  }} // Close modal on 'Yes'
                 >
                   Yes
                 </button>
                 <button
-                  className="btn btn-ghost"
+                  className="btn btn-ghost w-1/2"
                   onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
                 >
                   No

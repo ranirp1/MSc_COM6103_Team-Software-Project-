@@ -9,6 +9,7 @@ import {
 } from "react-icons/ri";
 import { API_URL } from "../../constants/constant";
 import { useNavigate } from "react-router-dom";
+import emptyListImage from "../../assets/empty_list.svg";
 
 type UserType = "employee" | "endUser" | "admin";
 
@@ -28,6 +29,19 @@ const AdminDashboard = () => {
   const [currentList, setCurrentList] = useState<
     "employees" | "endUsers" | "admins"
   >("employees");
+
+  const getUserType = () => {
+    switch (currentList) {
+      case "employees":
+        return "Employees";
+      case "endUsers":
+        return "End Users";
+      case "admins":
+        return "Admins";
+      default:
+        return "";
+    }
+  };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -160,7 +174,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-
       {/* Content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex justify-between items-center p-4 shadow bg-primary ">
@@ -225,73 +238,106 @@ const AdminDashboard = () => {
           </div>
         </header>
 
-        <div role="tablist" className="tabs tabs-lifted tabs-lg  shadow-2xl mx-5">
+        <div
+          role="tablist"
+          className="tabs tabs-lifted tabs-lg  shadow-2xl mx-5"
+        >
           <a
             role="tab"
-            className={`tab mx-1 border border-black ${currentList === "employees" ? "bg-primary text-white" : "text-primary  "}`}
-            onClick={() =>showList("employees")}
+            className={`tab mx-1 border border-black ${
+              currentList === "employees"
+                ? "bg-primary text-white"
+                : "text-primary  "
+            }`}
+            onClick={() => showList("employees")}
           >
             <RiUserSharedLine className="text-lg mr-4" /> Employees
           </a>
           <a
             role="tab"
-            className={`tab mx-1 border border-black ${currentList === "endUsers" ? " bg-primary text-white" : "text-primary "}`}
+            className={`tab mx-1 border border-black ${
+              currentList === "endUsers"
+                ? " bg-primary text-white"
+                : "text-primary "
+            }`}
             onClick={() => showList("endUsers")}
           >
-           <RiUserSettingsFill className="text-lg mr-2" /> End Users
+            <RiUserSettingsFill className="text-lg mr-2" /> End Users
           </a>
           <a
             role="tab"
-            className={`tab  mx-1 border border-black ${currentList === "admins" ? " bg-primary text-white" : "text-primary  "}`}
+            className={`tab  mx-1 border border-black ${
+              currentList === "admins"
+                ? " bg-primary text-white"
+                : "text-primary  "
+            }`}
             onClick={() => showList("admins")}
           >
-          <RiShieldUserLine className="text-lg mr-2" /> Admins
+            <RiShieldUserLine className="text-lg mr-2" /> Admins
           </a>
         </div>
         {/* Main content */}
         <main className="overflow-x-hidden overflow-y-auto mx-5">
           <div className="px-6 py-8">
             <h5 className="text-black text-3xl font-medium mb-6">
-              {currentList === "employees" ? "Employees" : "End Users"}
+              { getUserType()}
             </h5>
-
-            <div className="overflow-x-auto">
-              <table className="table w-full text-black">
-                <thead>
-                  <tr>
-                    <th className="text-black text-lg font-bold min-w-[200px]">Name</th>
-                    <th className="text-black text-lg font-bold min-w-[200px]">Email</th>
-                    <th className="text-black text-lg font-bold min-w-[150px]">Phone</th>
-                    <th className="text-black text-lg font-bold min-w-[150px]">Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAndSortedUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td>{user.phone}</td>
-                      <td>
-                        <select
-                          value={user.role}
-                          onChange={(e) =>
-                            handleRoleChange(
-                              user.id,
-                              e.target.value as UserType
-                            )
-                          }
-                          className="select select-bordered select-primary w-full max-w-xs"
-                        >
-                          <option value="employee">Employee</option>
-                          <option value="endUser">End User</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      </td>
+            {filteredAndSortedUsers.length == 0 ? (
+              <div className="flex flex-col  w-full h-full items-center mt-16">
+                <h3 className="text-3xl font-bold text-center mb-5 ">
+                  No{" "}
+                  {getUserType()}
+                  Found
+                </h3>
+                <img src={emptyListImage} className="h-80 w-80" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="table w-full text-black">
+                  <thead>
+                    <tr>
+                      <th className="text-black text-lg font-bold min-w-[200px]">
+                        Name
+                      </th>
+                      <th className="text-black text-lg font-bold min-w-[200px]">
+                        Email
+                      </th>
+                      <th className="text-black text-lg font-bold min-w-[150px]">
+                        Phone
+                      </th>
+                      <th className="text-black text-lg font-bold min-w-[150px]">
+                        Role
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredAndSortedUsers.map((user) => (
+                      <tr key={user.id}>
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>{user.phone}</td>
+                        <td>
+                          <select
+                            value={user.role}
+                            onChange={(e) =>
+                              handleRoleChange(
+                                user.id,
+                                e.target.value as UserType
+                              )
+                            }
+                            className="select select-bordered select-primary w-full max-w-xs"
+                          >
+                            <option value="employee">Employee</option>
+                            <option value="endUser">End User</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -303,18 +349,17 @@ const AdminDashboard = () => {
             <h3 className="font-bold text-lg">
               Are you sure you want to logout?
             </h3>
-            <div className="modal-action">
+            <div className="modal-action flex flex-row">
               <button
-                className="btn btn-primary"
+                className="btn btn-primary w-1/2 mr-1"
                 onClick={() => {
-                  setShowLogoutModal(false);
-                  navigate("/");
-                }}
+                  window.location.href = "/login";
+                }} // Close modal on 'Yes'
               >
                 Yes
               </button>
               <button
-                className="btn btn-ghost"
+                className="btn btn-ghost w-1/2"
                 onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
               >
                 No
