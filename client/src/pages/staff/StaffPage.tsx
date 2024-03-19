@@ -366,14 +366,14 @@ const StaffDashboard = () => {
         setDevices(await response.json());
         console.log("Role updated successfully");
       } else {
-        console.error("getListOfDevices");
+        console.error("getListOfDevices api failed");
       }
     } catch (error) {
-      console.error("Error updating user role:", error);
+      console.error("Error getListOfDevices user role:", error);
     }
   };
 
-  useEffect(() => {}, []);
+
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showVerified, setShowVerified] = useState(true);
