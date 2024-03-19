@@ -68,7 +68,7 @@ const UserDashboard = () => {
           headers: {
               'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ brand, model, deviceType, dateofPurchase, imageUrl, dateofRelease })
+          body: JSON.stringify({ brand, model, deviceType, dateofPurchase, imageUrl, dateofRelease,userID: 1})
       });
 
       if(response.ok){

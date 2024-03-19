@@ -1,4 +1,4 @@
-`from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
@@ -11,7 +11,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
@@ -66,7 +66,7 @@ with app.app_context():
     
     
 class UserDevice(db.Model):
-    __tablename__ = 'user_device_table'
+    __tablename__ = 'user_device'
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
@@ -78,8 +78,8 @@ class UserDevice(db.Model):
     estimatedValue = db.Column(db.String(255))
 
     # Define foreign key relationships
-    user = relationship('User', backref='user_device_table', foreign_keys=[userID])
-    device = relationship('Device', backref='user_device_table', foreign_keys=[deviceID])
+    user = relationship('User', backref='user_device', foreign_keys=[userID])
+    device = relationship('Device', backref='user_device', foreign_keys=[deviceID])
 
     def serialize(self):
         return {
@@ -93,6 +93,10 @@ class UserDevice(db.Model):
             'estimatedValue': self.estimatedValue
         }
 
+    
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def check_sql_connection():
@@ -343,8 +347,13 @@ def createDevice():
             )
             db.session.add(newDeviceAdded)
             db.session.commit()
+            
+            # Read the device ID from the database for the newly inserted device
             deviceID = newDeviceAdded.deviceID
+            deviceID = newDeviceAdded.deviceID
+            print('deviceID',deviceID)
         except Exception as e:
+            print(e)
             db.session.rollback()
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
@@ -369,4 +378,3 @@ def createDevice():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'User device creation error'}), 500
-`
