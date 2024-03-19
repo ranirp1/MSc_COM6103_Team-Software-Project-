@@ -5,8 +5,6 @@ from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
 from datetime import datetime
-
-
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -40,7 +38,6 @@ class User(db.Model):
         }
 
 
-
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
@@ -59,7 +56,7 @@ class Device(db.Model):
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
             'isVerified': self.isVerified
         }
-    
+  
 # Create the tables when Flask starts up
 with app.app_context():
     db.create_all()
@@ -80,6 +77,8 @@ class UserDeviceTable(db.Model):
     # Define foreign key relationships
     user = relationship('User', backref='user_device_table', foreign_keys=[userID])
     device = relationship('Device', backref='user_device_table', foreign_keys=[deviceID])
+    dataRetrieval = db.relationship('DataRetrieval', backref='payments')
+
 
     def serialize(self):
         return {
@@ -91,6 +90,36 @@ class UserDeviceTable(db.Model):
             'dateOfCreation': str(self.dateOfCreation),
             'dataRetrievalID': self.dataRetrievalID,
             'estimatedValue': self.estimatedValue
+        }
+
+class DataRetrieval(db.Model):
+    __tablename__ = 'dataretrieval'
+    dataRetrievalID = db.Column(db.Integer, primary_key=True)
+    dataUrl = db.Column(db.String(255), nullable=True)
+    dateOfCreation = db.Column(db.Date, nullable=False)
+    duration = db.Column(db.Integer, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+
+    def serialize(self):
+        return {
+            'dataRetrievalID': self.dataRetrievalID,
+            'dataUrl': self.dataUrl,
+            'dateOfCreation': str(self.dateOfCreation),
+            'duration': self.duration,
+            'password': self.password
+        }
+
+class PaymentTable(db.Model):
+    __tablename__ = 'paymenttable'
+    paymentID = db.Column(db.Integer, primary_key=True)
+    dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
+    userID = db.Column(db.Integer, nullable=False)
+
+     def serialize(self):
+        return {
+            'paymentID': self.paymentID,
+            'dataRetrievalID': self.dataRetrievalID,
+            'userID': self.userID
         }
 
 
