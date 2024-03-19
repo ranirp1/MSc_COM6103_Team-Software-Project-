@@ -13,6 +13,7 @@ import {
 import React, { useState, ChangeEvent } from "react";
 import "../../style.css";
 import { Navigate, useNavigate } from "react-router-dom";
+import { API_URL } from "../../constants/constant";
 
 interface Device {
   id: number;
@@ -39,53 +40,16 @@ interface DeviceDetails {
 
 const UserDashboard = () => {
   const [devices, setDevices] = useState<Device[]>([
-    {
-      id: 1,
-      brand: "Iphone",
-      model: "10",
-      createdAt: "31 Jul 2023, 07:13 PM",
-      isVerified: true,
-      image: IPhone,
-      storage: "64GB",
-      color: "Silver",
-      dataRecovered: null,
-      condition: "good",
-      deviceType: "Current",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "Not applicable",
-    },
-    {
-      id: 2,
-      brand: "Samsung",
-      model: "S23",
-      createdAt: "12 Jan 2024, 01:49 PM",
-      isVerified: false,
-      image: Samsung,
-      storage: "64GB",
-      color: "Red",
-      dataRecovered: true,
-      condition: "bad",
-      deviceType: "Recycle",
-      dataRetrievalRequested: true,
-      dataRetrievalTimeLeft: "",
-    },
-    {
-      id: 3,
-      brand: "One Plus",
-      model: "s22",
-      createdAt: "31 Jul 2022, 07:13 PM",
-      isVerified: true,
-      image: OnePlus,
-      storage: "128GB",
-      color: "Blue",
-      dataRecovered: null,
-      condition: "bad",
-      deviceType: "Current",
-      dataRetrievalRequested: null,
-      dataRetrievalTimeLeft: "",
-    },
+
   ]);
 
+  const [deviceId, setDeviceId] = useState("");
+  const [deviceType, setDeviceType] = useState("");
+  const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
+  const [dateofPurchase, setDateofPurchase] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [dateofRelease, setDateofRelease] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
@@ -96,19 +60,41 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState<Boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    try {
+      const response = await fetch(`${API_URL}/api/createDevice`,{
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ brand, model, deviceType, dateofPurchase, imageUrl, dateofRelease })
+      });
 
+      if(response.ok){
+        console.log(response);
+          console.log("Creation Successful");
+          // window.location.href = '/user';
+      }
+      else{
+          console.log("Creation Error");
+
+          // get the error message from the server and save it to show in toast
+      }
+  } catch (error) {
+      console.log('Error:', error);
+  }
     // Check if data retrieval is selected as "Yes"
-    if (dataRetrieval) {
+   {/* if (dataRetrieval) {
       setShowPopup(true); // Show the popup
     } else {
       // Handle form submission without showing popup
       // For now, just log a message
       console.log("Form submitted without showing popup");
       navigate("/user");
-    }
+    }*/}
   };
+  
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -547,6 +533,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
+                          onChange={(e => setBrand(e.target.value))}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -562,6 +549,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
+                          onChange={(e => setModel(e.target.value))}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -577,6 +565,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
+                          onChange={(e => setDateofPurchase(e.target.value))}
                           type="date"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -613,6 +602,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
+                          onChange={(e => setDateofRelease(e.target.value))}
                           type="date"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />

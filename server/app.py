@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+`from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
@@ -11,7 +11,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
@@ -46,7 +46,7 @@ class Device(db.Model):
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
     deviceType = db.Column(db.String(120), nullable=True)
     brand = db.Column(db.String(120), nullable=True)
-    model = db.Column(db.String(120), unique=True, nullable=True)
+    model = db.Column(db.String(120), nullable=True)
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
 
@@ -65,7 +65,7 @@ with app.app_context():
     db.create_all()
     
     
-class UserDeviceTable(db.Model):
+class UserDevice(db.Model):
     __tablename__ = 'user_device_table'
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
@@ -304,7 +304,7 @@ def move_device_classification():
 
 
 
-@app.route('/api/createDevice/', methods=['POST'])
+@app.route('/api/createDevice', methods=['POST'])
 def createDevice():
     """
     Create device API
@@ -322,18 +322,19 @@ def createDevice():
     model = data.get('model')
     imageUrl = data.get('imageUrl')
     qrCodeUrl = data.get('qrCodeUrl')
-    dateOfRelease = data.get('dateOfRelease')
-    dateOfPurchase = data.get('dateOfPurchase')
-    
+    dateOfRelease = data.get('dateofRelease')
+    dateOfPurchase = data.get('dateofPurchase')
+
     """Need to finalize if the isVerified is added in the device or userDevice table"""
     if not all([dateOfPurchase, imageUrl]):
         isVerified = False
     else:
         isVerified = True
+
     
     if(deviceID is None):
         try:
-            newDeviceAdded = NewDevice(
+            newDeviceAdded = Device(
                 deviceType=deviceType,
                 brand=brand,
                 model=model,
@@ -348,7 +349,8 @@ def createDevice():
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
     
-    newUserDeviceAdded = NewUserDevice(
+    
+    newUserDeviceAdded = UserDevice(
         userID = userID,
         deviceID = deviceID,
         dateOfPurchase = dateOfPurchase,
@@ -358,7 +360,6 @@ def createDevice():
         dataRetrievalID = 0,
         estimatedValue = ""
     )
-    
     try:
         db.session.add(newUserDeviceAdded)
         db.session.commit()
@@ -368,3 +369,4 @@ def createDevice():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'User device creation error'}), 500
+`
