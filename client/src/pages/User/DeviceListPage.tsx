@@ -412,24 +412,6 @@ const UserDashboard = () => {
               </li>
             </ul>
           </details>
-          <div className="dropdown dropdown-end ml-4">
-            <label tabIndex={0} role="button" className="btn btn-ghost cursor-pointer">
-              <RiFilter3Line className="text-lg" /> Filter
-            </label>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-            >
-              <li>
-                <a onClick={() => handleFilterChange("ascending")}>Ascending</a>
-              </li>
-              <li>
-                <a onClick={() => handleFilterChange("descending")}>
-                  Descending
-                </a>
-              </li>
-            </ul>
-          </div>
         </header>
         {/* Main content */}
         <main className="overflow-x-hidden overflow-y-auto">
