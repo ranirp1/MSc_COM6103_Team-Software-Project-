@@ -46,7 +46,7 @@ class Device(db.Model):
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
     deviceType = db.Column(db.String(120), nullable=True)
     brand = db.Column(db.String(120), nullable=True)
-    model = db.Column(db.String(120), unique=True, nullable=True)
+    model = db.Column(db.String(120), nullable=True)
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
 
@@ -65,8 +65,8 @@ with app.app_context():
     db.create_all()
     
     
-class UserDeviceTable(db.Model):
-    __tablename__ = 'user_device_table'
+class UserDevice(db.Model):
+    __tablename__ = 'user_device'
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
@@ -78,8 +78,8 @@ class UserDeviceTable(db.Model):
     estimatedValue = db.Column(db.String(255))
 
     # Define foreign key relationships
-    user = relationship('User', backref='user_device_table', foreign_keys=[userID])
-    device = relationship('Device', backref='user_device_table', foreign_keys=[deviceID])
+    user = relationship('User', backref='user_device', foreign_keys=[userID])
+    device = relationship('Device', backref='user_device', foreign_keys=[deviceID])
 
     def serialize(self):
         return {
@@ -93,6 +93,10 @@ class UserDeviceTable(db.Model):
             'estimatedValue': self.estimatedValue
         }
 
+    
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def check_sql_connection():
@@ -305,7 +309,8 @@ def move_device_classification():
         return jsonify({'message': 'User not found'}), 404
 
 
-@app.route('/api/createDevice/', methods=['POST'])
+
+@app.route('/api/createDevice', methods=['POST'])
 def createDevice():
     """
     Create device API
@@ -323,18 +328,19 @@ def createDevice():
     model = data.get('model')
     imageUrl = data.get('imageUrl')
     qrCodeUrl = data.get('qrCodeUrl')
-    dateOfRelease = data.get('dateOfRelease')
-    dateOfPurchase = data.get('dateOfPurchase')
-    
+    dateOfRelease = data.get('dateofRelease')
+    dateOfPurchase = data.get('dateofPurchase')
+
     """Need to finalize if the isVerified is added in the device or userDevice table"""
     if not all([dateOfPurchase, imageUrl]):
         isVerified = False
     else:
         isVerified = True
+
     
     if(deviceID is None):
         try:
-            newDeviceAdded = NewDevice(
+            newDeviceAdded = Device(
                 deviceType=deviceType,
                 brand=brand,
                 model=model,
@@ -343,13 +349,19 @@ def createDevice():
             )
             db.session.add(newDeviceAdded)
             db.session.commit()
+            
+            # Read the device ID from the database for the newly inserted device
             deviceID = newDeviceAdded.deviceID
+            deviceID = newDeviceAdded.deviceID
+            print('deviceID',deviceID)
         except Exception as e:
+            print(e)
             db.session.rollback()
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
     
-    newUserDeviceAdded = NewUserDevice(
+    
+    newUserDeviceAdded = UserDevice(
         userID = userID,
         deviceID = deviceID,
         dateOfPurchase = dateOfPurchase,
@@ -359,7 +371,6 @@ def createDevice():
         dataRetrievalID = 0,
         estimatedValue = ""
     )
-    
     try:
         db.session.add(newUserDeviceAdded)
         db.session.commit()
