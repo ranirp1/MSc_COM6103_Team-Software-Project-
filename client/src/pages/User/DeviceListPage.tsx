@@ -5,7 +5,8 @@ import OnePlus from "../../assets/OnePlus.jpg";
 import {RiArrowDropLeftLine, RiArrowDropRightLine, RiFilter3Line, RiLogoutBoxRLine, RiUserSettingsFill, RiUserSharedLine} from "react-icons/ri";
 import React, {useState, ChangeEvent} from "react";
 import "../../style.css";
-import { useLocation } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+
 
 interface Device {
     id: number;
@@ -20,7 +21,7 @@ interface Device {
     condition: string;
     deviceType: string;
     dataRetrievalRequested?: boolean | null;
-  dataRetrievalTimeLeft: string;
+    dataRetrievalTimeLeft: string;
 }
 
 interface DeviceDetails {
@@ -42,7 +43,33 @@ interface DeviceDetails {
     const [searchQuery, setSearchQuery] = useState('');
     const [expanded, setExpanded] = useState(false);
     const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
-  
+
+
+    const [dataRetrieval, setDataRetrieval] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
+    const navigate = useNavigate();
+    const [open, setOpen] = useState<Boolean>(false);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // Check if data retrieval is selected as "Yes"
+    if (dataRetrieval) {
+      setShowPopup(true); // Show the popup
+    } else {
+      // Handle form submission without showing popup
+      // For now, just log a message
+      console.log('Form submitted without showing popup');
+      navigate('/user');
+    }
+  };
+  const handleDataRetrievalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDataRetrieval(e.target.checked && e.target.value === "Yes");
+  };
+
+  const handleCancel = () => {
+    window.location.href = '/user';
+  };
 
     const handleToggleExpand = () => {
         setExpanded(!expanded);
@@ -196,13 +223,13 @@ interface DeviceDetails {
                   <div className="mt-4">
                   <button className="btn btn-info">Generate QRCode</button>
                   </div>
-                  <details className="dropdown mt-4">
-                    <summary className="m-1 btn btn-info">Extend Retrieval Period</summary>
-                    <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-                        <li><a>3 months</a></li>
-                        <li><a>6 months</a></li>
+                  <div className="dropdown dropdown-right mt-4">
+                    <div tabIndex={0} role="button" className="btn btn-info">Extend Retrieval</div>
+                    <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                      <li><a>3 months</a></li>
+                      <li><a>6 months</a></li>
                     </ul>
-                   </details>
+                  </div>
                    <div className="mt-4">
                    <span className="font-bold">Data Retrieval Status:</span>
                    <ul className="steps mt-4">
@@ -217,9 +244,6 @@ interface DeviceDetails {
               );
             };
 
-              
-    
-
         return (
             <div className="flex h-screen bg-gray-100">
               <div className="flex-1 flex flex-col overflow-hidden">
@@ -228,7 +252,14 @@ interface DeviceDetails {
                         <h3 className="text-gray-700 text-3xl font-medium text-center flex-1">Your Devices</h3>
                         <div className="flex dropdown dropdown-end">
                             <div>
-                            <a href="/deviceform" className="btn btn-primary">Add Device</a>
+                            {/* Open the modal using document.getElementById('ID').showModal() method */}
+                            <button className="btn btn-primary" onClick={() => {
+                                  const modal = document.getElementById('my_modal_5') as HTMLDialogElement | null;
+                                  if (modal) {
+                                      modal.showModal();
+                                  }
+                              }}>
+                                Add Device</button>
                             </div>
                         </div>
                     </div>
@@ -301,21 +332,214 @@ interface DeviceDetails {
                                 </div>
                             </div>
                                     {/* Overlay to fade out content and close details pane */}
-        {selectedDeviceId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-20" onClick={() => setSelectedDeviceId(null)}></div>
-        )}
+                                  {selectedDeviceId && (
+                                  <div className="fixed inset-0 bg-black bg-opacity-50 z-20" onClick={() => setSelectedDeviceId(null)}></div>
+                                  )}
 
-        {/* Detailed view section */}
-        {selectedDeviceId && (
-        <div className="device-details w-1/4 bg-white p-4 overflow-y-auto absolute right-0 top-0 h-full z-30">
-            {/* Find the selected device and render its details */}
-            {devices.filter(device => device.id === selectedDeviceId).map(device => renderDeviceDetails(device))}
-        </div>
-        )}
+                                  {/* Detailed view section */}
+                                  {selectedDeviceId && (
+                                  <div className="device-details w-1/3 bg-white p-4 overflow-y-auto absolute right-0 top-0 h-full z-30">
+                                      {/* Find the selected device and render its details */}
+                                      {devices.filter(device => device.id === selectedDeviceId).map(device => renderDeviceDetails(device))}
+                                  </div>
+                                  )}
                         </div>
                     </main>
                 </div>
-            </div>
-        );
+
+          <dialog id="my_modal_5" className="modal modal-bottom sm:modal-middle">
+            <div className="modal-box">
+            <div className='flex justify-center'>
+            <form method="dialog" onSubmit={handleSubmit} className="bg-gray-100 rounded-lg shadow-md p-8 w-full max-w-lg">
+              <div className="space-y-12">
+                <div className="border-b border-gray-900/10 pb-12">
+                  <h2 className="text-base font-bold leading-7 text-gray-900 text-center">Device Details</h2>
+                  <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                    <div className="sm:col-span-3">
+                      <label htmlFor="first-name" className="block font-medium leading-6 text-gray-900">
+                        Brand
+                      </label>
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        />
+                      </div>
+                    </div>
+          
+                    <div className="sm:col-span-3">
+                      <label htmlFor="last-name" className="block font-medium leading-6 text-gray-900">
+                        Model
+                      </label>
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        />
+                      </div>
+                    </div>
+          
+                    <div className="sm:col-span-4">
+                      <label htmlFor="DateofPurchase" className="block font-medium leading-6 text-gray-900">
+                        Date of Purchase
+                      </label>
+                      <div className="mt-2">
+                        <input
+                          type="date"
+                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        />
+                      </div>
+                    </div>
+          
+                    <div className="sm:col-span-3">
+                      <label htmlFor="classification" className="block font-medium leading-6 text-gray-900">
+                        Device Classification
+                      </label>
+                      <div className="mt-2">
+                        <select
+                          id="classification"
+                          name="classification"
+                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
+                        >
+                          <option>Current</option>
+                          <option>Rare</option>
+                          <option>Unknown</option>
+                          <option>Recycle</option>
+                        </select>
+                      </div>
+                    </div>
+          
+                    <div className="sm:col-span-4">
+                      <label htmlFor="DateofRelease" className="block font-medium leading-6 text-gray-900">
+                        Release Date
+                      </label>
+                      <div className="mt-2">
+                        <input
+                          type="date"
+                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-4">
+                      <label htmlFor="Color" className="block font-medium leading-6 text-gray-900">
+                        Color
+                      </label>
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-4">
+                      <label htmlFor="storage" className="block font-medium leading-6 text-gray-900">
+                        Storage
+                      </label>
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label htmlFor="device-condition" className="block font-medium leading-6 text-gray-900">
+                        Device Condition
+                      </label>
+                      <div className="mt-2">
+                        <label className="cursor-pointer flex items-center">
+                          <input
+                            type="checkbox"
+                            id="new-condition"
+                            name="device-condition"
+                            className="mr-2"
+                          />
+                          <span>New</span>
+                        </label>
+                        <label className="cursor-pointer flex items-center">
+                          <input
+                            type="checkbox"
+                            id="old-condition"
+                            name="device-condition"
+                            className="mr-2"
+                          />
+                          <span>Old</span>
+                        </label>
+                        <label className="cursor-pointer flex items-center">
+                          <input
+                            type="checkbox"
+                            id="damaged-condition"
+                            name="device-condition"
+                            className="mr-2"
+                          />
+                          <span>Damaged</span>
+                        </label>
+                      </div>
+                    </div>
+
+        
+                    <div className="sm:col-span-4 flex">
+                        <label
+                          htmlFor="image-upload" className="block font-medium leading-6 text-gray-900">
+                          Upload Image
+                        </label>
+                        <input
+                          type="file"
+                          className="ml-2 py-1.5 text-gray-900"
+                        />
+                      </div>
+        
+                      <div className="sm:col-span-4 flex items-center">
+                        <span className="font-medium leading-6 text-gray-900 mr-4">Data Retrieval:</span>
+                        <div className="flex items-center space-x-4">
+                          <label className="cursor-pointer">
+                            <input type="radio" name="data-retrieval" className="radio radio-primary" value="Yes" onChange={handleDataRetrievalChange} />
+                            <span className="text-gray-900">Yes</span>
+                          </label>
+                          <label className="cursor-pointer">
+                            <input type="radio" name="data-retrieval" className="radio radio-primary" value="No" onChange={handleDataRetrievalChange} />
+                            <span className="text-gray-900">No</span>
+                          </label>
+                        </div>
+                      </div>
+                  </div>
+                </div>
+              </div>
+        
+              <div className="mt-6 flex items-center justify-end gap-x-6">
+                <button onClick={handleCancel} type="button" className="btn">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"  
+                  onClick={() => setOpen(false)}
+                >
+                  Save
+                </button>
+              </div>
+              </form>
+          </div>
+
+                    </div>
+                              {/* Popup */}
+          {showPopup && (
+                  <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="bg-white rounded-lg p-8">
+                      <h2 className="text-xl font-bold text-gray-900 mb-4">Confirmation</h2>
+                      <p className="text-gray-700 mb-4">Do you want to proceed with payment for data retrieval?</p>
+                        <div className="flex justify-end gap-x-4">
+                          <button className="bg-indigo-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-indigo-500" onClick={() => setShowPopup(false)}>Proceed</button> 
+                          <button className="text-gray-900 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100" onClick={() => setShowPopup(false)}>Cancel</button>          
+                        </div>
+                      </div>
+                  </div>
+                )}
+                 </dialog>
+          </div>
+        );    
     };
 export default UserDashboard;
