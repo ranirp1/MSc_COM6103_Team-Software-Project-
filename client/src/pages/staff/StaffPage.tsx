@@ -611,6 +611,11 @@ const StaffDashboard = () => {
       {/* Content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex justify-between items-center p-4 shadow bg-primary ">
+        <img
+            src={EWasteHubImage}
+            alt="E-Waste Hub Logo"
+            className=" w-16 h-16 rounded-full shadow-2xl  "
+          />
           <h3 className="text-white text-3xl font-medium flex-1 text-center">
             Staff Dashboard
           </h3>
@@ -629,13 +634,13 @@ const StaffDashboard = () => {
             <input
               type="search"
               placeholder="Search Devices"
-              className="input input-bordered bg-white text-black w-full"
+              className="input input-bordered bg-white text-black w-full border-2 border-primary"
               value={searchQuery}
               onChange={handleSearchChange}
             />
           </form>
-          <div className="btn btn-link bg-white dropdown dropdown-end ml-4">
-            <label tabIndex={0} className="btn btn-ghost cursor-pointer">
+          <div className="btn btn-link dropdown dropdown-end ml-4">
+            <label tabIndex={0} className="btn btn-ghost cursor-pointer border-2 border-primary">
               <RiFilter3Line className="text-lg" /> Filter
             </label>
             <ul
