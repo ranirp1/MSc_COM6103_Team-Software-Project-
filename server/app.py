@@ -248,6 +248,128 @@ def deleteUser():
     db.session.commit()
     return jsonify({'message': 'User deleted'}), 200
 
+@app.route('/api/downgradeToUser', methods=['POST'])
+def updateUserToEndUser():
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    user.isAdmin = False
+    user.isStaff = False
+    db.session.commit()
+    return jsonify({'message': 'User downgraded to end user'}), 200
+
+
+@app.route('/api/moveDeviceClassification', methods=['POST'])
+def move_device_classification():
+    """
+    Move device classification for a user by staff.
+
+    Returns:
+        A JSON response with a success message if the classification is moved successfully.
+        A JSON response with an error message if the user, device, or new classification is not found.
+    """
+    data = request.json
+
+    # Input Validation
+    email = data.get('email')
+    new_classification = data.get('new_classification')
+
+    # Check for missing data in the request
+    if not email or not new_classification:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    # Check if the staff user is authenticated
+    staff_user = User.query.filter_by(email='staff@example.com').first()  # Adjust the email as per your staff user
+
+    if not staff_user or not staff_user.isStaff:
+        return jsonify({'message': 'Unauthorized access'}), 403
+
+    # Check if the user exists
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        # Retrieve the user's device for classification update
+        user_device = UserDeviceTable.query.filter_by(user_id=user.id).first()
+
+        if user_device:
+            # Update the device classification
+            user_device.classification = new_classification
+            db.session.commit()
+            return jsonify({'message': 'Classification moved successfully'}), 200
+        else:
+            return jsonify({'message': 'Device information not found for the user'}), 404
+    else:
+        return jsonify({'message': 'User not found'}), 404
+
+
+@app.route('/api/createDevice/', methods=['POST'])
+def createDevice():
+    """
+    Create device API
+    If user wants to add a new device which is not already listed in the db, it will create a new device entry
+    Associates the device with the user by userID
+    Returns:
+        A JSON response with a success message if the device is successfully created; A JSON response with an error message if the device model already exists in the database.
+        A JSON response with a success message if the device is successfully associated with the user; A JSON response with an error message if any problems arrives.
+    """
+    data = request.json
+    userID = data.get('userID')
+    deviceType = data.get('deviceType')
+    deviceID = data.get('deviceID')
+    brand = data.get('brand')
+    model = data.get('model')
+    imageUrl = data.get('imageUrl')
+    qrCodeUrl = data.get('qrCodeUrl')
+    dateOfRelease = data.get('dateOfRelease')
+    dateOfPurchase = data.get('dateOfPurchase')
+    
+    """Need to finalize if the isVerified is added in the device or userDevice table"""
+    if not all([dateOfPurchase, imageUrl]):
+        isVerified = False
+    else:
+        isVerified = True
+    
+    if(deviceID is None):
+        try:
+            newDeviceAdded = NewDevice(
+                deviceType=deviceType,
+                brand=brand,
+                model=model,
+                dateOfRelease=dateOfRelease,
+                isVerified=False            
+            )
+            db.session.add(newDeviceAdded)
+            db.session.commit()
+            deviceID = newDeviceAdded.deviceID
+        except Exception as e:
+            db.session.rollback()
+            db.session.flush()
+            return jsonify({'message': 'Device creation error'}), 500
+    
+    newUserDeviceAdded = NewUserDevice(
+        userID = userID,
+        deviceID = deviceID,
+        dateOfPurchase = dateOfPurchase,
+        imageUrl = imageUrl,
+        qrCodeUrl = qrCodeUrl,
+        dateOfCreation = datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        dataRetrievalID = 0,
+        estimatedValue = ""
+    )
+    
+    try:
+        db.session.add(newUserDeviceAdded)
+        db.session.commit()
+        return jsonify({'message': 'User Device creation successful'}), 200
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'User device creation error'}), 500
+
 
 @app.route('/api/updateDeviceVisibility', methods=['POST'])
 def update_device_visibility():
