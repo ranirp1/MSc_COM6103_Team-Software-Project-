@@ -373,8 +373,6 @@ const StaffDashboard = () => {
     }
   };
 
-
-
   const [searchQuery, setSearchQuery] = useState("");
   const [showVerified, setShowVerified] = useState(true);
   const [sortOrder, setSortOrder] = useState<string>("");
@@ -609,46 +607,15 @@ const StaffDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="sidebar bg-white text-black w-60 py-7 px-0 relative">
-        <div className="flex items-center justify-center pb-10">
-          <img
-            src={EWasteHubImage}
-            alt="E-Waste Hub Logo"
-            className="w-28 h-28"
-          />
-        </div>
-
-        <nav className="absolute top-56 w-full">
-          <h5 className="text-xl font-medium mb-4 text-center">Devices</h5>
-          <button
-            onClick={() => setShowVerified(true)}
-            className={`btn ${
-              showVerified ? "btn-primary" : "btn-ghost"
-            } btn-block normal-case`}
-          >
-            <RiSmartphoneFill className="text-lg mr-2" /> Verified Devices
-          </button>
-          <button
-            onClick={() => setShowVerified(false)}
-            className={`btn ${
-              !showVerified ? "btn-primary" : "btn-ghost"
-            } btn-block normal-case`}
-          >
-            <RiSmartphoneLine className="text-lg mr-2" /> Non-Verified Devices
-          </button>
-        </nav>
-      </div>
-
+    <div className="flex h-screen bg-gray-100 shadow-2xl">
       {/* Content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex justify-between items-center p-4 shadow bg-gray-100">
-          <h3 className="text-gray-700 text-3xl font-medium flex-1 text-center">
+        <div className="flex justify-between items-center p-4 shadow bg-primary ">
+          <h3 className="text-white text-3xl font-medium flex-1 text-center">
             Staff Dashboard
           </h3>
           <button
-            className="btn btn-ghost ml-4"
+            className="btn btn-link bg-white text-primary ml-4"
             onClick={() => setShowLogoutModal(true)}
           >
             <RiLogoutBoxRLine className="text-lg mr-2" /> Logout
@@ -667,7 +634,7 @@ const StaffDashboard = () => {
               onChange={handleSearchChange}
             />
           </form>
-          <div className="dropdown dropdown-end ml-4">
+          <div className="btn btn-link bg-white dropdown dropdown-end ml-4">
             <label tabIndex={0} className="btn btn-ghost cursor-pointer">
               <RiFilter3Line className="text-lg" /> Filter
             </label>
@@ -687,6 +654,25 @@ const StaffDashboard = () => {
           </div>
         </header>
 
+        <div role="tablist" className="tabs tabs-lifted tabs-lg">
+          <a
+            role="tab"
+            className={`tab ${showVerified ? " bg-primary text-white" : ""}`}
+            onClick={() => setShowVerified(true)}
+          >
+            Verified
+          </a>
+          <a
+            role="tab"
+            className={`tab ${!showVerified ? " bg-primary text-white" : ""}`}
+            onClick={() => {
+              setShowVerified(false);
+            }}
+          >
+            Non-Verified
+          </a>
+        </div>
+
         {/* Devices Table */}
         <div className="main-content flex-grow p-4">
           <h5 className="text-black text-3xl font-medium mb-6">
@@ -702,15 +688,27 @@ const StaffDashboard = () => {
           >
             {" "}
             {/* Added scrollbarWidth and scrollbarColor */}
-            <table className="table w-full text-black">
+            <table className="table w-full text-black ">
               <thead>
                 <tr>
-                  <th className="text-black min-w-[150px]">Image</th>
-                  <th className="text-black min-w-[200px]">Name</th>
-                  <th className="text-black min-w-[200px]">Model</th>
-                  <th className="text-black min-w-[150px]">Created At</th>
-                  <th className="text-black min-w-[200px]">Status</th>
-                  <th className="text-black min-w-[200px]">Classification</th>
+                  <th className="text-black text-lg font-bold min-w-[150px] ">
+                    Image
+                  </th>
+                  <th className="text-black text-lg font-bold min-w-[200px]">
+                    Name
+                  </th>
+                  <th className="text-black text-lg font-bold min-w-[200px]">
+                    Model
+                  </th>
+                  <th className="text-black text-lg font-bold min-w-[150px]">
+                    Created At
+                  </th>
+                  <th className="text-black text-lg font-bold min-w-[200px]">
+                    Classification
+                  </th>
+                  <th className="text-black text-lg font-bold min-w-[200px]">
+                    Status
+                  </th>
                   <th>Expand</th>
                 </tr>
               </thead>
@@ -731,6 +729,7 @@ const StaffDashboard = () => {
                     <td>{device.manufacturer}</td>
                     <td>{device.model}</td>
                     <td>{device.createdAt}</td>
+                    <td>{device.classification}</td>
                     <td>
                       <div className="flex">
                         <label
@@ -751,7 +750,6 @@ const StaffDashboard = () => {
                         </label>
                       </div>
                     </td>
-                    <td>{device.classification}</td>
                     <td>
                       <button onClick={() => toggleDeviceDetails(device.id)}>
                         {selectedDeviceId === device.id ? (

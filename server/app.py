@@ -393,3 +393,16 @@ def getListOfDevices():
         }
         device_list.append(device_data)
     return jsonify(device_list)
+
+
+@app.route('/api/changeDeviceVerification/', methods=['POST'])
+def changeDeviceVerification():
+    data = request.json
+    deviceID = data.get('deviceID')
+    isVerified = data.get('isVerified')
+    device = Device.query.filter_by(deviceID=deviceID).first()
+    if not device:
+        return jsonify({'message': 'Device not found'}), 404
+    device.isVerified = isVerified
+    db.session.commit()
+    return jsonify({'message': 'Device verification status updated'}), 200
