@@ -39,9 +39,7 @@ interface DeviceDetails {
 }
 
 const UserDashboard = () => {
-  const [devices, setDevices] = useState<Device[]>([
-
-  ]);
+  const [devices, setDevices] = useState<Device[]>([]);
 
   const [deviceId, setDeviceId] = useState("");
   const [deviceType, setDeviceType] = useState("");
@@ -63,39 +61,48 @@ const UserDashboard = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/api/createDevice`,{
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          //TODO userID is hardcoded for now, need to get it from the session
-          body: JSON.stringify({ brand, model, deviceType, dateofPurchase, imageUrl, dateofRelease,userID: 1})
+      const response = await fetch(`${API_URL}/api/createDevice`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        //TODO userID is hardcoded for now, need to get it from the session
+        body: JSON.stringify({
+          brand,
+          model,
+          deviceType,
+          dateofPurchase,
+          imageUrl,
+          dateofRelease,
+          userID: 1,
+        }),
       });
 
-      if(response.ok){
+      if (response.ok) {
         console.log(response);
-          console.log("Creation Successful");
-          // window.location.href = '/user';
-      }
-      else{
-          console.log("Creation Error");
+        console.log("Creation Successful");
+        // window.location.href = '/user';
+      } else {
+        console.log("Creation Error");
 
-          // get the error message from the server and save it to show in toast
+        // get the error message from the server and save it to show in toast
       }
-  } catch (error) {
-      console.log('Error:', error);
-  }
+    } catch (error) {
+      console.log("Error:", error);
+    }
     // Check if data retrieval is selected as "Yes"
-   {/* if (dataRetrieval) {
+    {
+      /* if (dataRetrieval) {
       setShowPopup(true); // Show the popup
     } else {
       // Handle form submission without showing popup
       // For now, just log a message
       console.log("Form submitted without showing popup");
       navigate("/user");
-    }*/}
+    }*/
+    }
   };
-  
+
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -169,7 +176,7 @@ const UserDashboard = () => {
     ) => {
       const baseUrl = "https://uk.webuy.com/search";
       return `${baseUrl}?stext=${encodeURIComponent(
-        '${manufacturer} ${model} ${storage} ${color}'
+        "${manufacturer} ${model} ${storage} ${color}"
       )}`;
     };
 
@@ -218,9 +225,9 @@ const UserDashboard = () => {
           const daysLeft = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
 
           if (daysLeft > 30) {
-            return 'More than 1 month left';
+            return "More than 1 month left";
           } else if (daysLeft > 7) {
-            return 'More than 1 week left';
+            return "More than 1 week left";
           } else {
             return '${daysLeft} day${daysLeft > 1 ? "s" : ""} left';
           }
@@ -254,7 +261,7 @@ const UserDashboard = () => {
             {/* Larger image size */}
             <img
               src={device.image}
-              alt='{${device.brand} ${device.model}}'
+              alt="{${device.brand} ${device.model}}"
               className="w-full h-auto rounded"
             />
           </div>
@@ -346,46 +353,49 @@ const UserDashboard = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex justify-between items-center p-4 shadow bg-gray-100">
+        <div className="flex justify-between items-center p-4 shadow bg-primary">
           <img
             src={EWasteHubImage}
             alt="E-Waste Hub Logo"
-            className="w-20 h-20 rounded-full"
+            className=" w-16 h-16 rounded-full shadow-2xl  "
           />
-          <h3 className="text-gray-700 text-3xl font-medium text-center flex-1">
+          <h3 className="text-white text-3xl font-medium flex-1 text-center">
             Your Devices
           </h3>
-          <div className="flex dropdown dropdown-end">
-            <div>
-              {/* Open the modal using document.getElementById('ID').showModal() method */}
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  const modal = document.getElementById(
-                    "my_modal_5"
-                  ) as HTMLDialogElement | null;
-                  if (modal) {
-                    modal.showModal();
-                  }
-                }}
-              >
-                Add Device
-              </button>
-            </div>
-          </div>
+
+          <button
+            className="btn btn-link bg-white text-primary ml-4"
+            onClick={() => {
+              const modal = document.getElementById(
+                "my_modal_5"
+              ) as HTMLDialogElement | null;
+              if (modal) {
+                modal.showModal();
+              }
+            }}
+          >
+            <RiLogoutBoxRLine className="text-lg mr-2" /> Add Device
+          </button>
+
+          <button className="btn btn-link bg-white text-primary ml-4">
+            <RiLogoutBoxRLine className="text-lg mr-2" /> Logout
+          </button>
         </div>
         <header className="flex p-4 shadow bg-gray-100">
           <form className="flex-1" onSubmit={(e) => e.preventDefault()}>
             <input
               type="search"
               placeholder="Search"
-              className="input input-bordered bg-white text-black w-full"
+              className="input input-bordered bg-white text-black w-full border-2 border-primary"
               value={searchQuery}
               onChange={handleSearchChange}
             />
           </form>
           <details className="dropdown dropdown-end ml-4">
-            <summary tabIndex={0} className="btn btn-ghost cursor-pointer">
+            <summary
+              tabIndex={0}
+              className="btn btn-ghost cursor-pointer border-2 border-primary"
+            >
               <RiFilter3Line className="text-lg" /> Filter
             </summary>
             <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
@@ -534,7 +544,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e => setBrand(e.target.value))}
+                          onChange={(e) => setBrand(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -550,7 +560,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e => setModel(e.target.value))}
+                          onChange={(e) => setModel(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -566,7 +576,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e => setDateofPurchase(e.target.value))}
+                          onChange={(e) => setDateofPurchase(e.target.value)}
                           type="date"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -603,7 +613,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e => setDateofRelease(e.target.value))}
+                          onChange={(e) => setDateofRelease(e.target.value)}
                           type="date"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />

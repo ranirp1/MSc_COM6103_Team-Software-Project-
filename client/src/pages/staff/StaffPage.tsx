@@ -611,7 +611,7 @@ const StaffDashboard = () => {
       {/* Content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex justify-between items-center p-4 shadow bg-primary ">
-        <img
+          <img
             src={EWasteHubImage}
             alt="E-Waste Hub Logo"
             className=" w-16 h-16 rounded-full shadow-2xl  "
@@ -639,14 +639,14 @@ const StaffDashboard = () => {
               onChange={handleSearchChange}
             />
           </form>
-          <div className="btn btn-link dropdown dropdown-end ml-4">
-            <label tabIndex={0} className="btn btn-ghost cursor-pointer border-2 border-primary">
-              <RiFilter3Line className="text-lg" /> Filter
-            </label>
-            <ul
+          <details className="dropdown dropdown-end ml-4">
+            <summary
               tabIndex={0}
-              className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
+              className="btn btn-ghost cursor-pointer border-2 border-primary"
             >
+              <RiFilter3Line className="text-lg" /> Filter
+            </summary>
+            <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
               <li>
                 <a onClick={() => handleFilterChange("ascending")}>Ascending</a>
               </li>
@@ -656,13 +656,13 @@ const StaffDashboard = () => {
                 </a>
               </li>
             </ul>
-          </div>
+          </details>
         </header>
 
         <div role="tablist" className="tabs tabs-lifted tabs-lg">
           <a
             role="tab"
-            className={`tab ${showVerified ? " bg-primary text-white" : ""}`}
+            className={`tab ${showVerified ? "bg-primary text-white" : ""}`}
             onClick={() => setShowVerified(true)}
           >
             Verified
