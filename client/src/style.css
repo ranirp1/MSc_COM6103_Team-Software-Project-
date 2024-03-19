@@ -1,0 +1,71 @@
+.badge-recycle {
+    background-color: #4caf50; 
+    color: black;
+    padding: 4px 8px;
+    border-radius: 4px;
+    padding-left: 15px; 
+    padding-right: 15px; 
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+.badge-rare {
+    background-color: #4b0517; 
+    color: black;
+    padding: 4px 8px;
+    border-radius: 4px;
+    padding-left: 15px; 
+    padding-right: 15px; 
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+.badge-current {
+    background-color: #b6d80d; 
+    color: black;
+    padding: 4px 8px;
+    border-radius: 4px;
+    padding-left: 15px; 
+    padding-right: 15px; 
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+.badge-unknown {
+    background-color: #05022e; 
+    color: black;
+    padding: 4px 8px;
+    border-radius: 4px;
+    padding-left: 15px; 
+    padding-right: 15px; 
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+.badge-verified {
+    background-color: #025a18; 
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    padding-left: 15px; 
+    padding-right: 15px; 
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }  
+.badge-notverified {
+    background-color: #c40404; 
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    padding-left: 15px; 
+    padding-right: 15px; 
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+
+  .modal-box {
+    max-width: 90%; /* Adjust the maximum width as needed */
+    width: auto;
+  }
+  
+  /* Adjust the height based on content */
+  .modal-content {
+    overflow-y: auto; /* Enable vertical scrolling if needed */
+    max-height: calc(100vh - 100px); /* Adjust the maximum height based on your layout */
+  }
