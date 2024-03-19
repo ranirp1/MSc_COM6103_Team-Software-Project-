@@ -228,45 +228,82 @@ def updateUserToAdmin():
     return jsonify({'message': 'User updated to admin'}), 200
 
 
-@app.route('/api/customer_device', methods=['POST'])
-def create_customer_device():
+@app.route('/api/deleteUser', methods=['POST'])
+def deleteUser():
     """
-        Create and Save device information for a user.
-
-        Returns:
-            A JSON response with a success message if the device information is saved successfully.
-            A JSON response with an error message if the user is not found.
-        """
+    Delete a user from the database.
+    Args:
+        email (str): The email of the user to delete.
+    Returns:
+        A JSON response with a success message if the user is successfully deleted.
+        A JSON response with an error message if the user is not found in the database.
+    """
+    # TODO : Add a check to see if the user calling this api is an admin before deleting
     data = request.json
     email = data.get('email')
-    device_info = data.get('device_info')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted'}), 200
 
-    # Input validation: Check if email and device_info are present
-    if not email or not device_info:
+
+@app.route('/api/downgradeToUser', methods=['POST'])
+def updateUserToEndUser():
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    user.isAdmin = False
+    user.isStaff = False
+    db.session.commit()
+    return jsonify({'message': 'User downgraded to end user'}), 200
+
+
+@app.route('/api/moveDeviceClassification', methods=['POST'])
+def move_device_classification():
+    """
+    Move device classification for a user by staff.
+
+    Returns:
+        A JSON response with a success message if the classification is moved successfully.
+        A JSON response with an error message if the user, device, or new classification is not found.
+    """
+    data = request.json
+
+    # Input Validation
+    email = data.get('email')
+    new_classification = data.get('new_classification')
+
+    # Check for missing data in the request
+    if not email or not new_classification:
         return jsonify({'error': 'Invalid request data'}), 400
 
+    # Check if the staff user is authenticated
+    staff_user = User.query.filter_by(email='staff@example.com').first()  # Adjust the email as per your staff user
+
+    if not staff_user or not staff_user.isStaff:
+        return jsonify({'message': 'Unauthorized access'}), 403
+
+    # Check if the user exists
     user = User.query.filter_by(email=email).first()
 
     if user:
-        # Assuming you have a one-to-many relationship between User and UserDeviceTable
-        customer_device = UserDeviceTable(
-            user_id=user.id,
-            device_type=device_info.get('device_type'),
-            brand=device_info.get('brand'),
-            model=device_info.get('model'),
-        )
+        # Retrieve the user's device for classification update
+        user_device = UserDeviceTable.query.filter_by(user_id=user.id).first()
 
-        # Input validation: Check if essential device information is present
-        if not customer_device.device_type or not customer_device.brand or not customer_device.model:
-            return jsonify({'error': 'Incomplete device information'}), 400
-
-        db.session.add(customer_device)
-        db.session.commit()
-
-        return jsonify({'message': 'Device information saved successfully'}), 200
+        if user_device:
+            # Update the device classification
+            user_device.classification = new_classification
+            db.session.commit()
+            return jsonify({'message': 'Classification moved successfully'}), 200
+        else:
+            return jsonify({'message': 'Device information not found for the user'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
-
 
 
 @app.route('/api/createDevice/', methods=['POST'])
@@ -333,3 +370,46 @@ def createDevice():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'User device creation error'}), 500
+
+
+@app.route('/api/customer_device', methods=['POST'])
+def create_customer_device():
+    """
+        Create and Save device information for a user.
+
+        Returns:
+            A JSON response with a success message if the device information is saved successfully.
+            A JSON response with an error message if the user is not found.
+        """
+    data = request.json
+    email = data.get('email')
+    device_info = data.get('device_info')
+
+    # Input validation: Check if email and device_info are present
+    if not email or not device_info:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        # Assuming you have a one-to-many relationship between User and UserDeviceTable
+        customer_device = UserDeviceTable(
+            user_id=user.id,
+            device_type=device_info.get('device_type'),
+            brand=device_info.get('brand'),
+            model=device_info.get('model'),
+        )
+
+        # Input validation: Check if essential device information is present
+        if not customer_device.device_type or not customer_device.brand or not customer_device.model:
+            return jsonify({'error': 'Incomplete device information'}), 400
+
+        db.session.add(customer_device)
+        db.session.commit()
+
+        return jsonify({'message': 'Device information saved successfully'}), 200
+    else:
+        return jsonify({'message': 'User not found'}), 404
+
+
+
