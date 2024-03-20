@@ -9,7 +9,7 @@ const NavBar = () => {
     <div className="">
       <div className="navbar">
         <div className="flex-1">
-          <img src={EWasteHubImage} alt="Logo" className="w-10 h-10" />
+          <img src={EWasteHubImage} alt="Logo" className="w-10 h-10 rounded-full" />
           <h1 className=" text-customDarkGreen text-2xl ml-2 font-semibold">
             E-Waste Hub
           </h1>

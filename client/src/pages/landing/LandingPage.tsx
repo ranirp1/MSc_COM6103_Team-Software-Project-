@@ -1,7 +1,7 @@
 import React from "react";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
-import backgroundImage from "../../assets/bg-3.png";
+import backgroundImage from "../../assets/preview.jpg";
 import eWasteImage from "../../assets/recycle.jpg";
 import environmentImage from "../../assets/environmental_impact.jpg";
 import eWasteLandfillsImage from "../../assets/e-waste landfills.jpg";
@@ -16,7 +16,7 @@ const LandingPage: React.FC = () => {
   return (
     <div
       style={{
-        backgroundImage: `url(${backgroundImage})`,
+        // backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
@@ -251,7 +251,7 @@ const LandingPage: React.FC = () => {
                   <p className="py-6 text-customDarkGreen">
                     Check if your device needs to be recycled!
                   </p>
-                  <div className="card shrink-0 w-full md:w-[550px] max-w-[550px] max-w-sm shadow-2xl bg-base-100">
+                  <div className="card shrink-0 h-full w-full md:w-[600px] max-w-[600px] max-w-sm shadow-2xl bg-base-100">
                     <form className="card-body rounded-lg">
                       {/* Device details */}
                       {/* Device type */}
