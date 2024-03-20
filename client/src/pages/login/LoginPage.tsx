@@ -68,20 +68,19 @@ const LoginPage = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "hsl(169, 52%, 80%)" }}
+      
     >
       {showToast === 1 && (
         <div className="toast toast-center">
-          <div className="alert alert-success">
-            <span>{successMessage}</span>
+          <div className="alert alert-success flex items-center justify-center">
+            <span>Login Successful!</span>
           </div>
         </div>
       )}
       {showToast === 2 && (
         <div className="toast toast-center">
-          <div className="alert alert-error">
-            <span>Invalid Credentials</span>
+          <div className="alert alert-error flex items-center justify-center">
+            <span>Invalid Credentials!</span>
           </div>
         </div>
       )}
@@ -119,11 +118,11 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
               {/* Create Account Hyperlink */}
-              <div className="text-right mb-6">
+              {/* <div className="text-right mb-6">
                 <a href="/register" className="text-sm text-primary link">
                   Don't have an account? Register here
                 </a>
-              </div>
+              </div> */}
               {/* Action Buttons */}
               <div className="flex flex-col">
                 <button className="btn btn-primary flex">Log In</button>

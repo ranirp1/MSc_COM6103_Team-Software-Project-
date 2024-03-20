@@ -3,6 +3,10 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      colors: {
+        customGreen: '#28D250',
+        customDarkGreen: 'rgb(27, 86, 67)'
+      },
       animation: {
         "fade-in": "fadeIn 1s ease-out",
         "fade-out": "fadeOut 1s ease-in",
