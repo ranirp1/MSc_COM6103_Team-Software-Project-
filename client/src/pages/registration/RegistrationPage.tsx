@@ -1,6 +1,7 @@
+import React, { useState } from "react";
 import Navigation from "../../Navigation";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
-import React, {useState} from "react";
+import { API_URL } from "../../constants/constant";
 import { Link } from 'react-router-dom';
 
 const CreateAccount = () => {
@@ -12,7 +13,7 @@ const CreateAccount = () => {
     const [password, setPassword] = useState("");
     const [first_name, setFirstName] = useState("");
     const [last_name, setLastName] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState(0);
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [terms, setTerms] = useState(0);
 
     const [showToast, setShowToast] = useState(0);
@@ -20,8 +21,9 @@ const CreateAccount = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
+        
         try {
-            const response = await fetch('/api/register',{
+            const response = await fetch(`${API_URL}/api/register`,{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -31,10 +33,8 @@ const CreateAccount = () => {
 
             if(response.ok){
                 setShowToast(1);
-                setTimeout(() => {
-                    setShowToast(0);
-                }, 3000);
                 console.log("Registration Successful");
+                window.location.href = '/login?register=success';
             }
             else{
                 setShowToast(2)
@@ -52,6 +52,7 @@ const CreateAccount = () => {
         }
     };
 
+
     return (
         <div className="">
             <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex lg:flex-row flex-col-reverse">
@@ -59,9 +60,9 @@ const CreateAccount = () => {
                 <div className="lg:w-1/2 flex justify-center items-center">
                     <div className="h-96 w-full bg-cover bg-no-repeat bg-center" style={{ backgroundImage: `url(${EWasteHubImage})`, backgroundSize: 'contain', backgroundPosition: 'center' }}></div>
                 </div>
-  
+
                 {/* Form Section */}
-                <div className="lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center items-center"> {/* Centering form content */}
+                <div className="lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center items-center">
                     {/* Sign In Hyperlink */}
                     <div className="text-right mb-6">
                         {/* <a href="/login" className="text-sm text-blue-600 hover:underline">Already have an account? Sign in here</a> */}
@@ -76,7 +77,7 @@ const CreateAccount = () => {
                             <input type="text" placeholder="Last Name" className="input input-bordered w-full bg-gray-50" value={last_name} onChange={(e => setLastName(e.target.value))}/>
                         </div>
                         <input type="email" placeholder="Email" className="input input-bordered w-full bg-gray-50" value={email} onChange={(e => setEmail(e.target.value))}/>
-                        <input type="tel" placeholder="Phone Number" className="input input-bordered w-full bg-gray-50" value={phoneNumber} onChange={(e => setPhoneNumber(Number(e.target.value)))}/>
+                        <input type="tel" placeholder="Phone Number" className="input input-bordered w-full bg-gray-50" value={phoneNumber} onChange={(e => setPhoneNumber((e.target.value)))}/>
                         <input type="password" placeholder="Password" className="input input-bordered w-full bg-gray-50" value={password} onChange={(e => setPassword(e.target.value))}/>
                         
                         {/* Terms & Conditions */}
@@ -85,13 +86,32 @@ const CreateAccount = () => {
                             <span className="label-text">I agree to the <a href="#" className="text-blue-600 hover:underline">Terms & Conditions</a></span>
                         </label>
 
+                        <div className="text-right mb-5">
+                            <a href="/login" className="text-sm text-primary link">Already have an account? Sign in here</a>
+                        </div>
+
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row sm:justify-between mt-6">
-                            <button className="btn bg-blue-200 hover:bg-blue-300 text-blue-900 w-full sm:w-auto mb-2 sm:mb-0">Register</button>
+                        <div className="flex flex-col">
+                            <button className="btn btn-primary flex">Register</button>
                         </div>
                     </form>
                 </div>
             </div>
+            {showToast === 1 && (
+            <div className="toast toast-center">
+                <div className="alert alert-success flex items-center justify-center">
+                    <span>Registration Successful</span>
+                </div>
+            </div>
+            )}
+            {showToast === 2 && (
+            <div className="toast toast-center">
+                <div className="alert alert-error flex items-center justify-center">
+                    {/* Show the error message */}
+                    <span>Registration failed: {errorMessage}</span>
+                </div>
+            </div>
+            )}
             {showToast === 1 && (
             <div className="toast toast-center">
                 <div className="alert alert-success flex items-center justify-center">
