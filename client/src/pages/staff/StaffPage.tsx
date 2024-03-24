@@ -10,11 +10,10 @@ import {
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import image1 from "../../assets/image1.jpg";
 import image2 from "../../assets/image2.jpg";
-import emptyListImage from "../../assets/empty_list.svg"
+import emptyListImage from "../../assets/empty_list.svg";
 import { API_URL } from "../../constants/constant";
 import { redirect } from "react-router-dom";
-
-
+import { BiSolidReport } from "react-icons/bi";
 
 class Device {
   id: number;
@@ -439,8 +438,7 @@ const StaffDashboard = () => {
                 <h3 className="text-3xl font-bold text-center mb-5 ">
                   No Devices Found
                 </h3>
-                <img src={emptyListImage} className="h-80 w-80"/>
-                
+                <img src={emptyListImage} className="h-80 w-80" />
               </div>
             ) : (
               <table className="table w-full text-black ">
@@ -487,7 +485,9 @@ const StaffDashboard = () => {
                           <td className="text-lg">{device.brand}</td>
                           <td className="text-lg">{device.model}</td>
                           <td className="text-lg">{device.createdAt}</td>
-                          <td className="text-lg">{device.classification || "Not Classified"}</td>
+                          <td className="text-lg">
+                            {device.classification || "Not Classified"}
+                          </td>
                           <td>
                             <div className="flex">
                               <label
@@ -575,6 +575,11 @@ const StaffDashboard = () => {
           </div>
         )}
       </div>
+
+      <button className="btn fixed bottom-4 right-4 bg-primary text-white h-20 rounded-full shadow-lg">
+        <BiSolidReport size={40} />
+        <div className="pl-2 text-xl">Check Reports</div>
+      </button>
     </div>
   );
 };
