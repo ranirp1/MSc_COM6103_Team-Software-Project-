@@ -576,9 +576,9 @@ const StaffDashboard = () => {
         )}
       </div>
 
-      <button className="btn fixed bottom-4 right-4 bg-primary text-white h-20 rounded-full shadow-lg">
+      <button className="btn fixed bottom-4 right-4 shadow-2xl bg-primary text-white h-20 rounded-full">
         <BiSolidReport size={40} />
-        <div className="pl-2 text-xl">Check Reports</div>
+        <div className="pl-2 text-lg ">Check Reports</div>
       </button>
     </div>
   );
