@@ -54,8 +54,8 @@ const CreateAccount = () => {
 
     return (
         <div className="min-h-screen flex flex-col justify-center items-center" style={{ backgroundColor: 'hsl(169, 52%, 80%)' }}>
-            <Navigation backgroundColor="hsl(169, 52%, 80%)" />
-            <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex lg:flex-row flex-col-reverse">
+           
+            <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex lg:flex-row flex-col-reverse animate-fade-in">
                 {/* Image Section */}
                 <div className="lg:w-1/2 flex justify-center items-center">
                     <div className="h-96 w-full bg-cover bg-no-repeat bg-center" style={{ backgroundImage: `url(${EWasteHubImage})`, backgroundSize: 'contain', backgroundPosition: 'center' }}></div>
@@ -79,7 +79,7 @@ const CreateAccount = () => {
                         {/* Terms & Conditions */}
                         <label className="label cursor-pointer justify-start space-x-2">
                             <input type="checkbox" className="checkbox checkbox-primary" value={0} onChange={(e => setTerms(e.target.checked? 1: 0))}/>
-                            <span className="label-text">I agree to the <a href="#" className="text-blue-600 hover:underline">Terms & Conditions</a></span>
+                            <span className="label-text">I agree to the <a href="#" className="btn-link hover:underline">Terms & Conditions</a></span>
                         </label>
 
                         <div className="text-right mb-5">
