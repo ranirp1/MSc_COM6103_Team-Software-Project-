@@ -70,7 +70,11 @@ class UserDevice(db.Model):
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    deviceClassification = db.Column(db.String(120), nullable=False)
     dateOfPurchase = db.Column(db.Date)
+    deviceColor = db.Column(db.String(120), nullable=True)
+    deviceStorage = db.Column(db.String(120), nullable=True)
+    deviceCondition = db.Column(db.String(20), nullable=True)
     imageUrl = db.Column(db.String(255))
     qrCodeUrl = db.Column(db.String(255))
     dateOfCreation = db.Column(db.Date)
@@ -85,7 +89,11 @@ class UserDevice(db.Model):
         return {
             'userDeviceID': self.userDeviceID,
             'deviceID': self.deviceID,
+            'deviceClassification': self.deviceClassification,
             'dateOfPurchase': str(self.dateOfPurchase),
+            'deviceColor': self.deviceColor,
+            'deviceStorage': self.deviceStorage,
+            'deviceCondition': self.deviceCondition,
             'imageUrl': self.imageUrl,
             'qrCodeUrl': self.qrCodeUrl,
             'dateOfCreation': str(self.dateOfCreation),
@@ -324,6 +332,10 @@ def createDevice():
     deviceID = data.get('deviceID')
     brand = data.get('brand')
     model = data.get('model')
+    deviceClassification = data.get('deviceClassification')
+    deviceColor = data.get('deviceColor')
+    deviceStorage = data.get('deviceStorage')
+    deviceCondition = data.get('deviceCondition')
     imageUrl = data.get('imageUrl')
     qrCodeUrl = data.get('qrCodeUrl')
     dateOfRelease = data.get('dateofRelease')
@@ -362,7 +374,11 @@ def createDevice():
     newUserDeviceAdded = UserDevice(
         userID = userID,
         deviceID = deviceID,
+        deviceClassification = deviceClassification,
         dateOfPurchase = dateOfPurchase,
+        deviceColor = deviceColor,
+        deviceStorage = deviceStorage,
+        deviceCondition = deviceCondition,
         imageUrl = imageUrl,
         qrCodeUrl = qrCodeUrl,
         dateOfCreation = dateOfRelease,
@@ -396,11 +412,11 @@ def getListOfDevices():
             'createdAt': device.dateOfRelease.strftime("%Y-%m-%d"),
             'verified': device.isVerified,
             'image': '',
-            'storage': '',
-            'color': '',
+            'storage': device.deviceStorage,
+            'color': device.deviceColor,
             'dataRecovered': None,
-            'condition': '',
-            'classification': '',
+            'condition': device.deviceCondition,
+            'classification': device.deviceClassification,
             'dataRetrievalRequested': None,
             'dataRetrievalTimeLeft': ''
         }
