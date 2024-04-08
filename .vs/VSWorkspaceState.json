@@ -4,7 +4,8 @@
     "\\client",
     "\\client\\src",
     "\\client\\src\\pages",
-    "\\client\\src\\pages\\login"
+    "\\client\\src\\pages\\login",
+    "\\server"
   ],
   "SelectedNode": "\\client\\src\\pages\\login\\LoginPage.tsx",
   "PreviewInSolutionExplorer": false

@@ -163,7 +163,30 @@ const AdminDashboard = () => {
       }
     }
   );
-
+  
+  const handleDeleteUser = async (email: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/deleteUser`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to delete user");
+      }
+  
+      // Filter out the deleted user from the state
+      setUsers(users.filter((user) => user.email !== email));
+      console.log("User deleted successfully");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
+  
+  
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const showList = (listType: "employees" | "endUsers" | "admins") => {
@@ -217,30 +240,26 @@ const AdminDashboard = () => {
               <option value="phone">Phone</option>
             </select>
           </div>
-          <div className="dropdown dropdown-end ml-4">
-            <label
-              tabIndex={0}
-              className="btn btn-ghost cursor-pointer border-2 border-primary"
-            >
-              <RiFilter3Line className="text-lg" /> Sort
-            </label>
-            <ul
-              tabIndex={0}
-              className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
-            >
-              <li>
-                <a onClick={() => handleSortOrderChange("asc")}>Ascending</a>
-              </li>
-              <li>
-                <a onClick={() => handleSortOrderChange("desc")}>Descending</a>
-              </li>
-            </ul>
-          </div>
-        </header>
-
+          <div className="flex ml-4">
+            
+          <button
+            className={`btn ${sortOrder === 'asc' ? 'btn-primary' : 'btn-ghost'} border-2 border-primary mr-2`}
+            onClick={() => handleSortOrderChange("asc")}
+          >
+            <RiFilter3Line className="text-lg" /> Ascending
+          </button>
+          <button
+            className={`btn ${sortOrder === 'desc' ? 'btn-primary' : 'btn-ghost'} border-2 border-primary`}
+            onClick={() => handleSortOrderChange("desc")}
+          >
+            <RiFilter3Line className="text-lg" /> Descending
+          </button>
+        </div>
+      </header>
+        
         <div
           role="tablist"
-          className="tabs tabs-lifted tabs-lg  shadow-2xl mx-5"
+          className="tabs tabs-lifted tabs-lg  shadow-2xl mx-2"
         >
           <a
             role="tab"
@@ -251,7 +270,7 @@ const AdminDashboard = () => {
             }`}
             onClick={() => showList("employees")}
           >
-            <RiUserSharedLine className="text-lg mr-4" /> Employees
+            <RiUserSharedLine className="text-lg mr-4" /> Staff
           </a>
           <a
             role="tab"
@@ -308,6 +327,9 @@ const AdminDashboard = () => {
                       <th className="text-black text-lg font-bold min-w-[150px]">
                         Role
                       </th>
+                      <th className="text-black text-lg font-bold min-w-[150px]">
+                        Delete User
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -317,20 +339,42 @@ const AdminDashboard = () => {
                         <td>{user.email}</td>
                         <td>{user.phone}</td>
                         <td>
-                          <select
-                            value={user.role}
-                            onChange={(e) =>
-                              handleRoleChange(
-                                user.id,
-                                e.target.value as UserType
-                              )
-                            }
-                            className="select select-bordered select-primary w-full max-w-xs"
+                        {user.role === 'endUser' && (
+                            <>
+                              <button
+                                onClick={() => handleRoleChange(user.id, 'employee')}
+                                className="bg-primary text-white p-3" 
+                              >
+                                Promote to Staff
+                              </button>
+                      
+                            </>
+                          )}
+                          {user.role === 'employee' && (
+                            <button
+                              onClick={() => handleRoleChange(user.id, 'admin')}
+                              className="bg-primary text-white p-3"
+                            >
+                              Upgrade to Admin
+                            </button>
+                          )}
+                          {user.role === 'admin' && (
+                            <button
+                              onClick={() => handleRoleChange(user.id, 'employee')}
+                              className="bg-primary text-white p-3" 
+                            >
+                              Downgrade to Staff
+                            </button>
+                          )}
+                        </td>
+
+                        <td>
+                          <button
+                            onClick={() => handleDeleteUser(user.email)}
+                            className="btn btn-error"
                           >
-                            <option value="employee">Employee</option>
-                            <option value="endUser">End User</option>
-                            <option value="admin">Admin</option>
-                          </select>
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))}

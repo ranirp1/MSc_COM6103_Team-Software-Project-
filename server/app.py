@@ -307,78 +307,61 @@ def move_device_classification():
         return jsonify({'message': 'User not found'}), 404
 
 
-
 @app.route('/api/createDevice', methods=['POST'])
 def createDevice():
-    """
-    Create device API
-    If user wants to add a new device which is not already listed in the db, it will create a new device entry
-    Associates the device with the user by userID
-    Returns:
-        A JSON response with a success message if the device is successfully created; A JSON response with an error message if the device model already exists in the database.
-        A JSON response with a success message if the device is successfully associated with the user; A JSON response with an error message if any problems arrives.
-    """
     data = request.json
     userID = data.get('userID')
-    deviceType = data.get('deviceType')
-    deviceID = data.get('deviceID')
+    deviceID = data.get('deviceID')  # This can be None if creating a new device
     brand = data.get('brand')
     model = data.get('model')
     imageUrl = data.get('imageUrl')
     qrCodeUrl = data.get('qrCodeUrl')
-    dateOfRelease = data.get('dateofRelease')
-    dateOfPurchase = data.get('dateofPurchase')
+    dateOfRelease = data.get('dateOfRelease')
+    dateOfPurchase = data.get('dateOfPurchase')
+    isVerified = data.get('isVerified', False)
 
-    """Need to finalize if the isVerified is added in the device or userDevice table"""
-    if not all([dateOfPurchase, imageUrl]):
-        isVerified = False
+    # Ensure the user exists
+    user = User.query.filter_by(id=userID).first()
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    # Check if we're creating a new device or using an existing one
+    if deviceID:
+        device = Device.query.filter_by(deviceID=deviceID).first()
+        if not device:
+            return jsonify({'message': 'Device not found'}), 404
     else:
-        isVerified = True
-
-    
-    if(deviceID is None):
+        # Create a new device
         try:
-            newDeviceAdded = Device(
-                deviceType=deviceType,
+            new_device = Device(
                 brand=brand,
                 model=model,
-                dateOfRelease=dateOfRelease,
-                isVerified=False            
+                isVerified=isVerified,
+                # Add other fields as necessary
             )
-            db.session.add(newDeviceAdded)
+            db.session.add(new_device)
             db.session.commit()
-            
-            # Read the device ID from the database for the newly inserted device
-
-            deviceID = newDeviceAdded.deviceID
-            print('deviceID',deviceID)
+            deviceID = new_device.deviceID  # Get the new device ID
         except Exception as e:
-            print(e)
             db.session.rollback()
-            db.session.flush()
-            return jsonify({'message': 'Device creation error'}), 500
-    
-    
-    newUserDeviceAdded = UserDevice(
-        userID = userID,
-        deviceID = deviceID,
-        dateOfPurchase = dateOfPurchase,
-        imageUrl = imageUrl,
-        qrCodeUrl = qrCodeUrl,
-        dateOfCreation = dateOfRelease,
-        dataRetrievalID = 0,
-        estimatedValue = ""
-    )
-    try:
-        db.session.add(newUserDeviceAdded)
-        db.session.commit()
-        return jsonify({'message': 'User Device creation successful'}), 200
-    except Exception as e:
-        print(e)
-        db.session.rollback()
-        db.session.flush()
-        return jsonify({'message': 'User device creation error'}), 500
+            return jsonify({'message': 'Error creating device: {}'.format(str(e))}), 500
 
+    # Create a UserDevice association
+    try:
+        new_user_device = UserDevice(
+            userID=userID,
+            deviceID=deviceID,
+            imageUrl=imageUrl,
+            qrCodeUrl=qrCodeUrl,
+            dateOfPurchase=dateOfPurchase,
+            # Add other fields as necessary
+        )
+        db.session.add(new_user_device)
+        db.session.commit()
+        return jsonify({'message': 'Device successfully created and associated with user'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error associating device with user: {}'.format(str(e))}), 500
 
 @app.route('/api/getListOfDevices', methods=['GET'])
 def getListOfDevices():
