@@ -438,5 +438,44 @@ def create_customer_device():
     else:
         return jsonify({'message': 'User not found'}), 404
 
+@app.route('/api/getListOfDevices', methods=['GET'])
+def getListOfDevices():
+    # combine the device and UserDevice tables to get the list of devices
+    print('inside get list of devices')
+    devices = Device.query.join(UserDevice, UserDevice.deviceID == Device.deviceID).all()
+    device_list = []
+    print('devices',devices)
+    for device in devices:
+        print('device',device.serialize())
+        device_data = {
+            'id': device.deviceID,
+            'brand': device.brand,
+            'model': device.model,
+            'createdAt': device.dateOfRelease.strftime("%Y-%m-%d"),
+            'verified': device.isVerified,
+            'image': '',
+            'storage': device.deviceStorage,
+            'color': device.deviceColor,
+            'dataRecovered': None,
+            'condition': device.deviceCondition,
+            'classification': device.deviceClassification,
+            'dataRetrievalRequested': None,
+            'dataRetrievalTimeLeft': ''
+        }
+        device_list.append(device_data)
+    return jsonify(device_list)
+
+
+@app.route('/api/changeDeviceVerification/', methods=['POST'])
+def changeDeviceVerification():
+    data = request.json
+    deviceID = data.get('deviceID')
+    isVerified = data.get('isVerified')
+    device = Device.query.filter_by(deviceID=deviceID).first()
+    if not device:
+        return jsonify({'message': 'Device not found'}), 404
+    device.isVerified = isVerified
+    db.session.commit()
+    return jsonify({'message': 'Device verification status updated'}), 200
 
 
