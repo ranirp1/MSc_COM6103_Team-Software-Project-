@@ -70,7 +70,11 @@ class UserDevice(db.Model):
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    deviceClassification = db.Column(db.String(120), nullable=False)
     dateOfPurchase = db.Column(db.Date)
+    deviceColor = db.Column(db.String(120), nullable=True)
+    deviceStorage = db.Column(db.String(120), nullable=True)
+    deviceCondition = db.Column(db.String(20), nullable=True)
     imageUrl = db.Column(db.String(255))
     qrCodeUrl = db.Column(db.String(255))
     dateOfCreation = db.Column(db.Date)
@@ -85,7 +89,11 @@ class UserDevice(db.Model):
         return {
             'userDeviceID': self.userDeviceID,
             'deviceID': self.deviceID,
+            'deviceClassification': self.deviceClassification,
             'dateOfPurchase': str(self.dateOfPurchase),
+            'deviceColor': self.deviceColor,
+            'deviceStorage': self.deviceStorage,
+            'deviceCondition': self.deviceCondition,
             'imageUrl': self.imageUrl,
             'qrCodeUrl': self.qrCodeUrl,
             'dateOfCreation': str(self.dateOfCreation),
@@ -296,7 +304,7 @@ def move_device_classification():
 
     if user:
         # Retrieve the user's device for classification update
-        user_device = UserDeviceTable.query.filter_by(user_id=user.id).first()
+        user_device = UserDevice.query.filter_by(user_id=user.id).first()
 
         if user_device:
             # Update the device classification
@@ -326,6 +334,10 @@ def createDevice():
     deviceID = data.get('deviceID')
     brand = data.get('brand')
     model = data.get('model')
+    deviceClassification = data.get('deviceClassification')
+    deviceColor = data.get('deviceColor')
+    deviceStorage = data.get('deviceStorage')
+    deviceCondition = data.get('deviceCondition')
     imageUrl = data.get('imageUrl')
     qrCodeUrl = data.get('qrCodeUrl')
     dateOfRelease = data.get('dateofRelease')
@@ -351,7 +363,7 @@ def createDevice():
             db.session.commit()
             
             # Read the device ID from the database for the newly inserted device
-            deviceID = newDeviceAdded.deviceID
+
             deviceID = newDeviceAdded.deviceID
             print('deviceID',deviceID)
         except Exception as e:
@@ -364,10 +376,14 @@ def createDevice():
     newUserDeviceAdded = UserDevice(
         userID = userID,
         deviceID = deviceID,
+        deviceClassification = deviceClassification,
         dateOfPurchase = dateOfPurchase,
+        deviceColor = deviceColor,
+        deviceStorage = deviceStorage,
+        deviceCondition = deviceCondition,
         imageUrl = imageUrl,
         qrCodeUrl = qrCodeUrl,
-        dateOfCreation = datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        dateOfCreation = dateOfRelease,
         dataRetrievalID = 0,
         estimatedValue = ""
     )
@@ -382,43 +398,42 @@ def createDevice():
         return jsonify({'message': 'User device creation error'}), 500
 
 
-@app.route('/api/updateDeviceVisibility', methods=['POST'])
-def update_device_visibility():
-    """
-    Update device visibility for a user by staff.
+@app.route('/api/getListOfDevices', methods=['GET'])
+def getListOfDevices():
+    # combine the device and UserDevice tables to get the list of devices
+    print('inside get list of devices')
+    devices = Device.query.join(UserDevice, UserDevice.deviceID == Device.deviceID).all()
+    device_list = []
+    print('devices',devices)
+    for device in devices:
+        print('device',device.serialize())
+        device_data = {
+            'id': device.deviceID,
+            'brand': device.brand,
+            'model': device.model,
+            'createdAt': device.dateOfRelease.strftime("%Y-%m-%d"),
+            'verified': device.isVerified,
+            'image': '',
+            'storage': device.deviceStorage,
+            'color': device.deviceColor,
+            'dataRecovered': None,
+            'condition': device.deviceCondition,
+            'classification': device.deviceClassification,
+            'dataRetrievalRequested': None,
+            'dataRetrievalTimeLeft': ''
+        }
+        device_list.append(device_data)
+    return jsonify(device_list)
 
-    Returns:
-        A JSON response with a success message if the visibility is updated successfully.
-        A JSON response with an error message if the user or device is not found.
-    """
+
+@app.route('/api/changeDeviceVerification/', methods=['POST'])
+def changeDeviceVerification():
     data = request.json
-
-    # Input Validation
-    email = data.get('email')
-    device_id = data.get('device_id')
-    is_visible = data.get('is_visible')
-
-    if not email or not device_id or is_visible is None:
-        return jsonify({'error': 'Invalid request data'}), 400
-
-    # Check if the staff user is authenticated
-    staff_user = User.query.filter_by(email='staff@example.com',
-                                      isStaff=True).first()  # Adjust the email as per your staff user
-
-    if not staff_user:
-        return jsonify({'message': 'Unauthorized access'}), 403
-
-    user = User.query.filter_by(email=email).first()
-
-    if user:
-        user_device = UserDeviceTable.query.filter_by(user_id=user.id, device_id=device_id).first()
-
-        if user_device:
-            # Update the device visibility
-            user_device.visible = is_visible
-            db.session.commit()
-            return jsonify({'message': 'Device visibility updated successfully'}), 200
-        else:
-            return jsonify({'message': 'Device not found for the user'}), 404
-    else:
-        return jsonify({'message': 'User not found'}), 404
+    deviceID = data.get('deviceID')
+    isVerified = data.get('isVerified')
+    device = Device.query.filter_by(deviceID=deviceID).first()
+    if not device:
+        return jsonify({'message': 'Device not found'}), 404
+    device.isVerified = isVerified
+    db.session.commit()
+    return jsonify({'message': 'Device verification status updated'}), 200
