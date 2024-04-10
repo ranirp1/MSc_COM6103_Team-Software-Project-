@@ -70,7 +70,11 @@ class UserDevice(db.Model):
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    deviceClassification = db.Column(db.String(120), nullable=False)
     dateOfPurchase = db.Column(db.Date)
+    deviceColor = db.Column(db.String(120), nullable=True)
+    deviceStorage = db.Column(db.String(120), nullable=True)
+    deviceCondition = db.Column(db.String(20), nullable=True)
     imageUrl = db.Column(db.String(255))
     qrCodeUrl = db.Column(db.String(255))
     dateOfCreation = db.Column(db.Date)
@@ -85,7 +89,11 @@ class UserDevice(db.Model):
         return {
             'userDeviceID': self.userDeviceID,
             'deviceID': self.deviceID,
+            'deviceClassification': self.deviceClassification,
             'dateOfPurchase': str(self.dateOfPurchase),
+            'deviceColor': self.deviceColor,
+            'deviceStorage': self.deviceStorage,
+            'deviceCondition': self.deviceCondition,
             'imageUrl': self.imageUrl,
             'qrCodeUrl': self.qrCodeUrl,
             'dateOfCreation': str(self.dateOfCreation),
@@ -297,7 +305,7 @@ def move_device_classification():
 
     if user:
         # Retrieve the user's device for classification update
-        user_device = UserDeviceTable.query.filter_by(user_id=user.id).first()
+        user_device = UserDevice.query.filter_by(user_id=user.id).first()
 
         if user_device:
             # Update the device classification
@@ -327,6 +335,10 @@ def createDevice():
     deviceID = data.get('deviceID')
     brand = data.get('brand')
     model = data.get('model')
+    deviceClassification = data.get('deviceClassification')
+    deviceColor = data.get('deviceColor')
+    deviceStorage = data.get('deviceStorage')
+    deviceCondition = data.get('deviceCondition')
     imageUrl = data.get('imageUrl')
     qrCodeUrl = data.get('qrCodeUrl')
     dateOfRelease = data.get('dateofRelease')
@@ -352,7 +364,7 @@ def createDevice():
             db.session.commit()
             
             # Read the device ID from the database for the newly inserted device
-            deviceID = newDeviceAdded.deviceID
+
             deviceID = newDeviceAdded.deviceID
             print('deviceID',deviceID)
         except Exception as e:
@@ -365,10 +377,14 @@ def createDevice():
     newUserDeviceAdded = UserDevice(
         userID = userID,
         deviceID = deviceID,
+        deviceClassification = deviceClassification,
         dateOfPurchase = dateOfPurchase,
+        deviceColor = deviceColor,
+        deviceStorage = deviceStorage,
+        deviceCondition = deviceCondition,
         imageUrl = imageUrl,
         qrCodeUrl = qrCodeUrl,
-        dateOfCreation = datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        dateOfCreation = dateOfRelease,
         dataRetrievalID = 0,
         estimatedValue = ""
     )
