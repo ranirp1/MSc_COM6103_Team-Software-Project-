@@ -6,18 +6,18 @@ import LoginPage from "../pages/login/LoginPage";
 const NavBar = () => {
 
   return (
-    <div className="">
+    <div className="bg-primary">
       <div className="navbar">
         <div className="flex-1 gap-5">
           <img src={EWasteHubImage} alt="Logo" className="w-20 h-20 rounded-full" />
-          <h1 className=" text-2xl ml-2 font-semibold text-primary">
+          <h1 className=" text-2xl ml-2 font-semibold text-white">
             E-Waste Hub
           </h1>
         </div>
         <div className="flex-none gap-2">
           {/* Open the modal using document.getElementById('ID').showModal() method */}
           <button
-            className="btn btn-primary"
+            className="btn btn-accent w-20"
             onClick={() => {
               const modal = document.getElementById(
                 "my_modal_1"
@@ -59,7 +59,7 @@ const NavBar = () => {
           </dialog>
 
           <button
-                className="btn btn-success"
+                className="btn btn-success w-20"
                 onClick={() => {
                   const modal = document.getElementById("my_modal_2") as HTMLDialogElement | null;
                   if (modal) {
