@@ -67,10 +67,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "hsl(169, 52%, 80%)" }}
-    >
+    <div>
       {showToast === 1 && (
         <div className="toast toast-center">
           <div className="alert alert-success">

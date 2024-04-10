@@ -53,7 +53,7 @@ const CreateAccount = () => {
 
 
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center" style={{ backgroundColor: 'hsl(169, 52%, 80%)' }}>
+        <div>
            
             <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex lg:flex-row flex-col-reverse animate-fade-in">
                 {/* Image Section */}

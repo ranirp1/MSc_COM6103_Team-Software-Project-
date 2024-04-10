@@ -10,10 +10,11 @@ import {
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import image1 from "../../assets/image1.jpg";
 import image2 from "../../assets/image2.jpg";
-import emptyListImage from "../../assets/empty_list.svg";
+import emptyListImage from "../../assets/empty_list.svg"
 import { API_URL } from "../../constants/constant";
 import { redirect } from "react-router-dom";
-import { BiSolidReport } from "react-icons/bi";
+
+
 
 class Device {
   id: number;
@@ -110,7 +111,7 @@ const StaffDashboard = () => {
   };
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [showVerified, setShowVerified] = useState(true);
+ // const [showVerified, setShowVerified] = useState(true);
   const [sortOrder, setSortOrder] = useState<string>("");
 
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
@@ -147,23 +148,47 @@ const StaffDashboard = () => {
     setSortOrder(newSortOrder);
   };
 
-  const toggleDeviceVerification = (deviceId: number) => {
-    setDevices(
-      devices.map((device) => {
-        if (device.id === deviceId) {
-          return { ...device, verified: !device.verified };
+  const toggleDeviceVerification = async (deviceId: number) => {
+    const device = devices.find((device) => device.id === deviceId);
+    if (device) {
+      try {
+        const response = await fetch(`${API_URL}/api/changeDeviceVerification/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            deviceID: deviceId,
+            isVerified: !device.verified,
+          }),
+        });
+  
+        if (response.ok) {
+          // Optionally fetch updated devices list or update the local state to reflect the change
+          // Here's an example of updating the local state
+          const updatedDevices = devices.map((d) => {
+            if (d.id === deviceId) {
+              return { ...d, verified: !d.verified };
+            }
+            return d;
+          });
+          setDevices(updatedDevices);
+        } else {
+          throw new Error('Failed to update device verification status');
         }
-        return device;
-      })
-    );
+      } catch (error) {
+        console.error('Error updating device verification status:', error);
+      }
+    }
   };
+  
 
   // Function to filter devices based on search query and verification status
   const getFilteredDevices = () => {
     return devices.filter(
       (device) =>
-        device.brand.toLowerCase().includes(searchQuery) &&
-        device.verified === showVerified
+        device.brand.toLowerCase().includes(searchQuery) 
+       // && device.verified === showVerified
     );
   };
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -176,11 +201,20 @@ const StaffDashboard = () => {
       manufacturer: string,
       model: string,
       storage: string,
-      color: string
+      color: string,
+    createdAt: string,
+    verified: boolean,
+    image: string,
+    dataRecovered: boolean | null,
+    condition: string,
+    classification: string,
+    dataRetrievalRequested: boolean | null,
+    dataRetrievalTimeLeft: string
     ) => {
       const baseUrl = "https://uk.webuy.com/search";
       return `${baseUrl}?stext=${encodeURIComponent(
-        `${manufacturer} ${model} ${storage} ${color}`
+        `${manufacturer} ${model} ${storage} ${color} ${createdAt} ${verified} 
+        ${image} ${dataRecovered} ${condition} ${classification}${dataRetrievalRequested} ${dataRetrievalTimeLeft}`
       )}`;
     };
 
@@ -193,7 +227,16 @@ const StaffDashboard = () => {
           device.brand,
           device.model,
           device.storage,
-          device.color
+          device.color,
+          device.createdAt,
+          device.verified,
+          device.image,
+          device.dataRecovered!,
+          device.condition,
+          device.classification,
+          device.dataRetrievalRequested!,
+          device.dataRetrievalTimeLeft
+
         );
         return (
           <div className="mt-2">
@@ -251,27 +294,58 @@ const StaffDashboard = () => {
       return "Not applicable";
     };
 
+    const saveDeviceDetails = async (device: Device) => {
+      try {
+        const response = await fetch(`${API_URL}/api/updateDeviceDetails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(device),
+        });
+    
+        if (!response.ok) {
+          throw new Error('Failed to update device details');
+        }
+    
+        // Optionally, refetch the devices list or show a success message
+        console.log('Device details updated successfully');
+      } catch (error) {
+        console.error('Error updating device details:', error);
+      }
+    };
+
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, deviceId: number, field: string) => {
+      const newValue = event.target.value;
+      setDevices((prevDevices) =>
+        prevDevices.map((device) =>
+          device.id === deviceId ? { ...device, [field]: newValue } : device
+        )
+      );
+    };
+     
+
     return (
       <div className="bg-white p-5 rounded-lg shadow-md">
         {/* Manufacturer and model name above the photo */}
-        <h3 className="text-2xl font-bold mb-4">
-          {device.brand} {device.model}
-        </h3>
-        <div className="mt-3">
-          <span
-            className={`px-3 py-1 text-sm font-semibold inline-block ${
-              device.verified
-                ? "bg-green-200 text-green-800"
-                : "bg-red-200 text-red-800"
-            }`}
-          >
-            {device.verified ? "Verified" : "Not Verified"}
-          </span>
+        <div className="flex justify-between mb-4">
+          <input
+            type="text"
+            value={device.brand}
+            onChange={(e) => handleInputChange(e, device.id, 'brand')}
+
+            className="text-2xl font-bold"
+          />
+          <input
+            type="text"
+            value={device.model}
+            onChange={(e) => handleInputChange(e, device.id,  'model')}
+            className="text-2xl font-bold"
+          />
         </div>
+  
         <div className="flex flex-col md:flex-row md:items-start">
           <div className="w-full md:w-3/4 lg:w-3/4">
-            {" "}
-            {/* Adjust width here */}
             {/* Larger image size */}
             <img
               src={image1}
@@ -279,30 +353,46 @@ const StaffDashboard = () => {
               className="w-full h-auto rounded"
             />
           </div>
-
+  
           <div className="md:ml-4 flex-1">
-            {/* Increase margin-top here for more space */}
             <div className="flex flex-wrap -m-1 mt-20 md:mt-22">
-              {" "}
-              {/* Adjust mt- class here */}
+              {/* Storage, Color, Condition, Classification */}
               <div className="p-1">
-                <span className="text-gray-600">Storage:</span> {device.storage}
+                <input
+                  type="text"
+                  value={device.storage}
+                  onChange={(e) => handleInputChange(e, device.id, 'storage')}
+                  className="input input-bordered"
+                />
               </div>
               <div className="p-1">
-                <span className="text-gray-600">Color:</span> {device.color}
+                <input
+                  type="text"
+                  value={device.color}
+                  onChange={(e) => handleInputChange(e, device.id,  'color')}
+                  className="input input-bordered"
+                />
               </div>
               <div className="p-1">
-                <span className="text-gray-600">Condition:</span>{" "}
-                {device.condition}
+                <input
+                  type="text"
+                  value={device.condition}
+                  onChange={(e) => handleInputChange(e, device.id,  'condition')}
+                  className="input input-bordered"
+                />
               </div>
               <div className="p-1">
-                <span className="text-gray-600">Classification:</span>{" "}
-                {device.classification}
+                <input
+                  type="text"
+                  value={device.classification}
+                  onChange={(e) => handleInputChange(e, device.id,  'classification')}
+                  className="input input-bordered"
+                />
               </div>
             </div>
           </div>
         </div>
-
+  
         <div className="mt-4">
           <div className="mb-2">
             <span className="font-bold">Specifications:</span>
@@ -310,29 +400,43 @@ const StaffDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p>
-                <strong>Model Name:</strong> {device.brand} {device.model}
+                <strong>Created At:</strong>
+                <input
+                  type="text"
+                  value={device.createdAt}
+                  onChange={(e) => handleInputChange(e, device.id,  'createdAt')}
+                  className="input input-bordered"
+                />
               </p>
               <p>
-                <strong>Created At:</strong> {device.createdAt}
-              </p>
-              <p>
-                <strong>Data Recovery:</strong>{" "}
-                {device.classification === "Current" ||
-                device.classification === "Rare"
-                  ? "Not applicable"
-                  : device.dataRecovered
-                  ? "Yes"
-                  : "No"}
-              </p>
-              <p>
-                <strong>Data Retrieval Time Left:</strong>{" "}
-                {calculateDataRetrievalTimeLeft()}
+                <strong>Data Recovery:</strong>
+                <select
+                  value={device.dataRecovered ? 'Yes' : 'No'}
+                  onChange={(e) => {
+                    const isDataRecovered = e.target.value === 'Yes';
+                    handleInputChange({ target: { value: isDataRecovered } } as unknown as React.ChangeEvent<HTMLInputElement>, device.id, 'dataRecovered');
+                  }}
+                  
+                  className="select select-bordered"
+                >
+                  <option>Yes</option>
+                  <option>No</option>
+                </select>
               </p>
             </div>
           </div>
         </div>
-
+  
+        {/* Render CEX Link if applicable */}
         {renderCexLink()}
+  
+              <button
+        onClick={() => saveDeviceDetails(device)}
+        className="btn btn-primary mt-4"
+      >
+        Save Changes
+      </button>
+
       </div>
     );
   };
@@ -394,36 +498,12 @@ const StaffDashboard = () => {
           role="tablist"
           className="tabs tabs-lifted tabs-lg  shadow-2xl mx-5"
         >
-          <a
-            role="tab"
-            className={`tab ${
-              showVerified
-                ? "bg-primary text-white"
-                : "text-primary border border-primary "
-            }`}
-            onClick={() => setShowVerified(true)}
-          >
-            Verified
-          </a>
-          <a
-            role="tab"
-            className={`tab ${
-              !showVerified
-                ? " bg-primary text-white"
-                : "text-primary border border-primary "
-            }`}
-            onClick={() => {
-              setShowVerified(false);
-            }}
-          >
-            Non-Verified
-          </a>
+
         </div>
 
         {/* Devices Table */}
         <div className="main-content flex-grow px-10 pt-5 ">
           <h5 className="text-black text-3xl font-medium mb-6">
-            {showVerified ? "Verified Devices" : "Non-Verified Devices"}
           </h5>
           <div
             className="overflow-y-auto"
@@ -438,7 +518,8 @@ const StaffDashboard = () => {
                 <h3 className="text-3xl font-bold text-center mb-5 ">
                   No Devices Found
                 </h3>
-                <img src={emptyListImage} className="h-80 w-80" />
+                <img src={emptyListImage} className="h-80 w-80"/>
+                
               </div>
             ) : (
               <table className="table w-full text-black ">
@@ -485,9 +566,7 @@ const StaffDashboard = () => {
                           <td className="text-lg">{device.brand}</td>
                           <td className="text-lg">{device.model}</td>
                           <td className="text-lg">{device.createdAt}</td>
-                          <td className="text-lg">
-                            {device.classification || "Not Classified"}
-                          </td>
+                          <td className="text-lg">{device.classification || "Not Classified"}</td>
                           <td>
                             <div className="flex">
                               <label
@@ -541,7 +620,7 @@ const StaffDashboard = () => {
 
         {/* Detailed view section */}
         {selectedDeviceId && (
-          <div className="device-details w-1/4 bg-white p-4 overflow-y-auto absolute right-0 top-0 h-full z-30">
+          <div className="device-details w-1/2 bg-white p-4 overflow-y-auto absolute right-0 top-0 h-full z-30">
             {/* Find the selected device and render its details */}
             {devices
               .filter((device) => device.id === selectedDeviceId)
@@ -575,11 +654,6 @@ const StaffDashboard = () => {
           </div>
         )}
       </div>
-
-      <button className="btn fixed bottom-4 right-4 shadow-2xl bg-primary text-white h-20 rounded-full">
-        <BiSolidReport size={40} />
-        <div className="pl-2 text-lg ">Check Reports</div>
-      </button>
     </div>
   );
 };
