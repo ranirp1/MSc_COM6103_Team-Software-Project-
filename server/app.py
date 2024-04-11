@@ -472,6 +472,85 @@ def getListOfDevices():
     return jsonify(device_list)
 
 
+@app.route('/api/customer_device', methods=['POST'])
+def update_device_visibility():
+def create_customer_device():
+    """
+    """
+    Update device visibility for a user by staff
+        Create and Save device information for a user.
+    Returns:
+
+    A JSON response with a success message if the visibility is updated successfully.
+        Returns:
+    A JSON response with an error message if the user or device is not found.
+            A JSON response with a success message if the device information is saved successfully.
+    """
+            A JSON response with an error message if the user is not found.
+    data = request.json
+        """
+
+    data = request.json
+    # Input Validation
+    email = data.get('email')
+    email = data.get('email')
+    device_info = data.get('device_info')
+    device_id = data.get('device_id')
+
+    is_visible = data.get('is_visible')
+    # Input validation: Check if email and device_info are present
+
+    if not email or not device_info:
+    if not email or not device_id or is_visible is None:
+        return jsonify({'error': 'Invalid request data'}), 400
+        return jsonify({'error': 'Invalid request data'}), 400
+
+
+    user = User.query.filter_by(email=email).first()
+    # Check if the staff user is authenticated
+
+    staff_user = User.query.filter_by(email='staff@example.com',
+    if user:
+                                       isStaff=True).first()  
+        # Assuming you have a one-to-many relationship between User and UserDeviceTable
+                                       
+        customer_device = UserDeviceTable(
+    
+            user_id=user.id,
+    # Adjust the email as per your staff user
+            device_type=device_info.get('device_type'),
+    if not staff_user:
+            brand=device_info.get('brand'),
+        return jsonify({'message': 'Unauthorized access'}), 403
+            model=device_info.get('model'),
+
+        )
+    user = User.query.filter_by(email=email).first()
+
+
+        # Input validation: Check if essential device information is present
+    if user:
+        if not customer_device.device_type or not customer_device.brand or not customer_device.model:
+        user_device = UserDeviceTable.query.filter_by(user_id=user.id, device_id=device_id).first()
+            return jsonify({'error': 'Incomplete device information'}), 400
+
+
+        if user_device:
+        db.session.add(customer_device)
+            # Update the device visibility
+        db.session.commit()
+            user_device.visible = is_visible
+
+            db.session.commit()
+        return jsonify({'message': 'Device information saved successfully'}), 200
+            return jsonify({'message': 'Device visibility updated successfully'}), 200
+    else:
+        else:
+        return jsonify({'message': 'User not found'}), 404
+            return jsonify({'message': 'Device not found for the user'}), 404
+
+
+
 @app.route('/api/changeDeviceVerification/', methods=['POST'])
 def changeDeviceVerification():
     data = request.json
