@@ -10,11 +10,13 @@ import {
   RiUserSettingsFill,
   RiUserSharedLine,
 } from "react-icons/ri";
-import React, { useState, ChangeEvent, useRef } from "react";
+import image1 from "../../assets/image1.jpg";
+import React, { useState, ChangeEvent, useEffect, useRef } from "react";
 import "../../style.css";
 import { Navigate, useNavigate } from "react-router-dom";
 import { API_URL } from "../../constants/constant";
 import QRCode from "react-qr-code";
+import emptyListImage from "../../assets/empty_device_list.svg";
 
 interface Device {
   id: number;
@@ -27,7 +29,7 @@ interface Device {
   color: string;
   dataRecovered: boolean | null;
   condition: string;
-  deviceType: string;
+  deviceClassification: string;
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
 }
@@ -40,13 +42,13 @@ interface DeviceDetails {
 }
 
 const UserDashboard = () => {
-  const [devices, setDevices] = useState<Device[]>([
-    { id: 1, brand: 'Iphone', model: '10', createdAt: '31 Jul 2023, 07:13 PM', isVerified: true, image: Samsung, storage: '64GB', color: 'Silver', dataRecovered: null, condition: 'good', deviceType: 'Current', dataRetrievalRequested: null, dataRetrievalTimeLeft: 'Not applicable' },
-    { id: 2, brand: 'Samsung', model: 'S23', createdAt: '12 Jan 2024, 01:49 PM', isVerified: false,  image: IPhone, storage: '64GB', color: 'Red', dataRecovered: true, condition: 'bad' , deviceType: 'Recycle', dataRetrievalRequested: true, dataRetrievalTimeLeft: '' },
-  ]);
+  const [devices, setDevices] = useState<Device[]>([]);
+
+  const radioPackage = useRef();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const [deviceId, setDeviceId] = useState("");
-  const [deviceType, setDeviceType] = useState("");
+  const [deviceClassification, setDeviceClassification] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
@@ -56,59 +58,97 @@ const UserDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
-  const [isGenerated, setIsGenerated] = useState(false);
-  const qrCodeRef = useRef(null);
 
   const [dataRetrieval, setDataRetrieval] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
   const [open, setOpen] = useState<Boolean>(false);
- 
+
+  useEffect(() => {
+    fetchDevices();
+  }, []);
+
+  const fetchDevices = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/getListOfDevices`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        console.log("getListOfDevices api success");
+        var data = await response.json();
+        console.log("data", data);
+        setDevices(data);
+        console.log("Role updated sucessfully");
+      } else {
+        console.error("getListOfDevices api failed");
+      }
+    } catch (error) {
+      console.error("Error getListOfDevices user role:", error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // if(e.target.checked && e.target.value === "Yes"){
+    //   setShowPopup(true);
+    //   return;
+    // }
     try {
-      const response = await fetch(`${API_URL}/api/createDevice`,{
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          //TODO userID is hardcoded for now, need to get it from the session
-          body: JSON.stringify({ brand, model, deviceType, dateofPurchase, imageUrl, dateofRelease,userID: 1})
+      const response = await fetch(`${API_URL}/api/createDevice`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        //TODO userID is hardcoded for now, need to get it from the session
+        body: JSON.stringify({
+          brand,
+          model,
+          deviceClassification,
+          dateofPurchase,
+          imageUrl,
+          dateofRelease,
+          userID: 1,
+        }),
       });
 
-      if(response.ok){
+      if (response.ok) {
         console.log(response);
-          console.log("Creation Successful");
-          // window.location.href = '/user';
-      }
-      else{
-          console.log("Creation Error");
+        console.log("Creation Successful");
+        window.location.href = "/user";
+      } else {
+        console.log("Creation Error");
 
-          // get the error message from the server and save it to show in toast
+        // get the error message from the server and save it to show in toast
       }
-  } catch (error) {
-      console.log('Error:', error);
-  }
+    } catch (error) {
+      console.log("Error:", error);
+    }
     // Check if data retrieval is selected as "Yes"
-   {/* if (dataRetrieval) {
+    {
+      /* if (dataRetrieval) {
       setShowPopup(true); // Show the popup
     } else {
       // Handle form submission without showing popup
       // For now, just log a message
       console.log("Form submitted without showing popup");
       navigate("/user");
-    }*/}
-  };
-  
-  const handleGenerateQr = () => {
-    setIsGenerated(true); // Set flag on click
+    }*/
+    }
   };
 
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setDataRetrieval(e.target.checked && e.target.value === "Yes");
+    console.log("e.target.checked", e.target.checked);
+    if (e.target.checked && e.target.value === "Yes") {
+      setDataRetrieval(e.target.checked && e.target.value === "Yes");
+      setShowPopup(true);
+      return;
+    }
   };
 
   const handleCancel = () => {
@@ -142,7 +182,7 @@ const UserDashboard = () => {
         device.brand.toLowerCase().includes(searchQuery) ||
         device.model.includes(searchQuery) ||
         device.createdAt.toLowerCase().includes(searchQuery) ||
-        device.deviceType.includes(searchQuery)
+        device.deviceClassification.includes(searchQuery)
     );
 
     // Apply sort filter
@@ -178,12 +218,15 @@ const UserDashboard = () => {
     ) => {
       const baseUrl = "https://uk.webuy.com/search";
       return `${baseUrl}?stext=${encodeURIComponent(
-        '${manufacturer} ${model} ${storage} ${color}'
+        "${manufacturer} ${model} ${storage} ${color}"
       )}`;
     };
 
     const renderCexLink = () => {
-      if (device.deviceType === "Rare" || device.deviceType === "Current") {
+      if (
+        device.deviceClassification === "Rare" ||
+        device.deviceClassification === "Current"
+      ) {
         const cexUrl = createCexSearchUrl(
           device.brand,
           device.model,
@@ -208,11 +251,17 @@ const UserDashboard = () => {
     };
     const calculateDataRetrievalTimeLeft = () => {
       // Return "Not applicable" for "Current" and "Rare" classifications
-      if (device.deviceType === "Current" || device.deviceType === "Rare") {
+      if (
+        device.deviceClassification === "Current" ||
+        device.deviceClassification === "Rare"
+      ) {
         return "Not applicable";
       }
 
-      if (device.deviceType === "Recycle" && device.dataRetrievalRequested) {
+      if (
+        device.deviceClassification === "Recycle" &&
+        device.dataRetrievalRequested
+      ) {
         const creationDate = new Date(device.createdAt);
         const endTime = new Date(
           creationDate.getFullYear(),
@@ -226,9 +275,9 @@ const UserDashboard = () => {
           const daysLeft = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
 
           if (daysLeft > 30) {
-            return 'More than 1 month left';
+            return "More than 1 month left";
           } else if (daysLeft > 7) {
-            return 'More than 1 week left';
+            return "More than 1 week left";
           } else {
             return '${daysLeft} day${daysLeft > 1 ? "s" : ""} left';
           }
@@ -261,8 +310,8 @@ const UserDashboard = () => {
             {/* Adjust width here */}
             {/* Larger image size */}
             <img
-              src={device.image}
-              alt='{${device.brand} ${device.model}}'
+              src={image1}
+              alt="{${device.brand} ${device.model}}"
               className="w-full h-auto rounded"
             />
           </div>
@@ -284,7 +333,7 @@ const UserDashboard = () => {
               </div>
               <div className="p-1">
                 <span className="text-gray-600">Classification:</span>{" "}
-                {device.deviceType}
+                {device.deviceClassification}
               </div>
             </div>
           </div>
@@ -304,7 +353,8 @@ const UserDashboard = () => {
               </p>
               <p>
                 <strong>Data Recovery:</strong>{" "}
-                {device.deviceType === "Current" || device.deviceType === "Rare"
+                {device.deviceClassification === "Current" ||
+                device.deviceClassification === "Rare"
                   ? "Not applicable"
                   : device.dataRecovered
                   ? "Yes"
@@ -319,17 +369,21 @@ const UserDashboard = () => {
         </div>
         {renderCexLink()}
         <div className="mt-4">
-          <button className="btn btn-info" onClick={handleGenerateQr}>Generate QRCode</button>
-          <div style={{ height: "auto", margin: "0 auto", maxWidth: 64, width: "100%" }}>
-          {isGenerated && (
-    <QRCode
-    size={256}
-    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-    value={device.brand + '\n'+ device.model}
-    viewBox={`0 0 256 256`}
-    />
-          )}
-</div>
+          <div
+            style={{
+              height: "auto",
+              margin: "0 auto",
+              maxWidth: 64,
+              width: "100%",
+            }}
+          >
+            <QRCode
+              size={256}
+              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+              value={device.brand + "\n" + device.model}
+              viewBox={`0 0 256 256`}
+            />
+          </div>
         </div>
         <div className="dropdown dropdown-right mt-4">
           <div tabIndex={0} role="button" className="btn btn-info">
@@ -364,46 +418,52 @@ const UserDashboard = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex justify-between items-center p-4 shadow bg-gray-100">
+        <div className="flex justify-between items-center p-4 shadow bg-primary">
           <img
             src={EWasteHubImage}
             alt="E-Waste Hub Logo"
-            className="w-20 h-20 rounded-full"
+            className=" w-16 h-16 rounded-full shadow-2xl  "
           />
-          <h3 className="text-gray-700 text-3xl font-medium text-center flex-1">
+          <h3 className="text-white text-3xl font-medium flex-1 text-center">
             Your Devices
           </h3>
-          <div className="flex dropdown dropdown-end">
-            <div>
-              {/* Open the modal using document.getElementById('ID').showModal() method */}
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  const modal = document.getElementById(
-                    "my_modal_5"
-                  ) as HTMLDialogElement | null;
-                  if (modal) {
-                    modal.showModal();
-                  }
-                }}
-              >
-                Add Device
-              </button>
-            </div>
-          </div>
+
+          <button
+            className="btn btn-accent   ml-4"
+            onClick={() => {
+              const modal = document.getElementById(
+                "my_modal_5"
+              ) as HTMLDialogElement | null;
+              if (modal) {
+                modal.showModal();
+              }
+            }}
+          >
+            <RiLogoutBoxRLine className="text-lg mr-2" /> Add Device
+          </button>
+
+          <button
+            className="btn btn-accent   ml-4"
+            onClick={() => setShowLogoutModal(true)}
+          >
+            <RiLogoutBoxRLine className="text-lg mr-2" /> Logout
+          </button>
         </div>
         <header className="flex p-4 shadow bg-gray-100">
           <form className="flex-1" onSubmit={(e) => e.preventDefault()}>
             <input
               type="search"
               placeholder="Search"
-              className="input input-bordered bg-white text-black w-full"
+              className="input input-bordered bg-white text-black w-full border-2 border-primary"
               value={searchQuery}
               onChange={handleSearchChange}
             />
           </form>
           <details className="dropdown dropdown-end ml-4">
-            <summary tabIndex={0} className="btn btn-ghost cursor-pointer">
+            <summary
+              tabIndex={0}
+              className="btn btn-ghost cursor-pointer border-2 border-primary"
+            >
               <RiFilter3Line className="text-lg" /> Filter
             </summary>
             <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
@@ -425,87 +485,96 @@ const UserDashboard = () => {
 
             <div className="overflow-x-auto">
               <div className="overflow-x-auto">
-                <table className="table">
-                  {/* head */}
-                  <thead>
-                    <tr>
-                      <th className="font-bold text-base min-w-[150px]">
-                        Image
-                      </th>
-                      <th className="font-bold text-base min-w-[150px]">
-                        Device Name
-                      </th>
-                      <th className="font-bold text-base min-w-[100px]">
-                        Model
-                      </th>
-                      <th className="font-bold text-base min-w-[150px]">
-                        CreatedAt
-                      </th>
-                      <th className="font-bold text-base min-w-[150px]">
-                        Verified
-                      </th>
-                      <th className="font-bold text-base min-w-[150px]">
-                        Classification
-                      </th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDevices.map((deviceList, index) => (
-                      <tr key={index}>
-                        <td>
-                          <img
-                            src={deviceList.image}
-                            style={{
-                              width: "100px",
-                              height: "100px",
-                              objectFit: "cover",
-                            }}
-                          />
-                        </td>
-                        <td className="font-bold">{deviceList.brand}</td>
-                        <td className="text-sm">{deviceList.model}</td>
-                        <td className="text-sm">{deviceList.createdAt}</td>
-                        <td
-                          className="justify-center"
-                          style={{ alignItems: "center" }}
-                        >
-                          <div
-                            className={`badge ${
-                              deviceList.isVerified
-                                ? "badge-verified"
-                                : "badge-notverified"
-                            }`}
-                          >
-                            {deviceList.isVerified
-                              ? "Verified"
-                              : "Not Verified"}
-                          </div>
-                        </td>
-                        <td className="text-sm">
-                          <span
-                            className={`badge ${getClassificationBadgeClass(
-                              deviceList.deviceType
-                            )}`}
-                          >
-                            {deviceList.deviceType}
-                          </span>
-                        </td>
-                        <th>
-                          <button
-                            onClick={() => toggleDeviceDetails(deviceList.id)}
-                          >
-                            {selectedDeviceId === deviceList.id ? (
-                              <RiArrowDropLeftLine size={32} />
-                            ) : (
-                              <RiArrowDropRightLine size={32} />
-                            )}
-                          </button>
+                {filteredDevices.length == 0 ? (
+                  <div className="flex flex-col  w-full h-full items-center mt-16">
+                    <h3 className="text-3xl font-bold text-center mb-5 ">
+                      No Devices Found
+                    </h3>
+                    <img src={emptyListImage} className="h-80 w-80" />
+                  </div>
+                ) : (
+                  <table className="table">
+                    {/* head */}
+                    <thead>
+                      <tr>
+                        <th className="font-bold text-base min-w-[150px]">
+                          Image
                         </th>
+                        <th className="font-bold text-base min-w-[150px]">
+                          Device Name
+                        </th>
+                        <th className="font-bold text-base min-w-[100px]">
+                          Model
+                        </th>
+                        <th className="font-bold text-base min-w-[150px]">
+                          CreatedAt
+                        </th>
+                        <th className="font-bold text-base min-w-[150px]">
+                          Verified
+                        </th>
+                        <th className="font-bold text-base min-w-[150px]">
+                          Classification
+                        </th>
+                        <th></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredDevices.map((deviceList, index) => (
+                        <tr key={index}>
+                          <td>
+                            <img
+                              src={image1}
+                              style={{
+                                width: "100px",
+                                height: "100px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          </td>
+                          <td className="font-bold">{deviceList.brand}</td>
+                          <td className="text-sm">{deviceList.model}</td>
+                          <td className="text-sm">{deviceList.createdAt}</td>
+                          <td
+                            className="justify-center"
+                            style={{ alignItems: "center" }}
+                          >
+                            <div
+                              className={`badge ${
+                                deviceList.isVerified
+                                  ? "badge-verified"
+                                  : "badge-notverified"
+                              }`}
+                            >
+                              {deviceList.isVerified
+                                ? "Verified"
+                                : "Not Verified"}
+                            </div>
+                          </td>
+                          <td className="text-sm">
+                            <span
+                              className={`badge ${getClassificationBadgeClass(
+                                deviceList.deviceClassification
+                              )}`}
+                            >
+                              {deviceList.deviceClassification}
+                            </span>
+                          </td>
+                          <th>
+                            <button
+                              onClick={() => toggleDeviceDetails(deviceList.id)}
+                            >
+                              {selectedDeviceId === deviceList.id ? (
+                                <RiArrowDropLeftLine size={32} />
+                              ) : (
+                                <RiArrowDropRightLine size={32} />
+                              )}
+                            </button>
+                          </th>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
             {/* Overlay to fade out content and close details pane */}
@@ -552,7 +621,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e => setBrand(e.target.value))}
+                          onChange={(e) => setBrand(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -568,7 +637,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e => setModel(e.target.value))}
+                          onChange={(e) => setModel(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -584,7 +653,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e => setDateofPurchase(e.target.value))}
+                          onChange={(e) => setDateofPurchase(e.target.value)}
                           type="date"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -603,6 +672,10 @@ const UserDashboard = () => {
                           id="classification"
                           name="classification"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
+                          onChange={(e) => {
+                            console.log("e.target.value", e.target.value);
+                            setDeviceClassification(e.target.value);
+                          }}
                         >
                           <option>Current</option>
                           <option>Rare</option>
@@ -621,7 +694,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e => setDateofRelease(e.target.value))}
+                          onChange={(e) => setDateofRelease(e.target.value)}
                           type="date"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -787,6 +860,31 @@ const UserDashboard = () => {
           </div>
         )}
       </dialog>
+      {showLogoutModal && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">
+              Are you sure you want to logout?
+            </h3>
+            <div className="modal-action flex flex-row">
+              <button
+                className="btn btn-primary w-1/2 mr-1"
+                onClick={() => {
+                  window.location.href = "/login";
+                }} // Close modal on 'Yes'
+              >
+                Yes
+              </button>
+              <button
+                className="btn btn-ghost w-1/2"
+                onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

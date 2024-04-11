@@ -70,7 +70,11 @@ class UserDevice(db.Model):
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    deviceClassification = db.Column(db.String(120), nullable=False)
     dateOfPurchase = db.Column(db.Date)
+    deviceColor = db.Column(db.String(120), nullable=True)
+    deviceStorage = db.Column(db.String(120), nullable=True)
+    deviceCondition = db.Column(db.String(20), nullable=True)
     imageUrl = db.Column(db.String(255))
     qrCodeUrl = db.Column(db.String(255))
     dateOfCreation = db.Column(db.Date)
@@ -84,11 +88,16 @@ class UserDevice(db.Model):
     def serialize(self):
         return {
             'userDeviceID': self.userDeviceID,
+            'userID': self.userID,
             'deviceID': self.deviceID,
-            'dateOfPurchase': str(self.dateOfPurchase),
+            'deviceClassification': self.deviceClassification,
+            'dateOfPurchase': str(self.dateOfPurchase) if self.dateOfPurchase else None,
+            'deviceColor': self.deviceColor,
+            'deviceStorage': self.deviceStorage,
+            'deviceCondition': self.deviceCondition,
             'imageUrl': self.imageUrl,
             'qrCodeUrl': self.qrCodeUrl,
-            'dateOfCreation': str(self.dateOfCreation),
+            'dateOfCreation': str(self.dateOfCreation) if self.dateOfCreation else None,
             'dataRetrievalID': self.dataRetrievalID,
             'estimatedValue': self.estimatedValue
         }
@@ -192,6 +201,7 @@ def getAllUsers():
     return jsonify(user_data)
 
 
+
 @app.route('/api/updateUserToStaff', methods=['POST'])
 def updateUserToStaff():
     """
@@ -229,7 +239,8 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
-   
+
+
 @app.route('/api/deleteUser', methods=['POST'])
 def deleteUser():
     """
@@ -249,7 +260,8 @@ def deleteUser():
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User deleted'}), 200
-   
+
+
 @app.route('/api/downgradeToUser', methods=['POST'])
 def updateUserToEndUser():
     data = request.json
@@ -294,7 +306,7 @@ def move_device_classification():
 
     if user:
         # Retrieve the user's device for classification update
-        user_device = UserDeviceTable.query.filter_by(user_id=user.id).first()
+        user_device = UserDevice.query.filter_by(user_id=user.id).first()
 
         if user_device:
             # Update the device classification
@@ -324,6 +336,10 @@ def createDevice():
     deviceID = data.get('deviceID')
     brand = data.get('brand')
     model = data.get('model')
+    deviceClassification = data.get('deviceClassification')
+    deviceColor = data.get('deviceColor')
+    deviceStorage = data.get('deviceStorage')
+    deviceCondition = data.get('deviceCondition')
     imageUrl = data.get('imageUrl')
     qrCodeUrl = data.get('qrCodeUrl')
     dateOfRelease = data.get('dateofRelease')
@@ -349,7 +365,7 @@ def createDevice():
             db.session.commit()
             
             # Read the device ID from the database for the newly inserted device
-            deviceID = newDeviceAdded.deviceID
+
             deviceID = newDeviceAdded.deviceID
             print('deviceID',deviceID)
         except Exception as e:
@@ -362,10 +378,14 @@ def createDevice():
     newUserDeviceAdded = UserDevice(
         userID = userID,
         deviceID = deviceID,
+        deviceClassification = deviceClassification,
         dateOfPurchase = dateOfPurchase,
+        deviceColor = deviceColor,
+        deviceStorage = deviceStorage,
+        deviceCondition = deviceCondition,
         imageUrl = imageUrl,
         qrCodeUrl = qrCodeUrl,
-        dateOfCreation = datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        dateOfCreation = dateOfRelease,
         dataRetrievalID = 0,
         estimatedValue = ""
     )
@@ -378,3 +398,86 @@ def createDevice():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'User device creation error'}), 500
+
+
+@app.route('/api/customer_device', methods=['POST'])
+def create_customer_device():
+    """
+        Create and Save device information for a user.
+
+        Returns:
+            A JSON response with a success message if the device information is saved successfully.
+            A JSON response with an error message if the user is not found.
+        """
+    data = request.json
+    email = data.get('email')
+    device_info = data.get('device_info')
+
+    # Input validation: Check if email and device_info are present
+    if not email or not device_info:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        # Assuming you have a one-to-many relationship between User and UserDeviceTable
+        customer_device = UserDevice(
+            user_id=user.id,
+            device_type=device_info.get('device_type'),
+            brand=device_info.get('brand'),
+            model=device_info.get('model'),
+        )
+
+        # Input validation: Check if essential device information is present
+        if not customer_device.device_type or not customer_device.brand or not customer_device.model:
+            return jsonify({'error': 'Incomplete device information'}), 400
+
+        db.session.add(customer_device)
+        db.session.commit()
+
+        return jsonify({'message': 'Device information saved successfully'}), 200
+    else:
+        return jsonify({'message': 'User not found'}), 404
+
+@app.route('/api/getListOfDevices', methods=['GET'])
+def getListOfDevices():
+    # combine the device and UserDevice tables to get the list of devices
+    print('inside get list of devices')
+    userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
+    
+    device_list = []
+    for userDevice in userDevice:
+        device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
+        device_data = {
+            'id': userDevice.deviceID,
+            'brand': device.brand,
+            'model': device.model,
+            'createdAt': userDevice.dateOfCreation.strftime("%Y-%m-%d"),
+            'verified': device.isVerified,
+            'image': '',
+            'storage': userDevice.deviceStorage,
+            'color': userDevice.deviceColor,
+            'dataRecovered': None,
+            'condition': userDevice.deviceCondition,
+            'classification': userDevice.deviceClassification,
+            'dataRetrievalRequested': None,
+            'dataRetrievalTimeLeft': ''
+        }
+
+    device_list.append(device_data)
+    return jsonify(device_list)
+
+
+@app.route('/api/changeDeviceVerification/', methods=['POST'])
+def changeDeviceVerification():
+    data = request.json
+    deviceID = data.get('deviceID')
+    isVerified = data.get('isVerified')
+    device = Device.query.filter_by(deviceID=deviceID).first()
+    if not device:
+        return jsonify({'message': 'Device not found'}), 404
+    device.isVerified = isVerified
+    db.session.commit()
+    return jsonify({'message': 'Device verification status updated'}), 200
+
+
