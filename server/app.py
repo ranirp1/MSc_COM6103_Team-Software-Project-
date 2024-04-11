@@ -40,7 +40,6 @@ class User(db.Model):
         }
 
 
-
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
@@ -134,7 +133,6 @@ def login():
         return jsonify({'message': 'Invalid Credentials'}), 401
 
 
-
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
@@ -199,7 +197,6 @@ def getAllUsers():
         } for user in users
     ]
     return jsonify(user_data)
-
 
 
 @app.route('/api/updateUserToStaff', methods=['POST'])
@@ -317,7 +314,6 @@ def move_device_classification():
             return jsonify({'message': 'Device information not found for the user'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
-
 
 
 @app.route('/api/createDevice', methods=['POST'])
@@ -438,6 +434,7 @@ def create_customer_device():
         return jsonify({'message': 'Device information saved successfully'}), 200
     else:
         return jsonify({'message': 'User not found'}), 404
+
 
 @app.route('/api/getListOfDevices', methods=['GET'])
 def getListOfDevices():
