@@ -1,5 +1,6 @@
 import React from "react";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import Lottie from "lottie-react";
@@ -516,6 +517,7 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* <Footer></Footer> */}
     </div>
   );
 };

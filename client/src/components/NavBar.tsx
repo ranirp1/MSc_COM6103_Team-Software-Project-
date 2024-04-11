@@ -31,7 +31,7 @@ const NavBar = () => {
           </button>
 
           <dialog id="my_modal_1" className="modal">
-            <div className="modal-box" style={{ overflow: 'hidden', maxWidth: 'none' }}>
+            <div className="modal-box" style={{ overflow: 'hidden', maxWidth: '800px', width: '800px', minHeight: 'auto', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
               <div className="text-right">
                 <span
                   className="mx-5 text-sm text-blue-600 hover:underline cursor-pointer"
@@ -69,9 +69,9 @@ const NavBar = () => {
               >
                 Login
               </button>
-
+                
               <dialog id="my_modal_2" className="modal">
-                <div className="modal-box" style={{ overflow: 'hidden', maxWidth: '600px', width: 'auto', minHeight: 'auto', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                <div className="modal-box" style={{ overflow: 'hidden', maxWidth: '800px', width: '800px', minHeight: 'auto', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                   <div className="text-right">
                     <span
                       className="mx-5 text-sm text-blue-600 hover:underline cursor-pointer"
