@@ -88,15 +88,16 @@ class UserDevice(db.Model):
     def serialize(self):
         return {
             'userDeviceID': self.userDeviceID,
+            'userID': self.userID,
             'deviceID': self.deviceID,
             'deviceClassification': self.deviceClassification,
-            'dateOfPurchase': str(self.dateOfPurchase),
+            'dateOfPurchase': str(self.dateOfPurchase) if self.dateOfPurchase else None,
             'deviceColor': self.deviceColor,
             'deviceStorage': self.deviceStorage,
             'deviceCondition': self.deviceCondition,
             'imageUrl': self.imageUrl,
             'qrCodeUrl': self.qrCodeUrl,
-            'dateOfCreation': str(self.dateOfCreation),
+            'dateOfCreation': str(self.dateOfCreation) if self.dateOfCreation else None,
             'dataRetrievalID': self.dataRetrievalID,
             'estimatedValue': self.estimatedValue
         }
@@ -420,7 +421,7 @@ def create_customer_device():
 
     if user:
         # Assuming you have a one-to-many relationship between User and UserDeviceTable
-        customer_device = UserDeviceTable(
+        customer_device = UserDevice(
             user_id=user.id,
             device_type=device_info.get('device_type'),
             brand=device_info.get('brand'),
@@ -442,27 +443,28 @@ def create_customer_device():
 def getListOfDevices():
     # combine the device and UserDevice tables to get the list of devices
     print('inside get list of devices')
-    devices = Device.query.join(UserDevice, UserDevice.deviceID == Device.deviceID).all()
+    userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
+    
     device_list = []
-    print('devices',devices)
-    for device in devices:
-        print('device',device.serialize())
+    for userDevice in userDevice:
+        device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
         device_data = {
-            'id': device.deviceID,
+            'id': userDevice.deviceID,
             'brand': device.brand,
             'model': device.model,
-            'createdAt': device.dateOfRelease.strftime("%Y-%m-%d"),
+            'createdAt': userDevice.dateOfCreation.strftime("%Y-%m-%d"),
             'verified': device.isVerified,
             'image': '',
-            'storage': device.deviceStorage,
-            'color': device.deviceColor,
+            'storage': userDevice.deviceStorage,
+            'color': userDevice.deviceColor,
             'dataRecovered': None,
-            'condition': device.deviceCondition,
-            'classification': device.deviceClassification,
+            'condition': userDevice.deviceCondition,
+            'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
             'dataRetrievalTimeLeft': ''
         }
-        device_list.append(device_data)
+
+    device_list.append(device_data)
     return jsonify(device_list)
 
 
