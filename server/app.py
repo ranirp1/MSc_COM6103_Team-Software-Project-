@@ -421,23 +421,15 @@ def update_device_visibility():
 
     # Check if the staff user is authenticated
     staff_user = User.query.filter_by(email='staff@example.com',
-                                       isStaff=True).first()  
-                                       
-    
-    # Adjust the email as per your staff user
+                                       isStaff=True).first()  # Adjust the email as per your staff user
+
     if not staff_user:
         return jsonify({'message': 'Unauthorized access'}), 403
 
     user = User.query.filter_by(email=email).first()
 
     if user:
-        # Assuming you have a one-to-many relationship between User and UserDeviceTable
-        customer_device = UserDevice(
-            user_id=user.id,
-            device_type=device_info.get('device_type'),
-            brand=device_info.get('brand'),
-            model=device_info.get('model'),
-        )
+        user_device = UserDeviceTable.query.filter_by(user_id=user.id, device_id=device_id).first()
 
         if user_device:
             # Update the device visibility
