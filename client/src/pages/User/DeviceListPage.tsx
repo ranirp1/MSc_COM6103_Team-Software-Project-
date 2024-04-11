@@ -10,10 +10,11 @@ import {
   RiUserSettingsFill,
   RiUserSharedLine,
 } from "react-icons/ri";
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent, useRef } from "react";
 import "../../style.css";
 import { Navigate, useNavigate } from "react-router-dom";
 import { API_URL } from "../../constants/constant";
+import QRCode from "react-qr-code";
 
 interface Device {
   id: number;
@@ -40,7 +41,8 @@ interface DeviceDetails {
 
 const UserDashboard = () => {
   const [devices, setDevices] = useState<Device[]>([
-
+    { id: 1, brand: 'Iphone', model: '10', createdAt: '31 Jul 2023, 07:13 PM', isVerified: true, image: Samsung, storage: '64GB', color: 'Silver', dataRecovered: null, condition: 'good', deviceType: 'Current', dataRetrievalRequested: null, dataRetrievalTimeLeft: 'Not applicable' },
+    { id: 2, brand: 'Samsung', model: 'S23', createdAt: '12 Jan 2024, 01:49 PM', isVerified: false,  image: IPhone, storage: '64GB', color: 'Red', dataRecovered: true, condition: 'bad' , deviceType: 'Recycle', dataRetrievalRequested: true, dataRetrievalTimeLeft: '' },
   ]);
 
   const [deviceId, setDeviceId] = useState("");
@@ -54,11 +56,14 @@ const UserDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
+  const [isGenerated, setIsGenerated] = useState(false);
+  const qrCodeRef = useRef(null);
 
   const [dataRetrieval, setDataRetrieval] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
   const [open, setOpen] = useState<Boolean>(false);
+ 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -95,6 +100,10 @@ const UserDashboard = () => {
     }*/}
   };
   
+  const handleGenerateQr = () => {
+    setIsGenerated(true); // Set flag on click
+  };
+
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -196,7 +205,6 @@ const UserDashboard = () => {
       }
       return null;
     };
-
     const calculateDataRetrievalTimeLeft = () => {
       // Return "Not applicable" for "Current" and "Rare" classifications
       if (device.deviceType === "Current" || device.deviceType === "Rare") {
@@ -310,7 +318,17 @@ const UserDashboard = () => {
         </div>
         {renderCexLink()}
         <div className="mt-4">
-          <button className="btn btn-info">Generate QRCode</button>
+          <button className="btn btn-info" onClick={handleGenerateQr}>Generate QRCode</button>
+          <div style={{ height: "auto", margin: "0 auto", maxWidth: 64, width: "100%" }}>
+          {isGenerated && (
+    <QRCode
+    size={256}
+    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+    value={device.brand + '\n'+ device.model}
+    viewBox={`0 0 256 256`}
+    />
+          )}
+</div>
         </div>
         <div className="dropdown dropdown-right mt-4">
           <div tabIndex={0} role="button" className="btn btn-info">
