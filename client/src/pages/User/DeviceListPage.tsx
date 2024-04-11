@@ -15,6 +15,7 @@ import React, { useState, ChangeEvent, useEffect, useRef } from "react";
 import "../../style.css";
 import { Navigate, useNavigate } from "react-router-dom";
 import { API_URL } from "../../constants/constant";
+import QRCode from "react-qr-code";
 import emptyListImage from "../../assets/empty_device_list.svg";
 
 interface Device {
@@ -28,7 +29,7 @@ interface Device {
   color: string;
   dataRecovered: boolean | null;
   condition: string;
-  deviceType: string;
+  deviceClassification: string;
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
 }
@@ -47,7 +48,7 @@ const UserDashboard = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const [deviceId, setDeviceId] = useState("");
-  const [deviceType, setDeviceType] = useState("");
+  const [deviceClassification, setDeviceClassification] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
@@ -91,7 +92,6 @@ const UserDashboard = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    
     e.preventDefault();
     // if(e.target.checked && e.target.value === "Yes"){
     //   setShowPopup(true);
@@ -107,7 +107,7 @@ const UserDashboard = () => {
         body: JSON.stringify({
           brand,
           model,
-          deviceType,
+          deviceClassification,
           dateofPurchase,
           imageUrl,
           dateofRelease,
@@ -118,7 +118,7 @@ const UserDashboard = () => {
       if (response.ok) {
         console.log(response);
         console.log("Creation Successful");
-        window.location.href = '/user';
+        window.location.href = "/user";
       } else {
         console.log("Creation Error");
 
@@ -144,12 +144,11 @@ const UserDashboard = () => {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     console.log("e.target.checked", e.target.checked);
-    if(e.target.checked && e.target.value === "Yes"){
+    if (e.target.checked && e.target.value === "Yes") {
       setDataRetrieval(e.target.checked && e.target.value === "Yes");
       setShowPopup(true);
       return;
     }
-    
   };
 
   const handleCancel = () => {
@@ -183,7 +182,7 @@ const UserDashboard = () => {
         device.brand.toLowerCase().includes(searchQuery) ||
         device.model.includes(searchQuery) ||
         device.createdAt.toLowerCase().includes(searchQuery) ||
-        device.deviceType.includes(searchQuery)
+        device.deviceClassification.includes(searchQuery)
     );
 
     // Apply sort filter
@@ -224,7 +223,10 @@ const UserDashboard = () => {
     };
 
     const renderCexLink = () => {
-      if (device.deviceType === "Rare" || device.deviceType === "Current") {
+      if (
+        device.deviceClassification === "Rare" ||
+        device.deviceClassification === "Current"
+      ) {
         const cexUrl = createCexSearchUrl(
           device.brand,
           device.model,
@@ -247,14 +249,19 @@ const UserDashboard = () => {
       }
       return null;
     };
-
     const calculateDataRetrievalTimeLeft = () => {
       // Return "Not applicable" for "Current" and "Rare" classifications
-      if (device.deviceType === "Current" || device.deviceType === "Rare") {
+      if (
+        device.deviceClassification === "Current" ||
+        device.deviceClassification === "Rare"
+      ) {
         return "Not applicable";
       }
 
-      if (device.deviceType === "Recycle" && device.dataRetrievalRequested) {
+      if (
+        device.deviceClassification === "Recycle" &&
+        device.dataRetrievalRequested
+      ) {
         const creationDate = new Date(device.createdAt);
         const endTime = new Date(
           creationDate.getFullYear(),
@@ -326,7 +333,7 @@ const UserDashboard = () => {
               </div>
               <div className="p-1">
                 <span className="text-gray-600">Classification:</span>{" "}
-                {device.deviceType}
+                {device.deviceClassification}
               </div>
             </div>
           </div>
@@ -346,7 +353,8 @@ const UserDashboard = () => {
               </p>
               <p>
                 <strong>Data Recovery:</strong>{" "}
-                {device.deviceType === "Current" || device.deviceType === "Rare"
+                {device.deviceClassification === "Current" ||
+                device.deviceClassification === "Rare"
                   ? "Not applicable"
                   : device.dataRecovered
                   ? "Yes"
@@ -361,7 +369,21 @@ const UserDashboard = () => {
         </div>
         {renderCexLink()}
         <div className="mt-4">
-          <button className="btn btn-info">Generate QRCode</button>
+          <div
+            style={{
+              height: "auto",
+              margin: "0 auto",
+              maxWidth: 64,
+              width: "100%",
+            }}
+          >
+            <QRCode
+              size={256}
+              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+              value={device.brand + "\n" + device.model}
+              viewBox={`0 0 256 256`}
+            />
+          </div>
         </div>
         <div className="dropdown dropdown-right mt-4">
           <div tabIndex={0} role="button" className="btn btn-info">
@@ -531,10 +553,10 @@ const UserDashboard = () => {
                           <td className="text-sm">
                             <span
                               className={`badge ${getClassificationBadgeClass(
-                                deviceList.deviceType
+                                deviceList.deviceClassification
                               )}`}
                             >
-                              {deviceList.deviceType}
+                              {deviceList.deviceClassification}
                             </span>
                           </td>
                           <th>
@@ -650,6 +672,10 @@ const UserDashboard = () => {
                           id="classification"
                           name="classification"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
+                          onChange={(e) => {
+                            console.log("e.target.value", e.target.value);
+                            setDeviceClassification(e.target.value);
+                          }}
                         >
                           <option>Current</option>
                           <option>Rare</option>
