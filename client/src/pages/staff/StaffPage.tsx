@@ -147,16 +147,58 @@ const StaffDashboard = () => {
     setSortOrder(newSortOrder);
   };
 
-  const toggleDeviceVerification = (deviceId: number) => {
+const toggleDeviceVerification = async (deviceId: number) => {
+  // Find the device and its current verification status
+  const deviceIndex = devices.findIndex((d) => d.id === deviceId);
+  if (deviceIndex === -1) {
+    console.error('Device not found');
+    return;
+  }
+
+  const device = devices[deviceIndex];
+  const newVerificationStatus = !device.verified;
+
+  try {
+    // Update the backend first
+    const response = await fetch(`${API_URL}/api/changeDeviceVerification/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        deviceID: deviceId,
+        isVerified: newVerificationStatus,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Backend failed to update device verification status');
+    }
+
+    // Update the frontend after a successful backend response
     setDevices(
-      devices.map((device) => {
-        if (device.id === deviceId) {
-          return { ...device, verified: !device.verified };
+      devices.map((d, index) => {
+        if (index === deviceIndex) {
+          return { ...d, verified: newVerificationStatus };
         }
-        return device;
+        return d;
       })
     );
-  };
+  } catch (error) {
+    console.error('Error updating verification status:', error);
+    // Revert the frontend update if the backend call fails
+    setDevices(
+      devices.map((d, index) => {
+        if (index === deviceIndex) {
+          // Revert the 'verified' status of the device
+          return { ...d, verified: !newVerificationStatus };
+        }
+        return d;
+      })
+    );
+  }
+};
+
 
   // Function to filter devices based on search query and verification status
   const getFilteredDevices = () => {

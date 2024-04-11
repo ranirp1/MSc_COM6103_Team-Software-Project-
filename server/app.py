@@ -481,3 +481,30 @@ def changeDeviceVerification():
     return jsonify({'message': 'Device verification status updated'}), 200
 
 
+@app.route('/api/updateDevice', methods=['POST'])
+def update_device():
+    data = request.json
+    device_id = data.get('id')
+    
+    try:
+        device = Device.query.filter_by(id=device_id).first()
+        if not device:
+            return jsonify({'message': 'Device not found'}), 404
+
+        # Update fields
+        device.brand = data.get('brand', device.brand)
+        device.model = data.get('model', device.model)
+        device.storage = data.get('storage', device.storage)
+        device.color = data.get('color', device.color)
+        device.condition = data.get('condition', device.condition)
+        device.classification = data.get('classification', device.classification)
+        device.createdAt = data.get('createdAt', device.createdAt)
+        device.dataRecovered = data.get('dataRecovered', device.dataRecovered)
+
+        db.session.commit()
+        return jsonify({'message': 'Device updated successfully'}), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({'message': 'Failed to update device', 'error': str(e)}), 500
+
