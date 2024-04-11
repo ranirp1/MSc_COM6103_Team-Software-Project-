@@ -1,5 +1,7 @@
 .venv/
 .projectenv/
+.projectenv2/
+
 # build file
 /build
 .DS_Store
