@@ -200,6 +200,7 @@ def getAllUsers():
     return jsonify(user_data)
 
 
+
 @app.route('/api/updateUserToStaff', methods=['POST'])
 def updateUserToStaff():
     """
@@ -237,7 +238,8 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
-   
+
+
 @app.route('/api/deleteUser', methods=['POST'])
 def deleteUser():
     """
@@ -257,7 +259,8 @@ def deleteUser():
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User deleted'}), 200
-   
+
+
 @app.route('/api/downgradeToUser', methods=['POST'])
 def updateUserToEndUser():
     data = request.json
@@ -396,6 +399,45 @@ def createDevice():
         return jsonify({'message': 'User device creation error'}), 500
 
 
+@app.route('/api/customer_device', methods=['POST'])
+def create_customer_device():
+    """
+        Create and Save device information for a user.
+
+        Returns:
+            A JSON response with a success message if the device information is saved successfully.
+            A JSON response with an error message if the user is not found.
+        """
+    data = request.json
+    email = data.get('email')
+    device_info = data.get('device_info')
+
+    # Input validation: Check if email and device_info are present
+    if not email or not device_info:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        # Assuming you have a one-to-many relationship between User and UserDeviceTable
+        customer_device = UserDeviceTable(
+            user_id=user.id,
+            device_type=device_info.get('device_type'),
+            brand=device_info.get('brand'),
+            model=device_info.get('model'),
+        )
+
+        # Input validation: Check if essential device information is present
+        if not customer_device.device_type or not customer_device.brand or not customer_device.model:
+            return jsonify({'error': 'Incomplete device information'}), 400
+
+        db.session.add(customer_device)
+        db.session.commit()
+
+        return jsonify({'message': 'Device information saved successfully'}), 200
+    else:
+        return jsonify({'message': 'User not found'}), 404
+
 @app.route('/api/getListOfDevices', methods=['GET'])
 def getListOfDevices():
     # combine the device and UserDevice tables to get the list of devices
@@ -435,3 +477,5 @@ def changeDeviceVerification():
     device.isVerified = isVerified
     db.session.commit()
     return jsonify({'message': 'Device verification status updated'}), 200
+
+
