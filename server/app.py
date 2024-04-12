@@ -103,6 +103,10 @@ class UserDevice(db.Model):
             'estimatedValue': self.estimatedValue
         }
 
+    
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
 
 class DataRetrieval(db.Model):
     __tablename__ = 'dataretrieval'
