@@ -40,7 +40,6 @@ class User(db.Model):
         }
 
 
-
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
@@ -134,7 +133,6 @@ def login():
         return jsonify({'message': 'Invalid Credentials'}), 401
 
 
-
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
@@ -199,7 +197,6 @@ def getAllUsers():
         } for user in users
     ]
     return jsonify(user_data)
-
 
 
 @app.route('/api/updateUserToStaff', methods=['POST'])
@@ -317,7 +314,6 @@ def move_device_classification():
             return jsonify({'message': 'Device information not found for the user'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
-
 
 
 @app.route('/api/createDevice', methods=['POST'])
@@ -439,6 +435,7 @@ def create_customer_device():
     else:
         return jsonify({'message': 'User not found'}), 404
 
+
 @app.route('/api/getListOfDevices', methods=['GET'])
 def getListOfDevices():
     # combine the device and UserDevice tables to get the list of devices
@@ -481,3 +478,42 @@ def changeDeviceVerification():
     return jsonify({'message': 'Device verification status updated'}), 200
 
 
+@app.route('/api/updateDeviceVisibility', methods=['POST'])
+def update_device_visibility():
+    """
+    Update device visibility for a user by staff
+    Returns:
+    A JSON response with a success message if the visibility is updated successfully.
+    A JSON response with an error message if the user or device is not found.
+    """
+    data = request.json
+
+    # Input Validation
+    email = data.get('email')
+    device_id = data.get('device_id')
+    is_visible = data.get('is_visible')
+
+    if not email or not device_id or is_visible is None:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    # Check if the staff user is authenticated
+    staff_user = User.query.filter_by(email='staff@example.com',
+                                       isStaff=True).first()  # Adjust the email as per your staff user
+
+    if not staff_user:
+        return jsonify({'message': 'Unauthorized access'}), 403
+
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        user_device = UserDeviceTable.query.filter_by(user_id=user.id, device_id=device_id).first()
+
+        if user_device:
+            # Update the device visibility
+            user_device.visible = is_visible
+            db.session.commit()
+            return jsonify({'message': 'Device visibility updated successfully'}), 200
+        else:
+            return jsonify({'message': 'Device not found for the user'}), 404
+    else:
+        return jsonify({'message': 'User not found'}), 404
