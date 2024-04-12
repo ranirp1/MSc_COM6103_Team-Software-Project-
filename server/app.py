@@ -62,10 +62,6 @@ class Device(db.Model):
             'isVerified': self.isVerified
         }
     
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
-    
     
 class UserDevice(db.Model):
     __tablename__ = 'user_device'
@@ -104,10 +100,6 @@ class UserDevice(db.Model):
             'estimatedValue': self.estimatedValue
         }
 
-    
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
 
 class DataRetrieval(db.Model):
     __tablename__ = 'dataretrieval'
