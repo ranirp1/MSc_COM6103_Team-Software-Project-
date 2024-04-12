@@ -558,3 +558,61 @@ def update_device_visibility():
         return jsonify({'message': 'User not found'}), 404
 
 
+
+@app.route('/api/generate_report', methods=['POST'])
+def generate_report():
+    """
+    Generate a report in PDF format for payment transactions and devices input by users within a specified date range.
+    """
+    data = request.json
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+
+    # Convert start_date and end_date strings to datetime objects
+    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+
+    # Fetch payment transactions and devices input by users within the specified date range
+    payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
+    user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
+
+    # Generate PDF report
+    pdf_filename = 'report.pdf'
+    doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+    elements = []
+
+    # Add payments data to PDF
+    payments_data = [['Payment ID', 'Data Retrieval ID', 'User ID', 'Date']]
+    for payment in payments:
+        payments_data.append([payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
+    payments_table = Table(payments_data)
+    payments_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                                        ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+    elements.append(payments_table)
+    elements.append(Spacer(1, 12))
+
+    # Add user devices data to PDF
+    devices_data = [['User Device ID', 'User ID', 'Device ID', 'Date of Creation']]
+    for device in user_devices:
+        devices_data.append([device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
+    devices_table = Table(devices_data)
+    devices_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                                       ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                                       ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                       ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                       ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                                       ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                                       ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+    elements.append(devices_table)
+
+    # Build PDF document
+    doc.build(elements)
+
+    # Return the PDF file
+    return send_file(pdf_filename, as_attachment=True)
+
