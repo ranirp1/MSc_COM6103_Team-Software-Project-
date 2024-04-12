@@ -103,6 +103,7 @@ class UserDevice(db.Model):
             'estimatedValue': self.estimatedValue
         }
 
+
 class DataRetrieval(db.Model):
     __tablename__ = 'dataretrieval'
     dataRetrievalID = db.Column(db.Integer, primary_key=True)
@@ -119,6 +120,7 @@ class DataRetrieval(db.Model):
             'duration': self.duration,
             'password': self.password
         }
+
 
 class PaymentTable(db.Model):
     __tablename__ = 'paymenttable'
