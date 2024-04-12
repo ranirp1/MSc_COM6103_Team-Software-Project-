@@ -5,7 +5,9 @@ from sqlalchemy.sql import func
 from sqlalchemy import text
 from flask_cors import CORS
 from datetime import datetime
-
+from flask import send_file
+from datetime import datetime, timedelta
+import csv
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
@@ -547,3 +549,50 @@ def update_device_visibility():
             return jsonify({'message': 'Device not found for the user'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
+
+
+@app.route('/api/generate_report', methods=['POST'])
+def generate_report():
+    """
+    Generate a report in PDF or CSV format for payment transactions and devices input by users within a specified date range.
+    """
+    data = request.json
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+
+    # Convert start_date and end_date strings to datetime objects
+    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+
+    # Fetch payment transactions and devices input by users within the specified date range
+    payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
+    user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
+
+    # Create CSV data
+    csv_data = []
+    for payment in payments:
+        csv_data.append({
+            'Payment ID': payment.paymentID,
+            'Data Retrieval ID': payment.dataRetrievalID,
+            'User ID': payment.userID,
+            'Date': payment.date.strftime('%Y-%m-%d'),
+        })
+    for device in user_devices:
+        csv_data.append({
+            'User Device ID': device.userDeviceID,
+            'User ID': device.userID,
+            'Device ID': device.deviceID,
+            'Date of Creation': device.dateOfCreation.strftime('%Y-%m-%d'),
+        })
+
+    # Generate CSV file
+    csv_filename = 'report.csv'
+    with open(csv_filename, 'w', newline='') as csvfile:
+        fieldnames = csv_data[0].keys()
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in csv_data:
+            writer.writerow(row)
+
+    # Return the CSV file
+    return send_file(csv_filename, as_attachment=True)
