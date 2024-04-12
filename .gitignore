@@ -1,14 +1,10 @@
 .venv/
 .projectenv/
+.projectenv2/
+
 # build file
 /build
 .DS_Store
 .vs
-<<<<<<< HEAD
 .index
-=======
-.idea
-
-
->>>>>>> 14c5f884c93f38edecf55f82033cf278293e922e
 node_modules

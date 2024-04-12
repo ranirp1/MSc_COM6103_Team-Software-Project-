@@ -40,7 +40,6 @@ class User(db.Model):
         }
 
 
-
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
@@ -88,15 +87,16 @@ class UserDevice(db.Model):
     def serialize(self):
         return {
             'userDeviceID': self.userDeviceID,
+            'userID': self.userID,
             'deviceID': self.deviceID,
             'deviceClassification': self.deviceClassification,
-            'dateOfPurchase': str(self.dateOfPurchase),
+            'dateOfPurchase': str(self.dateOfPurchase) if self.dateOfPurchase else None,
             'deviceColor': self.deviceColor,
             'deviceStorage': self.deviceStorage,
             'deviceCondition': self.deviceCondition,
             'imageUrl': self.imageUrl,
             'qrCodeUrl': self.qrCodeUrl,
-            'dateOfCreation': str(self.dateOfCreation),
+            'dateOfCreation': str(self.dateOfCreation) if self.dateOfCreation else None,
             'dataRetrievalID': self.dataRetrievalID,
             'estimatedValue': self.estimatedValue
         }
@@ -131,7 +131,6 @@ def login():
         return jsonify(user.serialize()), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
-
 
 
 @app.route('/api/register', methods=['POST'])
@@ -237,7 +236,8 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
-   
+
+
 @app.route('/api/deleteUser', methods=['POST'])
 def deleteUser():
     """
@@ -257,7 +257,8 @@ def deleteUser():
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User deleted'}), 200
-   
+
+
 @app.route('/api/downgradeToUser', methods=['POST'])
 def updateUserToEndUser():
     data = request.json
@@ -313,7 +314,6 @@ def move_device_classification():
             return jsonify({'message': 'Device information not found for the user'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
-
 
 
 @app.route('/api/createDevice', methods=['POST'])
@@ -396,31 +396,72 @@ def createDevice():
         return jsonify({'message': 'User device creation error'}), 500
 
 
+@app.route('/api/customer_device', methods=['POST'])
+def create_customer_device():
+    """
+        Create and Save device information for a user.
+
+        Returns:
+            A JSON response with a success message if the device information is saved successfully.
+            A JSON response with an error message if the user is not found.
+        """
+    data = request.json
+    email = data.get('email')
+    device_info = data.get('device_info')
+
+    # Input validation: Check if email and device_info are present
+    if not email or not device_info:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        # Assuming you have a one-to-many relationship between User and UserDeviceTable
+        customer_device = UserDevice(
+            user_id=user.id,
+            device_type=device_info.get('device_type'),
+            brand=device_info.get('brand'),
+            model=device_info.get('model'),
+        )
+
+        # Input validation: Check if essential device information is present
+        if not customer_device.device_type or not customer_device.brand or not customer_device.model:
+            return jsonify({'error': 'Incomplete device information'}), 400
+
+        db.session.add(customer_device)
+        db.session.commit()
+
+        return jsonify({'message': 'Device information saved successfully'}), 200
+    else:
+        return jsonify({'message': 'User not found'}), 404
+
+
 @app.route('/api/getListOfDevices', methods=['GET'])
 def getListOfDevices():
     # combine the device and UserDevice tables to get the list of devices
     print('inside get list of devices')
-    devices = Device.query.join(UserDevice, UserDevice.deviceID == Device.deviceID).all()
+    userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
+    
     device_list = []
-    print('devices',devices)
-    for device in devices:
-        print('device',device.serialize())
+    for userDevice in userDevice:
+        device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
         device_data = {
-            'id': device.deviceID,
+            'id': userDevice.deviceID,
             'brand': device.brand,
             'model': device.model,
-            'createdAt': device.dateOfRelease.strftime("%Y-%m-%d"),
+            'createdAt': userDevice.dateOfCreation.strftime("%Y-%m-%d"),
             'verified': device.isVerified,
             'image': '',
-            'storage': device.deviceStorage,
-            'color': device.deviceColor,
+            'storage': userDevice.deviceStorage,
+            'color': userDevice.deviceColor,
             'dataRecovered': None,
-            'condition': device.deviceCondition,
-            'classification': device.deviceClassification,
+            'condition': userDevice.deviceCondition,
+            'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
             'dataRetrievalTimeLeft': ''
         }
-        device_list.append(device_data)
+
+    device_list.append(device_data)
     return jsonify(device_list)
 
 
@@ -435,3 +476,44 @@ def changeDeviceVerification():
     device.isVerified = isVerified
     db.session.commit()
     return jsonify({'message': 'Device verification status updated'}), 200
+
+
+@app.route('/api/updateDeviceVisibility', methods=['POST'])
+def update_device_visibility():
+    """
+    Update device visibility for a user by staff
+    Returns:
+    A JSON response with a success message if the visibility is updated successfully.
+    A JSON response with an error message if the user or device is not found.
+    """
+    data = request.json
+
+    # Input Validation
+    email = data.get('email')
+    device_id = data.get('device_id')
+    is_visible = data.get('is_visible')
+
+    if not email or not device_id or is_visible is None:
+        return jsonify({'error': 'Invalid request data'}), 400
+
+    # Check if the staff user is authenticated
+    staff_user = User.query.filter_by(email='staff@example.com',
+                                       isStaff=True).first()  # Adjust the email as per your staff user
+
+    if not staff_user:
+        return jsonify({'message': 'Unauthorized access'}), 403
+
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        user_device = UserDeviceTable.query.filter_by(user_id=user.id, device_id=device_id).first()
+
+        if user_device:
+            # Update the device visibility
+            user_device.visible = is_visible
+            db.session.commit()
+            return jsonify({'message': 'Device visibility updated successfully'}), 200
+        else:
+            return jsonify({'message': 'Device not found for the user'}), 404
+    else:
+        return jsonify({'message': 'User not found'}), 404
