@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from flask import jsonify
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
@@ -560,15 +561,23 @@ def generate_report():
     start_date = data.get('start_date')
     end_date = data.get('end_date')
 
-    # Convert start_date and end_date strings to datetime objects
+    # Convert start_date and end_date strings to datetime 
+    # Validate date format
+    try:
     start_date = datetime.strptime(start_date, '%Y-%m-%d')
     end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+    except ValueError:
+        return jsonify({'error': 'Invalid date format. Please use YYYY-MM-DD.'}), 400
 
     # Fetch payment transactions and devices input by users within the specified date range
+    try:
     payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
     user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
+    except Exception as e:
+        return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
     # Generate PDF report
+    try: 
     pdf_filename = 'report.pdf'
     doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
     elements = []
@@ -607,4 +616,6 @@ def generate_report():
 
     # Return the PDF file
     return send_file(pdf_filename, as_attachment=True)
+    except Exception as e:
+        return jsonify({'error': 'Failed to generate PDF report.', 'details': str(e)}), 500
 
