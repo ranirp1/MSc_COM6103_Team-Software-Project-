@@ -63,6 +63,11 @@ class Device(db.Model):
             'isVerified': self.isVerified
         }
     
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
+
+    
     
 class UserDevice(db.Model):
     __tablename__ = 'user_device'
@@ -126,7 +131,7 @@ class PaymentTable(db.Model):
     dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
     userID = db.Column(db.Integer, nullable=False)
 
-     def serialize(self):
+    def serialize(self):
         return {
             'paymentID': self.paymentID,
             'dataRetrievalID': self.dataRetrievalID,
