@@ -12,13 +12,14 @@ from flask import jsonify
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
+from flask import request
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
-
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -537,7 +538,7 @@ def update_device_visibility():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        user_device = UserDeviceTable.query.filter_by(user_id=user.id, device_id=device_id).first()
+        user_device = UserDevice.query.filter_by(user_id=user.id, device_id=device_id).first()
 
         if user_device:
             # Update the device visibility
