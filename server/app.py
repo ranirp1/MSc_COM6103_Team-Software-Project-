@@ -3,19 +3,20 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from datetime import datetime
 
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
+from flask import request
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
-
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -517,3 +518,31 @@ def update_device_visibility():
             return jsonify({'message': 'Device not found for the user'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
+
+@app.route('/api/getDeviceTypeAndEstimation', methods=['POST'])
+@cross_origin()
+def get_device_type():
+    data = request.json
+    brand = data.get('brand')
+    model = data.get('model')
+    dateOfPurchase = data.get('dateOfPurchase')
+    # classification = data.get('classification')
+    releaseDate = data.get('releaseDate')
+    color = data.get('color')
+    storage = data.get('storage')
+    condition = data.get('condition')
+    
+    current_year = datetime.now().year
+    release_year = datetime.strptime(releaseDate, "%Y-%m-%d").year
+    purchase_year = datetime.strptime(dateOfPurchase, "%Y-%m-%d").year
+    device_age = current_year - release_year
+    
+    if device_age > 20:
+        # if classification == "Rare" or classification == "Unknown":
+            return jsonify({'type': 'Rare', 'data': ""}), 200
+        # else:
+        #     return jsonify({'type': 'Recycle', 'data': ""}), 200
+    elif device_age < 10 and (current_year - purchase_year) < 10:
+        return jsonify({'type': 'Recycle', 'data': ""}), 200
+    else:
+        return jsonify({'type': 'Current', 'data': ""}), 200

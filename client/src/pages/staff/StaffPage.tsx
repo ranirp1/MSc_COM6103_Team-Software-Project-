@@ -657,7 +657,7 @@ const StaffDashboard = () => {
                 <button
                   className="btn btn-primary w-1/2 mr-1"
                   onClick={() => {
-                    window.location.href = "/login";
+                    window.location.href = "/";
                   }} // Close modal on 'Yes'
                 >
                   Yes
