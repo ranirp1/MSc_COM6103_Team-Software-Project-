@@ -507,7 +507,7 @@ def update_device_visibility():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        user_device = UserDeviceTable.query.filter_by(user_id=user.id, device_id=device_id).first()
+        user_device = UserDevice.query.filter_by(user_id=user.id, device_id=device_id).first()
 
         if user_device:
             # Update the device visibility
