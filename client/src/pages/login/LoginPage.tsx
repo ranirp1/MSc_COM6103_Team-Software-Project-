@@ -1,15 +1,35 @@
 import React, { useState } from "react";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
+import { API_URL } from "../../constants/constant";
+import { UserModel } from "./model/UserModel";
 
-const LoginPage = () => {
+const LoginPage = ({ fullScreen = true }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showToast, setShowToast] = useState(0);
+  const [successMessage, setSuccessMessage] = useState("");
+  // read the query parameter from the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const registerSuccess = urlParams.get("register");
+
+  React.useEffect(() => {
+    if (registerSuccess === "success") {
+      setTimeout(() => {
+        setSuccessMessage(
+          "Registration successful! Please log in to continue."
+        );
+        setShowToast(1);
+        setTimeout(() => {
+          setShowToast(0);
+        }, 4000);
+      }, 500);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/login", {
+      const response = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -17,9 +37,20 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
       });
 
+      // read the response and pass it to User model
       if (response.ok) {
+        setSuccessMessage("Login Successful");
         setShowToast(1);
         console.log("Login Successful");
+        const data = await response.json();
+        const user = UserModel.fromJson(data);
+        if (user.isAdmin) {
+          window.location.href = "/admin";
+        } else if (user.isStaff) {
+          window.location.href = "/staff";
+        } else {
+          window.location.href = "/user";
+        }
       } else {
         setShowToast(2);
         console.log("Login Error");
@@ -36,14 +67,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "hsl(169, 52%, 80%)" }}
-    >
+    <div>
       {showToast === 1 && (
         <div className="toast toast-center">
           <div className="alert alert-success">
-            <span>Login Successful</span>
+            <span>{successMessage}</span>
           </div>
         </div>
       )}
@@ -54,8 +82,17 @@ const LoginPage = () => {
           </div>
         </div>
       )}
-      <div className="flex-grow flex justify-center items-center">
-        <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex lg:flex-row flex-col-reverse animate-fade-in">
+      <div
+        className={`flex-grow flex justify-center items-center w-full ${
+          fullScreen ? "h-screen" : ""
+        }`}
+      >
+        <div
+          className={`max-w-4xl w-full bg-white rounded-lg overflow-hidden flex lg:flex-row flex-col-reverse animate-fade-in ${
+            fullScreen ? "shadow-2xl" : ""
+          }`}
+        >
+          {" "}
           {/* Image Section */}
           <div className="lg:w-1/2 flex justify-center items-center my-6">
             <div

@@ -19,7 +19,7 @@ const Navigation: React.FC<NavigationProps> = ({ backgroundColor }) => {
       {/* Navigation Menu */}
       <div className="relative">
         <button 
-          onClick={() => setShowMenu(!showMenu)} 
+          onClick={() => setShowMenu(!showMenu)}
           className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center"
         >
           <span>&#8801;</span> {/* Hamburger menu Unicode */}
@@ -27,33 +27,47 @@ const Navigation: React.FC<NavigationProps> = ({ backgroundColor }) => {
         {showMenu && (
           <div className="absolute left-0 mt-10 w-48 origin-top-left rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
             <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-              <a 
-                href="#" 
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                onClick={() => navigateTo("/")}
+              <a
+                  href="#"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => navigateTo("/")}
               >
                 Home
               </a>
-              <a 
-                href="#" 
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                onClick={() => navigateTo("/register")}
+              <a
+                  href="#"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => navigateTo("/register")}
               >
                 Register
               </a>
-              <a 
-                href="#" 
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                onClick={() => navigateTo("/login")}
+              <a
+                  href="#"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => navigateTo("/login")}
               >
                 Login
+              </a>
+              <a
+                  href="#"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => navigateTo("/admin")}
+              >
+                Admin
               </a>
               <a 
                 href="#" 
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                onClick={() => navigateTo("/admin")}
+                onClick={() => navigateTo("/staff")}
               >
-                Admin
+                staff
+              </a>
+              <a
+                  href="#"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => navigateTo("/user")}
+              >
+                User
               </a>
             </div>
           </div>

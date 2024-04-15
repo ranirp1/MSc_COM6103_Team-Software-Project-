@@ -5,7 +5,7 @@
     <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredIdentifiers">
         <list>
-          <option value="server.app.sqlalche" />
+          <option value="server.app.flask_sqlalchemy" />
         </list>
       </option>
     </inspection_tool>
