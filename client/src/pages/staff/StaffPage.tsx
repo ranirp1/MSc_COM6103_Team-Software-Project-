@@ -14,6 +14,7 @@ import emptyListImage from "../../assets/empty_list.svg";
 import { API_URL } from "../../constants/constant";
 import { redirect } from "react-router-dom";
 import { BiSolidReport } from "react-icons/bi";
+import ReportDialog from "./component/ReportDialog";
 
 class Device {
   id: number;
@@ -689,10 +690,24 @@ const toggleDeviceVerification = async (deviceId: number) => {
         )}
       </div>
 
-      <button className="btn fixed bottom-4 right-4 shadow-2xl bg-primary text-white h-20 rounded-full">
+      <button
+        className="btn fixed bottom-4 right-4 shadow-2xl bg-primary text-white h-20 rounded-full"
+        onClick={() => {
+          const modal = document.getElementById(
+            "my_modal_1"
+          ) as HTMLDialogElement;
+          if (modal) {
+            modal.showModal();
+          }
+        }}
+      >
         <BiSolidReport size={40} />
         <div className="pl-2 text-lg ">Check Reports</div>
       </button>
+
+      <dialog id="my_modal_1" className="modal">
+        <ReportDialog />
+      </dialog>
     </div>
   );
 };
