@@ -6,16 +6,23 @@ const ReportDialog = () => {
   const [userId, setUserId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // Add isLoading state
+
+  function callGenerateReport(
+    userId: string,
+    startDate: string,
+    endDate: string
+  ) {
+    setIsLoading(true);
+
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+  }
 
   return (
     <div className="modal-box">
-      <form method="dialog">
-        {/* if there is a button in form, it will close the modal */}
-        <button className="btn  btn-ghost absolute right-2 top-2">
-          <RxCross2 size={20} />
-        </button>
-      </form>
-      <div className="font-bold text-2xl text-black ">Generate Report!</div>
+      <form method="dialog"></form>
       <p className="py-2"></p>
       <img
         src={ReportImage}
@@ -74,7 +81,14 @@ const ReportDialog = () => {
         </div>
       </div>
 
-      <button className="btn btn-primary w-full mt-4">Generate</button>
+      <button
+        className="btn btn-primary w-full mt-4"
+        onClick={async () => {
+          await callGenerateReport(userId, startDate, endDate);
+        }}
+      >
+        {isLoading ? "Loading...." : "Generate Report"}
+      </button>
     </div>
   );
 };
