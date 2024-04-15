@@ -5,6 +5,8 @@ import LandingPage from "./pages/landing/LandingPage";
 import RegistrationPage from "./pages/registration/RegistrationPage";
 import LoginPage from "./pages/login/LoginPage";
 import AdminPage from "./pages/admin/AdminPage";
+import DeviceListPage from "./pages/User/DeviceListPage";
+import DeviceCreationForm from "./pages/User/DeviceCreationForm";
 import StaffPage from "./pages/staff/StaffPage";
 import PaymentSuccess from "./pages/payment/PaymentSuccess";
 import PaymentFailure from "./pages/payment/PaymentFailure";
@@ -20,7 +22,7 @@ function App() {
           <Route path="/register" element={<RegistrationPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/staff" element={<StaffPage />} />
+          <Route path="/user" element={<DeviceListPage />} />
           <Route path="/staff" element={<StaffPage />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/failure" element={<PaymentFailure/>} />

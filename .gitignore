@@ -1,5 +1,7 @@
 .venv/
 .projectenv/
+.projectenv2/
+
 # build file
 /build
 .DS_Store
@@ -7,4 +9,5 @@
 .idea/
 .idea
 
+.index
 node_modules
