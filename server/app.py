@@ -18,7 +18,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
-CORS(app)
+CORS(app,origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 class User(db.Model):
@@ -66,8 +66,6 @@ class Device(db.Model):
 # Create the tables when Flask starts up
 with app.app_context():
     db.create_all()
-
-    
     
 class UserDevice(db.Model):
     __tablename__ = 'user_device'
@@ -138,10 +136,6 @@ class PaymentTable(db.Model):
             'userID': self.userID
         }
 
-    
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
 
 @app.route("/")
 @cross_origin()
@@ -510,7 +504,7 @@ def getListOfDevices():
             'dataRetrievalTimeLeft': ''
         }
 
-    device_list.append(device_data)
+        device_list.append(device_data)
     return jsonify(device_list)
 
 
@@ -628,6 +622,7 @@ def update_device():
 
 
 @app.route('/api/generate_report', methods=['POST'])
+@cross_origin()
 def generate_report():
     """
     Generate a report in PDF format for payment transactions and devices input by users within a specified date range.
@@ -638,10 +633,11 @@ def generate_report():
 
     # Convert start_date and end_date strings to datetime 
     # Validate date format
+    
     try:
         start_date = datetime.strptime(start_date, '%Y-%m-%d')
         end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
-    except ValueError:
+    except Exception as e:
         return jsonify({'error': 'Invalid date format. Please use YYYY-MM-DD.'}), 400
 
     # Fetch payment transactions and devices input by users within the specified date range
