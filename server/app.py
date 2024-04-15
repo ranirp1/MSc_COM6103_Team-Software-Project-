@@ -560,3 +560,31 @@ def get_device_type():
         return jsonify({'type': 'Recycle', 'data': ""}), 200
     else:
         return jsonify({'type': 'Current', 'data': ""}), 200
+    
+@app.route('/api/updateDevice', methods=['POST'])
+@cross_origin()
+def update_device():
+    data = request.json
+    if not data:
+        return jsonify({'message': 'No data provided'}), 400
+
+    device_id = data.get('id')
+    if not device_id:
+        return jsonify({'message': 'Device ID is required'}), 400
+
+    try:
+        device = Device.query.filter_by(deviceID=device_id).first()
+        if not device:
+            return jsonify({'message': 'Device not found'}), 404
+
+        for field in ['brand', 'model', 'storage', 'color', 'condition', 'classification', 'dateOfRelease', 'isVerified', 'dataRecovered']:
+            if field in data:
+                setattr(device, field, data[field])
+
+        db.session.commit()
+        return jsonify({'message': 'Device updated successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to update device: {e}")
+        return jsonify({'message': 'Failed to update device', 'error': str(e)}), 500
