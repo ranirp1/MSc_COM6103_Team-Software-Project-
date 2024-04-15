@@ -108,6 +108,7 @@ with app.app_context():
     db.create_all()
 
 @app.route("/")
+@cross_origin()
 def check_sql_connection():
     try:
         db.session.execute(text("SELECT 1"))
@@ -117,6 +118,7 @@ def check_sql_connection():
 
 
 @app.route('/api/login', methods=['POST'])
+@cross_origin()
 def login():
     """
     Login implementation. Compares the user supplied credentials with the database entries for authentication.
@@ -135,6 +137,7 @@ def login():
 
 
 @app.route('/api/register', methods=['POST'])
+@cross_origin()
 def register():
     data = request.json
     email = data.get('email').lower()
@@ -179,6 +182,7 @@ def register():
 
 
 @app.route('/api/getAllUsers', methods=['GET']) 
+@cross_origin()
 def getAllUsers():
     """
     Retrieve all users from the database and return them as JSON.
@@ -201,6 +205,7 @@ def getAllUsers():
 
 
 @app.route('/api/updateUserToStaff', methods=['POST'])
+@cross_origin()
 def updateUserToStaff():
     """
     Update a user's status to staff.
@@ -220,6 +225,7 @@ def updateUserToStaff():
 
 
 @app.route('/api/updateUserToAdmin', methods=['POST'])
+@cross_origin()
 def updateUserToAdmin():
     """
     Update a user's role to admin.
@@ -240,6 +246,7 @@ def updateUserToAdmin():
 
 
 @app.route('/api/deleteUser', methods=['POST'])
+@cross_origin()
 def deleteUser():
     """
     Delete a user from the database.
@@ -261,6 +268,7 @@ def deleteUser():
 
 
 @app.route('/api/downgradeToUser', methods=['POST'])
+@cross_origin()
 def updateUserToEndUser():
     data = request.json
     email = data.get('email')
@@ -275,6 +283,7 @@ def updateUserToEndUser():
 
 
 @app.route('/api/moveDeviceClassification', methods=['POST'])
+@cross_origin()
 def move_device_classification():
     """
     Move device classification for a user by staff.
@@ -318,6 +327,7 @@ def move_device_classification():
 
 
 @app.route('/api/createDevice', methods=['POST'])
+@cross_origin()
 def createDevice():
     """
     Create device API
@@ -398,6 +408,7 @@ def createDevice():
 
 
 @app.route('/api/customer_device', methods=['POST'])
+@cross_origin()
 def create_customer_device():
     """
         Create and Save device information for a user.
@@ -438,6 +449,7 @@ def create_customer_device():
 
 
 @app.route('/api/getListOfDevices', methods=['GET'])
+@cross_origin()
 def getListOfDevices():
     # combine the device and UserDevice tables to get the list of devices
     print('inside get list of devices')
@@ -467,6 +479,7 @@ def getListOfDevices():
 
 
 @app.route('/api/changeDeviceVerification/', methods=['POST'])
+@cross_origin()
 def changeDeviceVerification():
     data = request.json
     deviceID = data.get('deviceID')
@@ -480,6 +493,7 @@ def changeDeviceVerification():
 
 
 @app.route('/api/updateDeviceVisibility', methods=['POST'])
+@cross_origin()
 def update_device_visibility():
     """
     Update device visibility for a user by staff
