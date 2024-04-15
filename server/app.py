@@ -128,12 +128,14 @@ class PaymentTable(db.Model):
     paymentID = db.Column(db.Integer, primary_key=True)
     dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
     userID = db.Column(db.Integer, nullable=False)
+    date = db.Column(db.Date, nullable=False) 
 
     def serialize(self):
         return {
             'paymentID': self.paymentID,
             'dataRetrievalID': self.dataRetrievalID,
-            'userID': self.userID
+            'userID': self.userID,
+            'date': self.date 
         }
 
 
@@ -642,8 +644,9 @@ def generate_report():
 
     # Fetch payment transactions and devices input by users within the specified date range
     try:
-        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
-        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
+        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)) 
+        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date))  
+
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
