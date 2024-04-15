@@ -3,7 +3,7 @@ import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import { API_URL } from "../../constants/constant";
 import { UserModel } from "./model/UserModel";
 
-const LoginPage = () => {
+const LoginPage = ({ fullScreen = true }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showToast, setShowToast] = useState(0);
@@ -67,10 +67,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "hsl(169, 52%, 80%)" }}
-    >
+    <div>
       {showToast === 1 && (
         <div className="toast toast-center">
           <div className="alert alert-success">
@@ -85,8 +82,17 @@ const LoginPage = () => {
           </div>
         </div>
       )}
-      <div className="flex-grow flex justify-center items-center">
-        <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex lg:flex-row flex-col-reverse animate-fade-in">
+      <div
+        className={`flex-grow flex justify-center items-center w-full ${
+          fullScreen ? "h-screen" : ""
+        }`}
+      >
+        <div
+          className={`max-w-4xl w-full bg-white rounded-lg overflow-hidden flex lg:flex-row flex-col-reverse animate-fade-in ${
+            fullScreen ? "shadow-2xl" : ""
+          }`}
+        >
+          {" "}
           {/* Image Section */}
           <div className="lg:w-1/2 flex justify-center items-center my-6">
             <div

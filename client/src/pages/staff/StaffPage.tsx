@@ -30,6 +30,7 @@ class Device {
   classification: string;
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
+  cexLink?: string; 
 
   constructor(
     id: number,
@@ -44,7 +45,8 @@ class Device {
     condition: string,
     classification: string,
     dataRetrievalRequested: boolean | null,
-    dataRetrievalTimeLeft: string
+    dataRetrievalTimeLeft: string,
+    cexLink?: string 
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -59,6 +61,7 @@ class Device {
     this.classification = classification;
     this.dataRetrievalRequested = dataRetrievalRequested;
     this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
+    this.cexLink = cexLink;
   }
 
   static fromJson(json: any): Device {
@@ -75,7 +78,8 @@ class Device {
       json.condition,
       json.classification,
       json.dataRetrievalRequested,
-      json.dataRetrievalTimeLeft
+      json.dataRetrievalTimeLeft,
+      json.cexLink
     );
   }
 }
@@ -148,16 +152,58 @@ const StaffDashboard = () => {
     setSortOrder(newSortOrder);
   };
 
-  const toggleDeviceVerification = (deviceId: number) => {
+const toggleDeviceVerification = async (deviceId: number) => {
+  // Find the device and its current verification status
+  const deviceIndex = devices.findIndex((d) => d.id === deviceId);
+  if (deviceIndex === -1) {
+    console.error('Device not found');
+    return;
+  }
+
+  const device = devices[deviceIndex];
+  const newVerificationStatus = !device.verified;
+
+  try {
+    // Update the backend first
+    const response = await fetch(`${API_URL}/api/changeDeviceVerification/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        deviceID: deviceId,
+        isVerified: newVerificationStatus,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Backend failed to update device verification status');
+    }
+
+    // Update the frontend after a successful backend response
     setDevices(
-      devices.map((device) => {
-        if (device.id === deviceId) {
-          return { ...device, verified: !device.verified };
+      devices.map((d, index) => {
+        if (index === deviceIndex) {
+          return { ...d, verified: newVerificationStatus };
         }
-        return device;
+        return d;
       })
     );
-  };
+  } catch (error) {
+    console.error('Error updating verification status:', error);
+    // Revert the frontend update if the backend call fails
+    setDevices(
+      devices.map((d, index) => {
+        if (index === deviceIndex) {
+          // Revert the 'verified' status of the device
+          return { ...d, verified: !newVerificationStatus };
+        }
+        return d;
+      })
+    );
+  }
+};
+
 
   // Function to filter devices based on search query and verification status
   const getFilteredDevices = () => {
@@ -172,171 +218,238 @@ const StaffDashboard = () => {
   // Use this function to render your devices
   const filteredDevices = getFilteredDevices();
 
-  const renderDeviceDetails = (device: Device) => {
-    const createCexSearchUrl = (
-      manufacturer: string,
-      model: string,
-      storage: string,
-      color: string
-    ) => {
-      const baseUrl = "https://uk.webuy.com/search";
-      return `${baseUrl}?stext=${encodeURIComponent(
-        `${manufacturer} ${model} ${storage} ${color}`
-      )}`;
-    };
 
-    const renderCexLink = () => {
-      if (
-        device.classification === "Rare" ||
-        device.classification === "Current"
-      ) {
-        const cexUrl = createCexSearchUrl(
-          device.brand,
-          device.model,
-          device.storage,
-          device.color
+    const renderDeviceDetails = (device: Device) => {
+      // Function to update device details in state
+      const handleDeviceUpdate = (field: keyof Device, value: string | boolean) => {
+        setDevices((prevDevices) =>
+          prevDevices.map((d) =>
+            d.id === device.id ? { ...d, [field]: value } : d
+          )
         );
-        return (
-          <div className="mt-2">
-            <strong>CEX Link:</strong>{" "}
-            <a
-              href={cexUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:text-blue-700"
-            >
-              Search on CEX
-            </a>
-          </div>
-        );
-      }
-      return null;
-    };
-
-    const calculateDataRetrievalTimeLeft = () => {
-      // Return "Not applicable" for "Current" and "Rare" classifications
-      if (
-        device.classification === "Current" ||
-        device.classification === "Rare"
-      ) {
-        return "Not applicable";
-      }
-
-      if (
-        device.classification === "Recycle" &&
-        device.dataRetrievalRequested
-      ) {
-        const creationDate = new Date(device.createdAt);
-        const endTime = new Date(
-          creationDate.getFullYear(),
-          creationDate.getMonth() + 3,
-          creationDate.getDate()
-        );
-        const currentDate = new Date();
-
-        if (currentDate < endTime) {
-          const timeDifference = endTime.getTime() - currentDate.getTime();
-          const daysLeft = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-          if (daysLeft > 30) {
-            return `More than 1 month left`;
-          } else if (daysLeft > 7) {
-            return `More than 1 week left`;
-          } else {
-            return `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`;
-          }
-        } else {
-          return "Expired";
+      };
+    
+      // Function to render a link to CEX website for specific device configurations
+      const renderCexLink = () => {
+        if (device.cexLink) {
+          return (
+            <div className="mt-2">
+              <strong>CEX Link:</strong>{" "}
+              <a
+                href={device.cexLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-700"
+              >
+                Search on CEX
+              </a>
+            </div>
+          );
         }
-      }
-      return "Not applicable";
+        return null; // Return null if there is no CEX link
+      };
+    
+      // Include a CEX Link input field to be edited manually by staff
+      const handleCexLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        handleDeviceUpdate('cexLink', e.target.value);
+      };
+      
+
+      const calculateDataRetrievalTimeLeft = () => {
+        // Return "Not applicable" for "Current" and "Rare" classifications
+        if (
+          device.classification === "Current" ||
+          device.classification === "Rare"
+        ) {
+          return "Not applicable";
+        }
+  
+        if (
+          device.classification === "Recycle" &&
+          device.dataRetrievalRequested
+        ) {
+          const creationDate = new Date(device.createdAt);
+          const endTime = new Date(
+            creationDate.getFullYear(),
+            creationDate.getMonth() + 3,
+            creationDate.getDate()
+          );
+          const currentDate = new Date();
+  
+          if (currentDate < endTime) {
+            const timeDifference = endTime.getTime() - currentDate.getTime();
+            const daysLeft = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+  
+            if (daysLeft > 30) {
+              return `More than 1 month left`;
+            } else if (daysLeft > 7) {
+              return `More than 1 week left`;
+            } else {
+              return `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`;
+            }
+          } else {
+            return "Expired";
+          }
+        }
+        return "Not applicable";
+      };
+    
+      const saveDeviceUpdates = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/updateDevice`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(device),
+            });
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Failed to update device: ${errorData.message}`);
+            }
+    
+            alert('Device updated successfully!');
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                console.error('Error saving device updates:', error);
+                alert(`Failed to save device updates: ${error.message}`);
+            } else {
+                // Handle cases where the error is not an instance of Error
+                console.error('An unexpected error occurred:', error);
+                alert('An unexpected error occurred. Please try again.');
+            }
+        }
     };
-
-    return (
-      <div className="bg-white p-5 rounded-lg shadow-md">
-        {/* Manufacturer and model name above the photo */}
-        <h3 className="text-2xl font-bold mb-4">
-          {device.brand} {device.model}
-        </h3>
-        <div className="mt-3">
-          <span
-            className={`px-3 py-1 text-sm font-semibold inline-block ${
-              device.verified
-                ? "bg-green-200 text-green-800"
-                : "bg-red-200 text-red-800"
-            }`}
-          >
-            {device.verified ? "Verified" : "Not Verified"}
-          </span>
-        </div>
-        <div className="flex flex-col md:flex-row md:items-start">
-          <div className="w-full md:w-3/4 lg:w-3/4">
-            {" "}
-            {/* Adjust width here */}
-            {/* Larger image size */}
-            <img
-              src={image1}
-              alt={`${device.brand} ${device.model}`}
-              className="w-full h-auto rounded"
+    
+      return (
+        <div className="bg-white p-5 rounded-lg shadow-md">
+          {/* Manufacturer and model name above the photo */}
+          <h3 className="text-2xl font-bold mb-4">
+            <input
+              type="text"
+              value={device.brand}
+              onChange={(e) => handleDeviceUpdate('brand', e.target.value)}
+              className="input input-bordered w-full"
             />
+            <input
+              type="text"
+              value={device.model}
+              onChange={(e) => handleDeviceUpdate('model', e.target.value)}
+              className="input input-bordered w-full"
+            />
+          </h3>
+          <div className="mt-3">
+            <span
+              className={`px-3 py-1 text-sm font-semibold inline-block ${
+                device.verified ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+              }`}
+            >
+              {device.verified ? "Verified" : "Not Verified"}
+            </span>
           </div>
-
-          <div className="md:ml-4 flex-1">
-            {/* Increase margin-top here for more space */}
-            <div className="flex flex-wrap -m-1 mt-20 md:mt-22">
-              {" "}
-              {/* Adjust mt- class here */}
-              <div className="p-1">
-                <span className="text-gray-600">Storage:</span> {device.storage}
-              </div>
-              <div className="p-1">
-                <span className="text-gray-600">Color:</span> {device.color}
-              </div>
-              <div className="p-1">
-                <span className="text-gray-600">Condition:</span>{" "}
-                {device.condition}
-              </div>
-              <div className="p-1">
-                <span className="text-gray-600">Classification:</span>{" "}
-                {device.classification}
+          <div className="flex flex-col md:flex-row md:items-start">
+            <div className="w-full md:w-3/4 lg:w-3/4">
+              {/* Adjust width here */}
+              {/* Larger image size */}
+              <img
+                src={device.image}
+                alt={`${device.brand} ${device.model}`}
+                className="w-full h-auto rounded"
+              />
+            </div>
+            <div className="md:ml-4 flex-1">
+              {/* Increase margin-top here for more space */}
+              <div className="flex flex-wrap -m-1 mt-20 md:mt-22">
+                {/* Adjust mt- class here */}
+                <div className="p-1">
+                  <span className="text-gray-600">Storage:</span> 
+                  <input
+                    type="text"
+                    value={device.storage}
+                    onChange={(e) => handleDeviceUpdate('storage', e.target.value)}
+                    className="input input-bordered"
+                  />
+                </div>
+                <div className="p-1">
+                  <span className="text-gray-600">Color:</span> 
+                  <input
+                    type="text"
+                    value={device.color}
+                    onChange={(e) => handleDeviceUpdate('color', e.target.value)}
+                    className="input input-bordered"
+                  />
+                </div>
+                <div className="p-1">
+                  <span className="text-gray-600">Condition:</span> 
+                  <input
+                    type="text"
+                    value={device.condition}
+                    onChange={(e) => handleDeviceUpdate('condition', e.target.value)}
+                    className="input input-bordered"
+                  />
+                </div>
+                <div className="p-1">
+                  <span className="text-gray-600">Classification:</span> 
+                  <input
+                    type="text"
+                    value={device.classification}
+                    onChange={(e) => handleDeviceUpdate('classification', e.target.value)}
+                    className="input input-bordered"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="mt-4">
-          <div className="mb-2">
-            <span className="font-bold">Specifications:</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p>
-                <strong>Model Name:</strong> {device.brand} {device.model}
-              </p>
-              <p>
-                <strong>Created At:</strong> {device.createdAt}
-              </p>
-              <p>
-                <strong>Data Recovery:</strong>{" "}
-                {device.classification === "Current" ||
-                device.classification === "Rare"
-                  ? "Not applicable"
-                  : device.dataRecovered
-                  ? "Yes"
-                  : "No"}
-              </p>
-              <p>
-                <strong>Data Retrieval Time Left:</strong>{" "}
-                {calculateDataRetrievalTimeLeft()}
-              </p>
+          <div className="mt-4">
+            <div className="mb-2">
+              <span className="font-bold">Specifications:</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p>
+                  <strong>Created At:</strong> 
+                  <input
+                    type="text"
+                    value={device.createdAt}
+                    onChange={(e) => handleDeviceUpdate('createdAt', e.target.value)}
+                    className="input input-bordered"
+                  />
+                </p>
+                <p>
+                  <strong>Data Recovery:</strong> 
+                  <select
+                    value={device.dataRecovered ? "Yes" : "No"}
+                    onChange={(e) => handleDeviceUpdate('dataRecovered', e.target.value === "Yes")}
+                    className="select select-bordered w-full max-w-xs"
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </p>
+                <p>
+                  <strong>Data Retrieval Time Left:</strong>
+                  {calculateDataRetrievalTimeLeft()}
+                </p>
+              </div>
             </div>
           </div>
+          <div className="mt-3">
+            {/* CEX Link manual input */}
+            <input
+              type="text"
+              placeholder="Enter CEX Link"
+              value={device.cexLink || ''}
+              onChange={handleCexLinkChange}
+              className="input input-bordered w-full my-2"
+            />
+            {renderCexLink()}
+          </div>
+          <button className="btn btn-primary mt-4" onClick={saveDeviceUpdates}>
+            Save Changes
+          </button>
         </div>
-
-        {renderCexLink()}
-      </div>
-    );
-  };
+      );
+    };
+    
 
   return (
     <div className="flex h-screen bg-gray-100 shadow-2xl">

@@ -1,21 +1,25 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify , send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
-from flask_cors import CORS
-from datetime import datetime
-
+from flask_cors import CORS , cross_origin
+from datetime import datetime, timedelta
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle , Spacer
+from flask import jsonify
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
+from flask import request
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
-
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -62,6 +66,7 @@ class Device(db.Model):
 # Create the tables when Flask starts up
 with app.app_context():
     db.create_all()
+
     
     
 class UserDevice(db.Model):
@@ -101,12 +106,45 @@ class UserDevice(db.Model):
             'estimatedValue': self.estimatedValue
         }
 
+
+class DataRetrieval(db.Model):
+    __tablename__ = 'dataretrieval'
+    dataRetrievalID = db.Column(db.Integer, primary_key=True)
+    dataUrl = db.Column(db.String(255), nullable=True)
+    dateOfCreation = db.Column(db.Date, nullable=False)
+    duration = db.Column(db.Integer, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+
+    def serialize(self):
+        return {
+            'dataRetrievalID': self.dataRetrievalID,
+            'dataUrl': self.dataUrl,
+            'dateOfCreation': str(self.dateOfCreation),
+            'duration': self.duration,
+            'password': self.password
+        }
+
+
+class PaymentTable(db.Model):
+    __tablename__ = 'paymenttable'
+    paymentID = db.Column(db.Integer, primary_key=True)
+    dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
+    userID = db.Column(db.Integer, nullable=False)
+
+    def serialize(self):
+        return {
+            'paymentID': self.paymentID,
+            'dataRetrievalID': self.dataRetrievalID,
+            'userID': self.userID
+        }
+
     
 # Create the tables when Flask starts up
 with app.app_context():
     db.create_all()
 
 @app.route("/")
+@cross_origin()
 def check_sql_connection():
     try:
         db.session.execute(text("SELECT 1"))
@@ -116,6 +154,7 @@ def check_sql_connection():
 
 
 @app.route('/api/login', methods=['POST'])
+@cross_origin()
 def login():
     """
     Login implementation. Compares the user supplied credentials with the database entries for authentication.
@@ -134,6 +173,7 @@ def login():
 
 
 @app.route('/api/register', methods=['POST'])
+@cross_origin()
 def register():
     data = request.json
     email = data.get('email').lower()
@@ -178,6 +218,7 @@ def register():
 
 
 @app.route('/api/getAllUsers', methods=['GET']) 
+@cross_origin()
 def getAllUsers():
     """
     Retrieve all users from the database and return them as JSON.
@@ -200,6 +241,7 @@ def getAllUsers():
 
 
 @app.route('/api/updateUserToStaff', methods=['POST'])
+@cross_origin()
 def updateUserToStaff():
     """
     Update a user's status to staff.
@@ -219,6 +261,7 @@ def updateUserToStaff():
 
 
 @app.route('/api/updateUserToAdmin', methods=['POST'])
+@cross_origin()
 def updateUserToAdmin():
     """
     Update a user's role to admin.
@@ -239,6 +282,7 @@ def updateUserToAdmin():
 
 
 @app.route('/api/deleteUser', methods=['POST'])
+@cross_origin()
 def deleteUser():
     """
     Delete a user from the database.
@@ -260,6 +304,7 @@ def deleteUser():
 
 
 @app.route('/api/downgradeToUser', methods=['POST'])
+@cross_origin()
 def updateUserToEndUser():
     data = request.json
     email = data.get('email')
@@ -274,6 +319,7 @@ def updateUserToEndUser():
 
 
 @app.route('/api/moveDeviceClassification', methods=['POST'])
+@cross_origin()
 def move_device_classification():
     """
     Move device classification for a user by staff.
@@ -317,6 +363,7 @@ def move_device_classification():
 
 
 @app.route('/api/createDevice', methods=['POST'])
+@cross_origin()
 def createDevice():
     """
     Create device API
@@ -397,6 +444,7 @@ def createDevice():
 
 
 @app.route('/api/customer_device', methods=['POST'])
+@cross_origin()
 def create_customer_device():
     """
         Create and Save device information for a user.
@@ -437,6 +485,7 @@ def create_customer_device():
 
 
 @app.route('/api/getListOfDevices', methods=['GET'])
+@cross_origin()
 def getListOfDevices():
     # combine the device and UserDevice tables to get the list of devices
     print('inside get list of devices')
@@ -466,6 +515,7 @@ def getListOfDevices():
 
 
 @app.route('/api/changeDeviceVerification/', methods=['POST'])
+@cross_origin()
 def changeDeviceVerification():
     data = request.json
     deviceID = data.get('deviceID')
@@ -479,6 +529,7 @@ def changeDeviceVerification():
 
 
 @app.route('/api/updateDeviceVisibility', methods=['POST'])
+@cross_origin()
 def update_device_visibility():
     """
     Update device visibility for a user by staff
@@ -506,7 +557,7 @@ def update_device_visibility():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        user_device = UserDeviceTable.query.filter_by(user_id=user.id, device_id=device_id).first()
+        user_device = UserDevice.query.filter_by(user_id=user.id, device_id=device_id).first()
 
         if user_device:
             # Update the device visibility
@@ -517,3 +568,128 @@ def update_device_visibility():
             return jsonify({'message': 'Device not found for the user'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
+
+@app.route('/api/getDeviceTypeAndEstimation', methods=['POST'])
+@cross_origin()
+def get_device_type():
+    data = request.json
+    brand = data.get('brand')
+    model = data.get('model')
+    dateOfPurchase = data.get('dateOfPurchase')
+    # classification = data.get('classification')
+    releaseDate = data.get('releaseDate')
+    color = data.get('color')
+    storage = data.get('storage')
+    condition = data.get('condition')
+    
+    current_year = datetime.now().year
+    release_year = datetime.strptime(releaseDate, "%Y-%m-%d").year
+    purchase_year = datetime.strptime(dateOfPurchase, "%Y-%m-%d").year
+    device_age = current_year - release_year
+    
+    if device_age > 20:
+        # if classification == "Rare" or classification == "Unknown":
+            return jsonify({'type': 'Rare', 'data': ""}), 200
+        # else:
+        #     return jsonify({'type': 'Recycle', 'data': ""}), 200
+    elif device_age < 10 and (current_year - purchase_year) < 10:
+        return jsonify({'type': 'Recycle', 'data': ""}), 200
+    else:
+        return jsonify({'type': 'Current', 'data': ""}), 200
+
+
+@app.route('/api/updateDevice', methods=['POST'])
+@cross_origin()
+def update_device():
+    data = request.json
+    if not data:
+        return jsonify({'message': 'No data provided'}), 400
+
+    device_id = data.get('id')
+    if not device_id:
+        return jsonify({'message': 'Device ID is required'}), 400
+
+    try:
+        device = Device.query.filter_by(deviceID=device_id).first()
+        if not device:
+            return jsonify({'message': 'Device not found'}), 404
+
+        for field in ['brand', 'model', 'storage', 'color', 'condition', 'classification', 'dateOfRelease', 'isVerified', 'dataRecovered']:
+            if field in data:
+                setattr(device, field, data[field])
+
+        db.session.commit()
+        return jsonify({'message': 'Device updated successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to update device: {e}")
+        return jsonify({'message': 'Failed to update device', 'error': str(e)}), 500
+
+
+@app.route('/api/generate_report', methods=['POST'])
+def generate_report():
+    """
+    Generate a report in PDF format for payment transactions and devices input by users within a specified date range.
+    """
+    data = request.json
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+
+    # Convert start_date and end_date strings to datetime 
+    # Validate date format
+    try:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+    except ValueError:
+        return jsonify({'error': 'Invalid date format. Please use YYYY-MM-DD.'}), 400
+
+    # Fetch payment transactions and devices input by users within the specified date range
+    try:
+        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
+        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
+    except Exception as e:
+        return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
+
+    # Generate PDF report
+    try: 
+        pdf_filename = 'report.pdf'
+        doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+        elements = []
+
+        # Add payments data to PDF
+        payments_data = [['Payment ID', 'Data Retrieval ID', 'User ID', 'Date']]
+        for payment in payments:
+            payments_data.append([payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
+        payments_table = Table(payments_data)
+        payments_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                                            ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+        elements.append(payments_table)
+        elements.append(Spacer(1, 12))
+
+        # Add user devices data to PDF
+        devices_data = [['User Device ID', 'User ID', 'Device ID', 'Date of Creation']]
+        for device in user_devices:
+            devices_data.append([device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
+        devices_table = Table(devices_data)
+        devices_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                                           ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                                           ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                           ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                           ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                                           ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                                           ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+        elements.append(devices_table)
+
+        # Build PDF document
+        doc.build(elements)
+
+        # Return the PDF file
+        return send_file(pdf_filename, as_attachment=True)
+    except Exception as e:
+        return jsonify({'error': 'Failed to generate PDF report.', 'details': str(e)}), 500
