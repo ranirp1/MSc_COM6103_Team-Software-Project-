@@ -161,7 +161,7 @@ def check_sql_connection():
 def generate_token(user):
     payload = {
         'user_id': user.id,  # Use existing user.id
-        'exp': datetime.utcnow() + datetime.timedelta(minutes=60)  # Token expires in 60 minutes
+        'exp': datetime.utcnow() + timedelta(minutes=60)  # Token expires in 60 minutes
     }
     return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
 
@@ -178,8 +178,8 @@ def verify_token(token):
         return None  # Token has expired
 
 
-def verify_jwt(func):
-    @wraps(func)
+def verify_jwt(inner_func):
+    @wraps(inner_func)
     def decorated_function(*args, **kwargs):
         token = request.headers.get('Authorization', None)
         if not token:
@@ -189,7 +189,7 @@ def verify_jwt(func):
             return jsonify({'error': 'Invalid or expired token'}), 401
         # Add user_id to request object for further use
         request.user_id = user_id
-        return func(*args, **kwargs)
+        return inner_func(*args, **kwargs)
 
     return decorated_function
 
