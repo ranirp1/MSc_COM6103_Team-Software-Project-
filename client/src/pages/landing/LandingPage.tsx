@@ -12,37 +12,35 @@ import backup from "../../animation/backup.json";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import CheckNow from "./CheckNow";
 
-import {Elements} from '@stripe/react-stripe-js';
-import {loadStripe} from '@stripe/stripe-js';
-import CardPayment from "../../components/CardPayment";
+import CardPaymentModel from "../../components/CardPaymentModel";
 
 // const publicKey = process.env.PUBLIC_URL || ""
-const publicKey = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN"
-const stripePromise = loadStripe(publicKey)
+
 const LandingPage: React.FC = () => {
+  return <CardPaymentModel></CardPaymentModel>;
   return (
     <div className="bg-gray-100 flex flex-col md:flex-row w-full ">
       {/* <NavBar></NavBar> */}
 
       {/* LandingPage content goes here */}
-{/*<<<<<<< HEAD*/}
-{/*        <div>*/}
-{/*            /!* Content specific to LandingPage *!/*/}
-{/*            /!* More content *!/*/}
-{/*            <br/>*/}
-{/*            <br/>*/}
-{/*            <br/>*/}
-{/*            <br/>*/}
-{/*            <div>*/}
-{/*                <h3>Card number: 4000008260000000</h3>*/}
-{/*            </div>*/}
-{/*            <div className="justify-center items-center p-8 bg-neutral-300">*/}
-{/*                <Elements stripe={stripePromise}>*/}
-{/*                    <CardPayment />*/}
-{/*                </Elements>*/}
-{/*            </div>*/}
-{/*        </div>*/}
-{/*=======*/}
+      {/*<<<<<<< HEAD*/}
+      {/*        <div>*/}
+      {/*            /!* Content specific to LandingPage *!/*/}
+      {/*            /!* More content *!/*/}
+      {/*            <br/>*/}
+      {/*            <br/>*/}
+      {/*            <br/>*/}
+      {/*            <br/>*/}
+      {/*            <div>*/}
+      {/*                <h3>Card number: 4000008260000000</h3>*/}
+      {/*            </div>*/}
+      {/*            <div className="justify-center items-center p-8 bg-neutral-300">*/}
+      {/*                <Elements stripe={stripePromise}>*/}
+      {/*                    <CardPayment />*/}
+      {/*                </Elements>*/}
+      {/*            </div>*/}
+      {/*        </div>*/}
+      {/*=======*/}
 
       <div className="w-1/2 flex flex-col items-center place-content-center">
         <div className="flex flex-col gap-5 card  text-primary w-10/12 px-5 py-5">
