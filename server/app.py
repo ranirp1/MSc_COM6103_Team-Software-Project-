@@ -1,25 +1,33 @@
-from flask import Flask, request, jsonify , send_file
+from flask import Flask, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
-from flask_cors import CORS , cross_origin
+from flask_cors import CORS, cross_origin
 from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle , Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
 from flask import jsonify
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from flask import request
 
+# pip install python-jose to work with JWT tokens
+from jose import JWTError, jwt
+from functools import wraps
+from os import environ
+
+SECRET_KEY = environ.get('JWT_SECRET_KEY', 'your_secret_key_here')
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
-CORS(app,origins=["http://localhost:3000"])
+CORS(app, origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -31,7 +39,7 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
-    
+
     def serialize(self):
         return {
             'id': self.id,
@@ -62,11 +70,13 @@ class Device(db.Model):
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
             'isVerified': self.isVerified
         }
-    
+
+
 # Create the tables when Flask starts up
 with app.app_context():
     db.create_all()
-    
+
+
 class UserDevice(db.Model):
     __tablename__ = 'user_device'
     userDeviceID = db.Column(db.Integer, primary_key=True)
@@ -147,6 +157,67 @@ def check_sql_connection():
         return f'Error: {str(e)}'
 
 
+# Function to generate JWT token for a user
+def generate_token(user):
+    payload = {
+        'user_id': user.id,  # Use existing user.id
+        'exp': datetime.utcnow() + datetime.timedelta(minutes=60)  # Token expires in 60 minutes
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+
+# Function to Verify JWT token
+def verify_token(token):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['user_id']
+    except JWTError:
+        return None
+
+
+def verify_jwt(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization', None)
+        if not token:
+            return jsonify({'error': 'Missing authorization token'}), 401
+        user_id = verify_token(token.split()[1])  # Assuming 'Bearer token' format
+        if not user_id:
+            return jsonify({'error': 'Invalid token'}), 401
+        # Add user_id to request object for further use
+        request.user_id = user_id
+        return func(*args, **kwargs)
+
+    return decorated_function
+
+
+@app.route('/api/protected_endpoint')
+@verify_jwt
+def protected_endpoint():
+    """
+  Protected endpoint accessible only with a valid JWT token.
+
+  Returns:
+      A JSON response with user information or an error message.
+  """
+
+    # Access user ID from request object (added by verify_jwt decorator)
+    user_id = request.user_id
+
+    # Retrieve user information from database based on user_id
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    # Example usage: Return basic user information (modify as needed)
+    user_data = {
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+    }
+    return jsonify(user_data)
+
+
 @app.route('/api/login', methods=['POST'])
 @cross_origin()
 def login():
@@ -161,6 +232,8 @@ def login():
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and user.password == password:
+        token = generate_token(user)
+        # return jsonify({'token': token})
         return jsonify(user.serialize()), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
@@ -208,10 +281,16 @@ def register():
         db.session.flush()
         # code from https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
         return jsonify({'message': 'Database Error'}), 500
+
+    # Generate JWT token for the newly created user
+    token = generate_token(newUser)
+
+    # Return success message and the JWT token
+    # return jsonify({'message': 'Registration Successful', 'token': token})
     return jsonify({'message': 'Login Successful'}), 200
 
 
-@app.route('/api/getAllUsers', methods=['GET']) 
+@app.route('/api/getAllUsers', methods=['GET'])
 @cross_origin()
 def getAllUsers():
     """
@@ -388,43 +467,41 @@ def createDevice():
     else:
         isVerified = True
 
-    
-    if(deviceID is None):
+    if (deviceID is None):
         try:
             newDeviceAdded = Device(
                 deviceType=deviceType,
                 brand=brand,
                 model=model,
                 dateOfRelease=dateOfRelease,
-                isVerified=False            
+                isVerified=False
             )
             db.session.add(newDeviceAdded)
             db.session.commit()
-            
+
             # Read the device ID from the database for the newly inserted device
 
             deviceID = newDeviceAdded.deviceID
-            print('deviceID',deviceID)
+            print('deviceID', deviceID)
         except Exception as e:
             print(e)
             db.session.rollback()
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
-    
-    
+
     newUserDeviceAdded = UserDevice(
-        userID = userID,
-        deviceID = deviceID,
-        deviceClassification = deviceClassification,
-        dateOfPurchase = dateOfPurchase,
-        deviceColor = deviceColor,
-        deviceStorage = deviceStorage,
-        deviceCondition = deviceCondition,
-        imageUrl = imageUrl,
-        qrCodeUrl = qrCodeUrl,
-        dateOfCreation = dateOfRelease,
-        dataRetrievalID = 0,
-        estimatedValue = ""
+        userID=userID,
+        deviceID=deviceID,
+        deviceClassification=deviceClassification,
+        dateOfPurchase=dateOfPurchase,
+        deviceColor=deviceColor,
+        deviceStorage=deviceStorage,
+        deviceCondition=deviceCondition,
+        imageUrl=imageUrl,
+        qrCodeUrl=qrCodeUrl,
+        dateOfCreation=dateOfRelease,
+        dataRetrievalID=0,
+        estimatedValue=""
     )
     try:
         db.session.add(newUserDeviceAdded)
@@ -484,7 +561,7 @@ def getListOfDevices():
     # combine the device and UserDevice tables to get the list of devices
     print('inside get list of devices')
     userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
-    
+
     device_list = []
     for userDevice in userDevice:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
@@ -543,7 +620,7 @@ def update_device_visibility():
 
     # Check if the staff user is authenticated
     staff_user = User.query.filter_by(email='staff@example.com',
-                                       isStaff=True).first()  # Adjust the email as per your staff user
+                                      isStaff=True).first()  # Adjust the email as per your staff user
 
     if not staff_user:
         return jsonify({'message': 'Unauthorized access'}), 403
@@ -563,6 +640,7 @@ def update_device_visibility():
     else:
         return jsonify({'message': 'User not found'}), 404
 
+
 @app.route('/api/getDeviceTypeAndEstimation', methods=['POST'])
 @cross_origin()
 def get_device_type():
@@ -575,17 +653,17 @@ def get_device_type():
     color = data.get('color')
     storage = data.get('storage')
     condition = data.get('condition')
-    
+
     current_year = datetime.now().year
     release_year = datetime.strptime(releaseDate, "%Y-%m-%d").year
     purchase_year = datetime.strptime(dateOfPurchase, "%Y-%m-%d").year
     device_age = current_year - release_year
-    
+
     if device_age > 20:
         # if classification == "Rare" or classification == "Unknown":
-            return jsonify({'type': 'Rare', 'data': ""}), 200
-        # else:
-        #     return jsonify({'type': 'Recycle', 'data': ""}), 200
+        return jsonify({'type': 'Rare', 'data': ""}), 200
+    # else:
+    #     return jsonify({'type': 'Recycle', 'data': ""}), 200
     elif device_age < 10 and (current_year - purchase_year) < 10:
         return jsonify({'type': 'Recycle', 'data': ""}), 200
     else:
@@ -608,7 +686,8 @@ def update_device():
         if not device:
             return jsonify({'message': 'Device not found'}), 404
 
-        for field in ['brand', 'model', 'storage', 'color', 'condition', 'classification', 'dateOfRelease', 'isVerified', 'dataRecovered']:
+        for field in ['brand', 'model', 'storage', 'color', 'condition', 'classification', 'dateOfRelease',
+                      'isVerified', 'dataRecovered']:
             if field in data:
                 setattr(device, field, data[field])
 
@@ -633,7 +712,7 @@ def generate_report():
 
     # Convert start_date and end_date strings to datetime 
     # Validate date format
-    
+
     try:
         start_date = datetime.strptime(start_date, '%Y-%m-%d')
         end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
@@ -648,7 +727,7 @@ def generate_report():
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
     # Generate PDF report
-    try: 
+    try:
         pdf_filename = 'report.pdf'
         doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
         elements = []
@@ -656,7 +735,8 @@ def generate_report():
         # Add payments data to PDF
         payments_data = [['Payment ID', 'Data Retrieval ID', 'User ID', 'Date']]
         for payment in payments:
-            payments_data.append([payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
+            payments_data.append(
+                [payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
         payments_table = Table(payments_data)
         payments_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                                             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -671,7 +751,8 @@ def generate_report():
         # Add user devices data to PDF
         devices_data = [['User Device ID', 'User ID', 'Device ID', 'Date of Creation']]
         for device in user_devices:
-            devices_data.append([device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
+            devices_data.append(
+                [device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
         devices_table = Table(devices_data)
         devices_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
