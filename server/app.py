@@ -169,10 +169,13 @@ def generate_token(user):
 # Function to Verify JWT token
 def verify_token(token):
     try:
+        token = token.split()[1]  # Assuming 'Bearer token' format
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         return payload['user_id']
-    except JWTError:
-        return None
+    except jwt.exceptions.DecodeError:
+        return None  # Token is malformed
+    except jwt.exceptions.ExpiredSignatureError:
+        return None  # Token has expired
 
 
 def verify_jwt(func):
@@ -181,9 +184,9 @@ def verify_jwt(func):
         token = request.headers.get('Authorization', None)
         if not token:
             return jsonify({'error': 'Missing authorization token'}), 401
-        user_id = verify_token(token.split()[1])  # Assuming 'Bearer token' format
+        user_id = verify_token(token)
         if not user_id:
-            return jsonify({'error': 'Invalid token'}), 401
+            return jsonify({'error': 'Invalid or expired token'}), 401
         # Add user_id to request object for further use
         request.user_id = user_id
         return func(*args, **kwargs)
@@ -195,11 +198,11 @@ def verify_jwt(func):
 @verify_jwt
 def protected_endpoint():
     """
-  Protected endpoint accessible only with a valid JWT token.
+    Protected endpoint accessible only with a valid JWT token.
 
-  Returns:
-      A JSON response with user information or an error message.
-  """
+    Returns:
+        A JSON response with user information or an error message.
+    """
 
     # Access user ID from request object (added by verify_jwt decorator)
     user_id = request.user_id
