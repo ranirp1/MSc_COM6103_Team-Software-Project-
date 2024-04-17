@@ -342,130 +342,107 @@ const UserDashboard = () => {
       return "Not applicable";
     };
     return (
-      <div className="bg-white p-5 rounded-lg shadow-md">
-        {/* Manufacturer and model name above the photo */}
-        <h3 className="text-2xl font-bold mb-4">
-          {device.brand} {device.model}
-        </h3>
-        <div className="mt-3">
-          <span
-            className={`px-3 py-1 text-sm font-semibold inline-block ${
-              device.verified
-                ? "bg-green-200 text-green-800"
-                : "bg-red-200 text-red-800"
-            }`}
-          >
-            {device.verified ? "Verified" : "Not Verified"}
+      <div className="card w-97 bg-base-100 shadow-xl">
+      <figure><img src={image1} alt="{${device.brand} ${device.model}}" /></figure>
+      <div className="card-body">
+      <div className="flex flex-row justify-between">
+      <h2 className="card-title">{device.brand} {device.model}</h2>
+        <span
+          className={`px-3 py-1 text-sm font-semibold inline-block ${
+            device.verified
+              ? "badge badge-success gap-2 flex justify-content: center"
+              : "badge badge-error gap-2 flex justify-content: center"
+          }`}
+        >
+        {device.verified ? "Verified" : "Not Verified"}
+        </span>
+        </div>
+        <div>
+        <div className="mb-2">
+          <span className="font-bold">Specifications:</span>
+        </div>
+        <div className="p-1">
+           <span className="text-black">Storage:</span> {device.storage}
+        </div>
+        <div className="p-1">
+           <span className="text-black">Color:</span> {device.deviceColor}
+        </div>
+        <div className="p-1">
+           <span className="text-black">Condition:</span> {device.storage}
+        </div>
+        <div className="p-1">
+           <span className="text-black">Classification:</span> {device.storage}
+        </div>
+        <div className="p-1">
+           <span className="text-black">Created At:</span> {device.createdAt}
+        </div>
+        <div className="p-1">
+          <span className="text-black">
+          Data Recovery:{" "}
+          {device.deviceClassification === "Current" ||
+          device.deviceClassification === "Rare"
+            ? "Not applicable"
+            : device.dataRecovered
+            ? "Yes"
+            : "No"}  
           </span>
         </div>
-        <div className="flex flex-col md:flex-row md:items-start">
-          <div className="w-full md:w-3/4 lg:w-3/4">
-            {" "}
-            {/* Adjust width here */}
-            {/* Larger image size */}
-            <img
-              src={image1}
-              alt="{${device.brand} ${device.model}}"
-              className="w-full h-auto rounded"
-            />
-          </div>
-
-          <div className="md:ml-4 flex-1">
-            {/* Increase margin-top here for more space */}
-            <div className="flex flex-wrap -m-1 mt-20 md:mt-22">
-              {" "}
-              {/* Adjust mt- class here */}
-              <div className="p-1">
-                <span className="text-gray-600">Storage:</span> {device.storage}
-              </div>
-              <div className="p-1">
-                <span className="text-gray-600">Color:</span> {device.deviceColor}
-              </div>
-              <div className="p-1">
-                <span className="text-gray-600">Condition:</span>{" "}
-                {device.condition}
-              </div>
-              <div className="p-1">
-                <span className="text-gray-600">Classification:</span>{" "}
-                {device.deviceClassification}
-              </div>
-            </div>
-          </div>
+        <div className="p-1">
+          <span className="text-black">
+          Data Retrieval Time Left:{" "}
+          {calculateDataRetrievalTimeLeft()}  
+          </span> {device.storage}
         </div>
-
-        <div className="mt-4">
-          <div className="mb-2">
-            <span className="font-bold">Specifications:</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p>
-                <strong>Model Name:</strong> {device.brand} {device.model}
-              </p>
-              <p>
-                <strong>Created At:</strong> {device.createdAt}
-              </p>
-              <p>
-                <strong>Data Recovery:</strong>{" "}
-                {device.deviceClassification === "Current" ||
-                device.deviceClassification === "Rare"
-                  ? "Not applicable"
-                  : device.dataRecovered
-                  ? "Yes"
-                  : "No"}
-              </p>
-              <p>
-                <strong>Data Retrieval Time Left:</strong>{" "}
-                {calculateDataRetrievalTimeLeft()}
-              </p>
-            </div>
-          </div>
         </div>
         {renderCexLink()}
-        <div className="mt-4">
-          <div
-            style={{
-              height: "auto",
-              margin: "0 auto",
-              maxWidth: 64,
-              width: "100%",
-            }}
-          >
-            <QRCode
-              size={256}
-              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-              value={device.brand + "\n" + device.model}
-              viewBox={`0 0 256 256`}
-            />
-          </div>
-        </div>
-        <div className="dropdown dropdown-right mt-4">
-          <div tabIndex={0} role="button" className="btn btn-info">
-            Extend Retrieval
-          </div>
-          <ul
-            tabIndex={0}
-            className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-          >
-            <li>
-              <a>3 months</a>
-            </li>
-            <li>
-              <a>6 months</a>
-            </li>
-          </ul>
-        </div>
-        <div className="mt-4">
-          <span className="font-bold">Data Retrieval Status:</span>
-          <ul className="steps mt-4">
-            <li className="step step-primary">Device Registered</li>
-            <li className="step step-primary">Deviced Verified</li>
-            <li className="step">Data Requested</li>
-            <li className="step">Payment Processed</li>
-            <li className="step">Retrival link Received</li>
-          </ul>
+  <div className="mt-4">
+    <div
+      style={{
+        height: "auto",
+        margin: "0 auto",
+        maxWidth: 64,
+        width: "100%",
+      }}
+    >
+      <QRCode
+        size={256}
+        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+        value={device.brand + "\n" + device.model}
+        viewBox={`0 0 256 256`}
+      />
+    </div>
+  </div>
+  <div className="dropdown dropdown-right mt-4">
+    <div tabIndex={0} role="button" className="btn btn-primary">
+      Extend Retrieval
+    </div>
+    <ul
+      tabIndex={0}
+      className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+    >
+      <li>
+        <a>3 months</a>
+      </li>
+      <li>
+        <a>6 months</a>
+      </li>
+    </ul>
+  </div>
+  <div className="mt-4">
+    <span className="font-bold">Data Retrieval Status:</span>
+    <ul className="steps mt-4">
+      <li className="step step-primary">Device Registered</li>
+      <li className="step step-primary">Deviced Verified</li>
+      <li className="step">Data Requested</li>
+      <li className="step">Payment Processed</li>
+      <li className="step">Retrival link Received</li>
+    </ul>
+  </div>
+        <div className="card-actions justify-end">
+          <button className="btn btn-primary">Buy Now</button>
         </div>
       </div>
+    </div>
     );
   };
 
@@ -534,11 +511,10 @@ const UserDashboard = () => {
         </header>
         {/* Main content */}
         <main className="overflow-x-hidden overflow-y-auto">
-          <div className="mx-auto px-6 py-8">
+          <div className="mx-auto">
             <h5 className="text-black text-3xl font-medium mb-6"></h5>
-
             <div className="overflow-x-auto">
-              <div className="overflow-x-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 gap-4 ">
                 {filteredDevices.length == 0 ? (
                   <div className="flex flex-col  w-full h-full items-center mt-16">
                     <h3 className="text-3xl font-bold text-center mb-5 ">
@@ -546,108 +522,14 @@ const UserDashboard = () => {
                     </h3>
                     <img src={emptyListImage} className="h-80 w-80" />
                   </div>
-                ) : (
-                  <table className="table">
-                    {/* head */}
-                    <thead>
-                      <tr>
-                        <th className="font-bold text-base min-w-[150px]">
-                          Image
-                        </th>
-                        <th className="font-bold text-base min-w-[150px]">
-                          Device Name
-                        </th>
-                        <th className="font-bold text-base min-w-[100px]">
-                          Model
-                        </th>
-                        <th className="font-bold text-base min-w-[150px]">
-                          CreatedAt
-                        </th>
-                        <th className="font-bold text-base min-w-[150px]">
-                          Verified
-                        </th>
-                        <th className="font-bold text-base min-w-[150px]">
-                          Classification
-                        </th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredDevices.map((deviceList, index) => (
-                        <tr key={index}>
-                          <td>
-                            <img
-                              src={image1}
-                              style={{
-                                width: "100px",
-                                height: "100px",
-                                objectFit: "cover",
-                              }}
-                            />
-                          </td>
-                          <td className="font-bold">{deviceList.brand}</td>
-                          <td className="text-sm">{deviceList.model}</td>
-                          <td className="text-sm">{deviceList.createdAt}</td>
-                          <td
-                            className="justify-center"
-                            style={{ alignItems: "center" }}
-                          >
-                            <div
-                              className={`badge ${
-                                deviceList.verified
-                                  ? "badge-verified"
-                                  : "badge-notverified"
-                              }`}
-                            >
-                              {deviceList.verified
-                                ? "Verified"
-                                : "Not Verified"}
-                            </div>
-                          </td>
-                          <td className="text-sm">
-                            <span
-                              className={`badge ${getClassificationBadgeClass(
-                                deviceList.deviceClassification
-                              )}`}
-                            >
-                              {deviceList.deviceClassification}
-                            </span>
-                          </td>
-                          <th>
-                            <button
-                              onClick={() => toggleDeviceDetails(deviceList.id)}
-                            >
-                              {selectedDeviceId === deviceList.id ? (
-                                <RiArrowDropLeftLine size={32} />
-                              ) : (
-                                <RiArrowDropRightLine size={32} />
-                              )}
-                            </button>
-                          </th>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                ) : ( filteredDevices.map((device) => (
+                  <div>
+                    {renderDeviceDetails(device)}
+                  </div>
+                ))
                 )}
               </div>
             </div>
-            {/* Overlay to fade out content and close details pane */}
-            {selectedDeviceId && (
-              <div
-                className="fixed inset-0 bg-black bg-opacity-50 z-20"
-                onClick={() => setSelectedDeviceId(null)}
-              ></div>
-            )}
-
-            {/* Detailed view section */}
-            {selectedDeviceId && (
-              <div className="device-details w-1/3 bg-white p-4 overflow-y-auto absolute right-0 top-0 h-full z-30">
-                {/* Find the selected device and render its details */}
-                {devices
-                  .filter((device) => device.id === selectedDeviceId)
-                  .map((device) => renderDeviceDetails(device))}
-              </div>
-            )}
           </div>
         </main>
       </div>
