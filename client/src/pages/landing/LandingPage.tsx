@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import NavBar from "../../components/NavBar";
 import "tippy.js/dist/tippy.css";
 import Lottie from "lottie-react";
@@ -12,59 +12,12 @@ import backup from "../../animation/backup.json";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import CheckNow from "./CheckNow";
 
-import CardPaymentModel from "../../components/CardPaymentModel";
-import { PaymentStatus } from "../../components/CardPayment";
-
-// const publicKey = process.env.PUBLIC_URL || ""
-
 const LandingPage: React.FC = () => {
-  const [paymentStatus, setPaymentStatus] = useState(
-    PaymentStatus.INTRODUCTION
-  );
-  function openPaymentModel(): void {
-    setPaymentStatus(PaymentStatus.INTRODUCTION);
-    const modal = document.getElementById(
-      "card_payment_model"
-    ) as HTMLDialogElement | null;
-    if (modal) {
-      modal.showModal();
-    }
-  }
-
-  return (
-    <div>
-      <button className=" w-full btn btn-primary" onClick={openPaymentModel}>
-        Pay with Card
-      </button>
-      <CardPaymentModel
-        status={paymentStatus}
-        setPaymentStatus={setPaymentStatus}
-      ></CardPaymentModel>
-    </div>
-  );
   return (
     <div className="bg-gray-100 flex flex-col md:flex-row w-full ">
       {/* <NavBar></NavBar> */}
 
       {/* LandingPage content goes here */}
-      {/*<<<<<<< HEAD*/}
-      {/*        <div>*/}
-      {/*            /!* Content specific to LandingPage *!/*/}
-      {/*            /!* More content *!/*/}
-      {/*            <br/>*/}
-      {/*            <br/>*/}
-      {/*            <br/>*/}
-      {/*            <br/>*/}
-      {/*            <div>*/}
-      {/*                <h3>Card number: 4000008260000000</h3>*/}
-      {/*            </div>*/}
-      {/*            <div className="justify-center items-center p-8 bg-neutral-300">*/}
-      {/*                <Elements stripe={stripePromise}>*/}
-      {/*                    <CardPayment />*/}
-      {/*                </Elements>*/}
-      {/*            </div>*/}
-      {/*        </div>*/}
-      {/*=======*/}
 
       <div className="w-1/2 flex flex-col items-center place-content-center">
         <div className="flex flex-col gap-5 card  text-primary w-10/12 px-5 py-5">
