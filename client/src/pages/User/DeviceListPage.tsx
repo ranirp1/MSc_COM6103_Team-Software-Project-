@@ -23,7 +23,7 @@ class Device {
   verified: boolean;
   image: string;
   storage: string;
-  deviceColor: string;
+  color: string;
   dataRecovered?: boolean | null;
   condition: string;
   deviceClassification: string;
@@ -39,7 +39,7 @@ class Device {
     verified: boolean,
     image: string,
     storage: string,
-    deviceColor: string,
+    color: string,
     dataRecovered: boolean | null,
     condition: string,
     deviceClassification: string,
@@ -54,7 +54,7 @@ class Device {
     this.verified = verified;
     this.image = image;
     this.storage = storage;
-    this.deviceColor = deviceColor;
+    this.color = color;
     this.dataRecovered = dataRecovered;
     this.condition = condition;
     this.deviceClassification = deviceClassification;
@@ -72,7 +72,7 @@ class Device {
       json.verified,
       json.image,
       json.storage,
-      json.deviceColor,
+      json.color,
       json.dataRecovered,
       json.condition,
       json.deviceClassification,
@@ -100,7 +100,8 @@ const UserDashboard = () => {
   const [deviceClassification, setDeviceClassification] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
-  const [deviceColor, setDeviceColor] = useState("");
+  const [color, setColor] = useState("");
+  const [condition, setCondition] = useState("");
   const [storage, setStorage] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -163,7 +164,7 @@ const UserDashboard = () => {
           imageUrl,
           dateofRelease,
           userID: 1,
-          deviceColor,
+          color,
           storage,
         }),
       });
@@ -284,7 +285,7 @@ const UserDashboard = () => {
           device.brand,
           device.model,
           device.storage,
-          device.deviceColor
+          device.color
         );
         return (
           <div className="mt-2">
@@ -368,14 +369,14 @@ const UserDashboard = () => {
               <span className="text-black">Storage:</span> {device.storage}
             </div>
             <div className="p-1">
-              <span className="text-black">Color:</span> {device.deviceColor}
+              <span className="text-black">Color:</span> {device.color}
             </div>
             <div className="p-1">
-              <span className="text-black">Condition:</span> {device.storage}
+              <span className="text-black">Condition:</span> {device.condition}
             </div>
             <div className="p-1">
               <span className="text-black">Classification:</span>{" "}
-              {device.storage}
+              {device.deviceClassification}
             </div>
             <div className="p-1">
               <span className="text-black">Created At:</span> {device.createdAt}
@@ -394,8 +395,7 @@ const UserDashboard = () => {
             <div className="p-1">
               <span className="text-black">
                 Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}
-              </span>{" "}
-              {device.storage}
+              </span>
             </div>
           </div>
           {renderCexLink()}
@@ -411,7 +411,7 @@ const UserDashboard = () => {
               <QRCode
                 size={256}
                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                value={device.brand + "\n" + device.model}
+                value={device.brand + "\n" + device.model + "\n" + device.color}
                 viewBox={`0 0 256 256`}
               />
             </div>
@@ -441,9 +441,6 @@ const UserDashboard = () => {
               <li className="step">Payment Processed</li>
               <li className="step">Retrival link Received</li>
             </ul>
-          </div>
-          <div className="card-actions justify-end">
-            <button className="btn btn-primary">Buy Now</button>
           </div>
         </div>
       </div>
@@ -517,7 +514,7 @@ const UserDashboard = () => {
         <main className="overflow-x-hidden overflow-y-auto">
           <div className="mx-auto">
             <h5 className="text-black text-3xl font-medium mb-6"></h5>
-            <div className="overflow-x-auto">
+            <div className="">
               {filteredDevices.length == 0 ? (
                 <div className="flex flex-col  w-full h-full items-center mt-16">
                   <h3 className="text-3xl font-bold text-center mb-5 ">
@@ -526,8 +523,8 @@ const UserDashboard = () => {
                   <img src={emptyListImage} className="h-80 w-80" />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 gap-4">
-                  {filteredDevices.map((device: Device) => (
+                <div className="grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 gap-4 ">
+                  {filteredDevices.map((device) => (
                     <div>{renderDeviceDetails(device)}</div>
                   ))}
                 </div>
@@ -649,7 +646,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e) => setDeviceColor(e.target.value)}
+                          onChange={(e) => setColor(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
