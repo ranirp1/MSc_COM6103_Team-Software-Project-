@@ -350,8 +350,8 @@ const UserDashboard = () => {
             <h2 className="card-title">{device.brand} {device.model}</h2>
             <span
               className={`px-3 py-1 text-sm font-semibold inline-block ${device.verified
-                  ? "badge badge-success gap-2 flex justify-content: center"
-                  : "badge badge-error gap-2 flex justify-content: center"
+                ? "badge badge-success gap-2 flex justify-content: center"
+                : "badge badge-error gap-2 flex justify-content: center"
                 }`}
             >
               {device.verified ? "Verified" : "Not Verified"}
@@ -391,7 +391,7 @@ const UserDashboard = () => {
               <span className="text-black">
                 Data Retrieval Time Left:{" "}
                 {calculateDataRetrievalTimeLeft()}
-              </span> 
+              </span>
             </div>
           </div>
           {renderCexLink()}
@@ -510,22 +510,22 @@ const UserDashboard = () => {
         <main className="overflow-x-hidden overflow-y-auto">
           <div className="mx-auto">
             <h5 className="text-black text-3xl font-medium mb-6"></h5>
-            <div className="overflow-x-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 gap-4 ">
-                {filteredDevices.length == 0 ? (
-                  <div className="flex flex-col  w-full h-full items-center mt-16">
-                    <h3 className="text-3xl font-bold text-center mb-5 ">
-                      No Devices Found
-                    </h3>
-                    <img src={emptyListImage} className="h-80 w-80" />
-                  </div>
-                ) : (filteredDevices.map((device) => (
+            <div className="">
+              {filteredDevices.length == 0 ? (
+                <div className="flex flex-col  w-full h-full items-center mt-16">
+                  <h3 className="text-3xl font-bold text-center mb-5 ">
+                    No Devices Found
+                  </h3>
+                  <img src={emptyListImage} className="h-80 w-80" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 gap-4 ">{filteredDevices.map((device) => (
                   <div>
                     {renderDeviceDetails(device)}
                   </div>
-                ))
-                )}
-              </div>
+                ))}
+                </div>
+              )}
             </div>
           </div>
         </main>
