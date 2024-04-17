@@ -130,8 +130,6 @@
 **Parameters:**
 - `email` (string): The email of the user to update.
 
-
-
 ### 3. Update User to Admin
 **Description:** Update a user's role to admin.
 
@@ -142,6 +140,7 @@
 **Parameters:**
 - `email` (string): The email of the user to update.
 
+=======
 ### 4. Delete User 
 **Description:** Delete user.
 
@@ -151,3 +150,11 @@
 
 **Parameters:**
 - `email` (string): The email of the user whose details need to be deleted.
+
+# Payment card
+Fake card for payment with stripe:
+
+* 4000008260000000
+* any MM/YY in future
+* any CVC
+* and valid UK post code

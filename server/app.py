@@ -1,23 +1,34 @@
 from flask import Flask, request, jsonify , send_file
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
+
+import os
+from dotenv import load_dotenv
+import stripe
+from datetime import datetime
 from flask_cors import CORS , cross_origin
 from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle , Spacer
-from flask import jsonify
-
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship
-from flask import request
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
+CORS(app)
+
+load_dotenv()
+app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
+
+STRIPE_PUBLIC_KEY = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN"
+
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 CORS(app,origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
 # Create the tables when Flask starts up
@@ -130,12 +141,14 @@ class PaymentTable(db.Model):
     paymentID = db.Column(db.Integer, primary_key=True)
     dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
     userID = db.Column(db.Integer, nullable=False)
+    date = db.Column(db.Date, nullable=False) 
 
     def serialize(self):
         return {
             'paymentID': self.paymentID,
             'dataRetrievalID': self.dataRetrievalID,
-            'userID': self.userID
+            'userID': self.userID,
+            'date': self.date 
         }
 
 
@@ -276,6 +289,24 @@ def updateUserToAdmin():
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
 
+# Source: https://github.com/Vuka951/tutorial-code/tree/master/react-flask-stripe/payment-and-hooks
+@app.route('/api/create-payment-intent', methods=['POST'])
+def pay():
+    email = request.json.get('email', None)
+
+    if not email:
+        print("email is blank")
+        return {'message': 'You need to send an Email!', 'error':True}, 400
+
+    print(f"email is: {email}")
+
+    intent = stripe.PaymentIntent.create(
+        amount=500,
+        currency='gbp',
+        receipt_email=email
+    )
+
+    return {"client_secret": intent['client_secret']}, 200
 
 @app.route('/api/deleteUser', methods=['POST'])
 @cross_origin()
@@ -644,8 +675,9 @@ def generate_report():
 
     # Fetch payment transactions and devices input by users within the specified date range
     try:
-        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
-        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
+        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)) 
+        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date))  
+
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
