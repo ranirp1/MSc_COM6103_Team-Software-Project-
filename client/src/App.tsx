@@ -8,8 +8,6 @@ import AdminPage from "./pages/admin/AdminPage";
 import DeviceListPage from "./pages/User/DeviceListPage";
 import DeviceCreationForm from "./pages/User/DeviceCreationForm";
 import StaffPage from "./pages/staff/StaffPage";
-import PaymentSuccess from "./pages/payment/PaymentSuccess";
-import PaymentFailure from "./pages/payment/PaymentFailure";
 
 
 function App() {
@@ -24,8 +22,6 @@ function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/user" element={<DeviceListPage />} />
           <Route path="/staff" element={<StaffPage />} />
-          <Route path="/payment/success" element={<PaymentSuccess />} />
-          <Route path="/payment/failure" element={<PaymentFailure/>} />
         </Routes>
       </BrowserRouter>
     </html>
