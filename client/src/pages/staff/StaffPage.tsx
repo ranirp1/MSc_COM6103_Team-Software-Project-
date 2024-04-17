@@ -85,6 +85,7 @@ class Device {
 
 const StaffDashboard = () => {
   const [devices, setDevices] = useState<Device[]>([]);
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     fetchDevices();
@@ -114,19 +115,17 @@ const StaffDashboard = () => {
   };
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [showVerified, setShowVerified] = useState(true);
   const [sortOrder, setSortOrder] = useState<string>("");
 
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const toggleDeviceDetails = (id: number) => {
-    console.log("Current selectedDeviceId:", selectedDeviceId);
-    setSelectedDeviceId((prevId) => {
-      console.log("Updating selectedDeviceId to:", prevId === id ? null : id);
-      return prevId === id ? null : id;
-    });
+    setSelectedDeviceId(id);
+    setIsModalVisible(true);
   };
-
+  
+  
   useEffect(() => {
     // Function to apply sorting
     const sortDevices = () => {
@@ -208,8 +207,8 @@ const toggleDeviceVerification = async (deviceId: number) => {
   const getFilteredDevices = () => {
     return devices.filter(
       (device) =>
-        device.brand.toLowerCase().includes(searchQuery) &&
-        device.verified === showVerified
+        device.brand.toLowerCase().includes(searchQuery) 
+        //device.verified === showVerified
     );
   };
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -218,42 +217,70 @@ const toggleDeviceVerification = async (deviceId: number) => {
   const filteredDevices = getFilteredDevices();
 
 
+  const renderDeviceModal = () => {
+    if (!selectedDeviceId || !isModalVisible) return null;
+  
+    const device = devices.find((d) => d.id === selectedDeviceId);
+    if (!device) return null;
+  
+    // Correctly type the styles object
+    const modalBoxStyles: React.CSSProperties = {
+      maxHeight: '98vh',
+      overflowY: 'hidden'   
+    };
+  
+    return (
+      <div className="modal modal-open">
+        <div className="modal-box relative" style={modalBoxStyles}>
+          {renderDeviceDetails(device)}
+          <button
+            className="btn btn-sm btn-circle absolute right-2 top-2"
+            onClick={() => setIsModalVisible(false)}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    );
+  };
+  
+  
     const renderDeviceDetails = (device: Device) => {
       // Function to update device details in state
       const handleDeviceUpdate = (field: keyof Device, value: string | boolean) => {
+        if (!editMode) return;
+        
         setDevices((prevDevices) =>
           prevDevices.map((d) =>
             d.id === device.id ? { ...d, [field]: value } : d
           )
         );
       };
-    
-      // Function to render a link to CEX website for specific device configurations
-      const renderCexLink = () => {
-        if (device.cexLink) {
-          return (
-            <div className="mt-2">
-              <strong>CEX Link:</strong>{" "}
-              <a
-                href={device.cexLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:text-blue-700"
-              >
-                Search on CEX
-              </a>
-            </div>
-          );
-        }
-        return null; // Return null if there is no CEX link
-      };
-    
-      // Include a CEX Link input field to be edited manually by staff
-      const handleCexLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        handleDeviceUpdate('cexLink', e.target.value);
-      };
-      
 
+      const createCexSearchUrl = (manufacturer: string, model: string, storage: string, color: string) => {
+        const baseUrl = "https://uk.webuy.com/search";
+        const queryParts = [manufacturer, model, storage, color].filter(part => part); // Filters out null or empty strings
+        const query = queryParts.join(' '); // Joins the parts into a single string with spaces
+        return `${baseUrl}?stext=${encodeURIComponent(query)}`;
+    };
+    
+    const renderCexLink = () => {
+        if (device.classification === 'Rare' || device.classification === 'Current') {
+            const cexUrl = createCexSearchUrl(device.brand, device.model, device.storage, device.color);
+            return (
+                <div className="mt-2">
+                    <p className="block mt-4 mb-2 text-lg font-medium text-black">CEX Link:{' '}
+                    <a href={cexUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+                        Search on CEX
+                    </a>
+                    </p>
+                </div>
+            );
+        }
+        return null;
+    };
+    
       const calculateDataRetrievalTimeLeft = () => {
         // Return "Not applicable" for "Current" and "Rare" classifications
         if (
@@ -319,136 +346,140 @@ const toggleDeviceVerification = async (deviceId: number) => {
         }
     };
     
-      return (
-        <div className="bg-white p-5 rounded-lg shadow-md">
-          {/* Manufacturer and model name above the photo */}
-          <h3 className="text-2xl font-bold mb-4">
-            <input
-              type="text"
-              value={device.brand}
-              onChange={(e) => handleDeviceUpdate('brand', e.target.value)}
-              className="input input-bordered w-full"
-            />
-            <input
-              type="text"
-              value={device.model}
-              onChange={(e) => handleDeviceUpdate('model', e.target.value)}
-              className="input input-bordered w-full"
-            />
-          </h3>
-          <div className="mt-3">
-            <span
-              className={`px-3 py-1 text-sm font-semibold inline-block ${
-                device.verified ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
-              }`}
-            >
-              {device.verified ? "Verified" : "Not Verified"}
-            </span>
-          </div>
+    return (
+      <div className="bg-white p-5 rounded-lg shadow-md">
+        <h3 className="text-2xl mb-4">
+           {/* Conditional rendering of edit mode toggle button */}
+        <div className="mb-4 top-2">
+          <button onClick={() => setEditMode(!editMode)} className="btn btn-primary">
+            {editMode ? "Disable Edit Mode" : "Enable Edit Mode"}
+          </button>
+        </div>
+          {editMode ? (
+            
+            <> 
+              <label className="block mb-2 text-lg font-medium text-black">Name</label>
+          <input
+            type="text"
+            value={device.brand}
+            onChange={(e) => handleDeviceUpdate('brand', e.target.value)}
+            className="input input-bordered w-full bg-gray-200 text-black"
+          />
+          <label className="block mt-4 mb-2 text-lg font-medium text-black">Model</label>
+          <input
+            type="text"
+            value={device.model}
+            onChange={(e) => handleDeviceUpdate('model', e.target.value)}
+            className="input input-bordered w-full bg-gray-200 text-black" 
+          />
+            </>
+          ) : (
+            `${device.brand} ${device.model}`
+          )}
+        </h3>
+  
+        {editMode && (
           <div className="flex flex-col md:flex-row md:items-start">
-            <div className="w-full md:w-3/4 lg:w-3/4">
-              {/* Adjust width here */}
-              {/* Larger image size */}
+            <div className="w-full md:w-2/4 lg:w-2/4">
               <img
-                src={device.image}
+                src={image2}
                 alt={`${device.brand} ${device.model}`}
-                className="w-full h-auto rounded"
+                className="w-full sm:w-30 md:w-44 lg:w-60 h-auto rounded"
               />
             </div>
             <div className="md:ml-4 flex-1">
-              {/* Increase margin-top here for more space */}
-              <div className="flex flex-wrap -m-1 mt-20 md:mt-22">
-                {/* Adjust mt- class here */}
-                <div className="p-1">
-                  <span className="text-gray-600">Storage:</span> 
+              <div className="grid grid-cols-2 gap-4 p-1">
+                <div>
+                  <span className="block mt-4 mb-2 text-lg font-medium text-black">Storage</span>
                   <input
                     type="text"
                     value={device.storage}
                     onChange={(e) => handleDeviceUpdate('storage', e.target.value)}
-                    className="input input-bordered"
+                    className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
-                <div className="p-1">
-                  <span className="text-gray-600">Color:</span> 
+                <div>
+                  <span className="block mt-4 mb-2 text-lg font-medium text-black">Color</span>
                   <input
                     type="text"
                     value={device.color}
                     onChange={(e) => handleDeviceUpdate('color', e.target.value)}
-                    className="input input-bordered"
+                    className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
-                <div className="p-1">
-                  <span className="text-gray-600">Condition:</span> 
-                  <input
-                    type="text"
+                <div>
+                  <p className="block mt-4 mb-2 text-lg font-medium text-black">Condition</p>
+                  <select
                     value={device.condition}
                     onChange={(e) => handleDeviceUpdate('condition', e.target.value)}
-                    className="input input-bordered"
-                  />
+                    className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
+                  >
+                    <option value="New">New</option>
+                    <option value="Old">Old</option>
+                    <option value="Damaged">Damaged</option>
+                  </select>
                 </div>
-                <div className="p-1">
-                  <span className="text-gray-600">Classification:</span> 
-                  <input
-                    type="text"
+                <div>
+                  <p className="block mt-4 mb-2 text-lg font-medium text-black">Classification</p>
+                  <select
                     value={device.classification}
                     onChange={(e) => handleDeviceUpdate('classification', e.target.value)}
-                    className="input input-bordered"
-                  />
+                    className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
+                  >
+                    <option value="Rare">Rare</option>
+                    <option value="Current">Current</option>
+                    <option value="Recycle">Recycle</option>
+                  </select>
                 </div>
               </div>
             </div>
           </div>
-          <div className="mt-4">
-            <div className="mb-2">
-              <span className="font-bold">Specifications:</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p>
-                  <strong>Created At:</strong> 
-                  <input
-                    type="text"
-                    value={device.createdAt}
-                    onChange={(e) => handleDeviceUpdate('createdAt', e.target.value)}
-                    className="input input-bordered"
-                  />
-                </p>
-                <p>
-                  <strong>Data Recovery:</strong> 
-                  <select
-                    value={device.dataRecovered ? "Yes" : "No"}
-                    onChange={(e) => handleDeviceUpdate('dataRecovered', e.target.value === "Yes")}
-                    className="select select-bordered w-full max-w-xs"
-                  >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </p>
-                <p>
-                  <strong>Data Retrieval Time Left:</strong>
-                  {calculateDataRetrievalTimeLeft()}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="mt-3">
-            {/* CEX Link manual input */}
-            <input
-              type="text"
-              placeholder="Enter CEX Link"
-              value={device.cexLink || ''}
-              onChange={handleCexLinkChange}
-              className="input input-bordered w-full my-2"
-            />
-            {renderCexLink()}
-          </div>
-          <button className="btn btn-primary mt-4" onClick={saveDeviceUpdates}>
-            Save Changes
-          </button>
-        </div>
-      );
-    };
-    
+        )}
+
+{/* Specifications and Data Recovery section */}
+<br></br>
+<div className="mt-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <p>
+        <p className="block mt-4 mb-2 text-lg font-medium text-black">Created At</p>
+        <input
+          type="text"
+          value={device.createdAt}
+          onChange={(e) => handleDeviceUpdate('createdAt', e.target.value)}
+          className="mt-1 block w-full input input-bordered bg-gray-200 text-black"
+        />
+      </p>
+      <p>
+        <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}</p>
+      </p>
+    </div>
+    <div>
+      {/* Right Column Content */}
+      <p>
+        <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Recovery</p>
+        <select
+          value={device.dataRecovered ? "Yes" : "No"}
+          onChange={(e) => handleDeviceUpdate('dataRecovered', e.target.value === "Yes")}
+          className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
+        >
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+      </p>
+    </div>
+  </div>
+</div>
+{renderCexLink()}
+{editMode && (
+  <button className="btn btn-primary mt-4" onClick={saveDeviceUpdates}>
+    Save Changes
+  </button>
+)}
+
+      </div>
+    );
+  };
 
   return (
     <div className="flex h-screen bg-gray-100 shadow-2xl">
@@ -503,40 +534,10 @@ const toggleDeviceVerification = async (deviceId: number) => {
           </details>
         </header>
 
-        <div
-          role="tablist"
-          className="tabs tabs-lifted tabs-lg  shadow-2xl mx-5"
-        >
-          <a
-            role="tab"
-            className={`tab ${
-              showVerified
-                ? "bg-primary text-white"
-                : "text-primary border border-primary "
-            }`}
-            onClick={() => setShowVerified(true)}
-          >
-            Verified
-          </a>
-          <a
-            role="tab"
-            className={`tab ${
-              !showVerified
-                ? " bg-primary text-white"
-                : "text-primary border border-primary "
-            }`}
-            onClick={() => {
-              setShowVerified(false);
-            }}
-          >
-            Non-Verified
-          </a>
-        </div>
-
         {/* Devices Table */}
         <div className="main-content flex-grow px-10 pt-5 ">
           <h5 className="text-black text-3xl font-medium mb-6">
-            {showVerified ? "Verified Devices" : "Non-Verified Devices"}
+            Device List
           </h5>
           <div
             className="overflow-y-auto"
@@ -575,92 +576,68 @@ const toggleDeviceVerification = async (deviceId: number) => {
                     <th className="text-black text-lg font-bold min-w-[200px]">
                       Status
                     </th>
-                    <th className="text-black text-lg font-bold ">Expand</th>
-                  </tr>
+                    </tr>
                 </thead>
                 <tbody>
-                  {filteredDevices.length == 0
-                    ? "No List"
-                    : filteredDevices.map((device) => (
-                        <tr key={device.id}>
-                          <td>
-                            <img
-                              src={image1}
-                              alt={`${device.brand} ${device.model}`}
-                              className="rounded-lg shadow-lg"
-                              style={{
-                                width: "100px",
-                                height: "100px",
-                                objectFit: "cover",
-                              }}
-                            />
-                          </td>
-                          <td className="text-lg">{device.brand}</td>
-                          <td className="text-lg">{device.model}</td>
-                          <td className="text-lg">{device.createdAt}</td>
-                          <td className="text-lg">
-                            {device.classification || "Not Classified"}
-                          </td>
-                          <td>
-                            <div className="flex">
-                              <label
-                                htmlFor={`toggle-${device.id}`}
-                                className="relative flex  group p-2"
-                              >
-                                <span className="text-sm mr-3">
-                                  {device.verified
-                                    ? "Verified"
-                                    : "Not Verified"}
-                                </span>
-                                <input
-                                  type="checkbox"
-                                  id={`toggle-${device.id}`}
-                                  className="sr-only peer"
-                                  checked={device.verified}
-                                  onChange={() =>
-                                    toggleDeviceVerification(device.id)
-                                  }
-                                />
-                                <span className="w-12 h-6 flex items-center flex-shrink-0 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-primary after:w-6 after:h-6 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-full"></span>
-                              </label>
-                            </div>
-                          </td>
-                          <td>
-                            <button
-                              onClick={() => toggleDeviceDetails(device.id)}
+                  {filteredDevices.length === 0 ? (
+                    <tr>
+                    <td colSpan={6} className="text-center">No Devices Found</td>
+                  </tr>
+                  
+                  ) : (
+                    filteredDevices.map((device) => (
+                      <tr key={device.id} onClick={() => toggleDeviceDetails(device.id)} className="cursor-pointer hover:bg-gray-200">
+                        <td>
+                          <img
+                            src={image1}
+                            alt={`${device.brand} ${device.model}`}
+                            className="rounded-lg shadow-lg"
+                            style={{
+                              width: "100px",
+                              height: "100px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        </td>
+                        <td className="text-lg">{device.brand}</td>
+                        <td className="text-lg">{device.model}</td>
+                        <td className="text-lg">{device.createdAt}</td>
+                        <td className="text-lg">{device.classification || "Not Classified"}</td>
+                        <td>
+                          <div className="flex">
+                            <label
+                              htmlFor={`toggle-${device.id}`}
+                              className="relative flex group p-2"
+                              onClick={(e) => e.stopPropagation()} // Prevent modal trigger when toggling verification
                             >
-                              {selectedDeviceId === device.id ? (
-                                <RiArrowDropLeftLine />
-                              ) : (
-                                <RiArrowDropRightLine />
-                              )}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                              <span className="text-lg mr-3">
+                                {device.verified ? "Verified" : "Not Verified"}
+                              </span>
+                              <input
+                                type="checkbox"
+                                id={`toggle-${device.id}`}
+                                className="sr-only peer"
+                                checked={device.verified}
+                                onChange={() => {
+                                  toggleDeviceVerification(device.id);
+                                }}
+                              />
+                              <span className="w-12 h-6 flex items-center flex-shrink-0 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-primary after:w-6 after:h-6 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-full"></span>
+                            </label>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
+
               </table>
             )}
           </div>
         </div>
 
-        {/* Overlay to fade out content and close details pane */}
-        {selectedDeviceId && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-20"
-            onClick={() => setSelectedDeviceId(null)}
-          ></div>
-        )}
-
-        {/* Detailed view section */}
-        {selectedDeviceId && (
-          <div className="device-details w-1/4 bg-white p-4 overflow-y-auto absolute right-0 top-0 h-full z-30">
-            {/* Find the selected device and render its details */}
-            {devices
-              .filter((device) => device.id === selectedDeviceId)
-              .map((device) => renderDeviceDetails(device))}
-          </div>
-        )}
+        {renderDeviceModal()}
+        
         {/* Logout Confirmation Modal */}
         {showLogoutModal && (
           <div className="modal modal-open">
