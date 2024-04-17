@@ -1,7 +1,4 @@
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
-import Samsung from "../../assets/Samsung.png";
-import IPhone from "../../assets/IPhone.png";
-import OnePlus from "../../assets/OnePlus.jpg";
 import {
   RiArrowDropLeftLine,
   RiArrowDropRightLine,
@@ -18,21 +15,74 @@ import { API_URL } from "../../constants/constant";
 import QRCode from "react-qr-code";
 import emptyListImage from "../../assets/empty_device_list.svg";
 
-interface Device {
+class Device {
   id: number;
   brand: string;
   model: string;
   createdAt: string;
-  isVerified: boolean;
+  verified: boolean;
   image: string;
   storage: string;
-  color: string;
-  dataRecovered: boolean | null;
+  deviceColor: string;
+  dataRecovered?: boolean | null;
   condition: string;
   deviceClassification: string;
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
+  cexLink?: string; 
+
+  constructor(
+    id: number,
+    manufacturer: string,
+    model: string,
+    createdAt: string,
+    verified: boolean,
+    image: string,
+    storage: string,
+    deviceColor: string,
+    dataRecovered: boolean | null,
+    condition: string,
+    deviceClassification: string,
+    dataRetrievalRequested: boolean | null,
+    dataRetrievalTimeLeft: string,
+    cexLink?: string 
+  ) {
+    this.id = id;
+    this.brand = manufacturer;
+    this.model = model;
+    this.createdAt = createdAt;
+    this.verified = verified;
+    this.image = image;
+    this.storage = storage;
+    this.deviceColor = deviceColor;
+    this.dataRecovered = dataRecovered;
+    this.condition = condition;
+    this.deviceClassification = deviceClassification;
+    this.dataRetrievalRequested = dataRetrievalRequested;
+    this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
+    this.cexLink = cexLink;
+  }
+
+  static fromJson(json: any): Device {
+    return new Device(
+      json.id,
+      json.manufacturer,
+      json.model,
+      json.createdAt,
+      json.verified,
+      json.image,
+      json.storage,
+      json.deviceColor,
+      json.dataRecovered,
+      json.condition,
+      json.deviceClassification,
+      json.dataRetrievalRequested,
+      json.dataRetrievalTimeLeft,
+      json.cexLink
+    );
+  }
 }
+
 
 interface DeviceDetails {
   sellPrice: number;
@@ -51,6 +101,8 @@ const UserDashboard = () => {
   const [deviceClassification, setDeviceClassification] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
+  const [deviceColor, setDeviceColor] = useState("");
+  const [storage, setStorage] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [dateofRelease, setDateofRelease] = useState("");
@@ -112,6 +164,8 @@ const UserDashboard = () => {
           imageUrl,
           dateofRelease,
           userID: 1,
+          deviceColor,
+          storage
         }),
       });
 
@@ -231,7 +285,7 @@ const UserDashboard = () => {
           device.brand,
           device.model,
           device.storage,
-          device.color
+          device.deviceColor
         );
         return (
           <div className="mt-2">
@@ -296,12 +350,12 @@ const UserDashboard = () => {
         <div className="mt-3">
           <span
             className={`px-3 py-1 text-sm font-semibold inline-block ${
-              device.isVerified
+              device.verified
                 ? "bg-green-200 text-green-800"
                 : "bg-red-200 text-red-800"
             }`}
           >
-            {device.isVerified ? "Verified" : "Not Verified"}
+            {device.verified ? "Verified" : "Not Verified"}
           </span>
         </div>
         <div className="flex flex-col md:flex-row md:items-start">
@@ -325,7 +379,7 @@ const UserDashboard = () => {
                 <span className="text-gray-600">Storage:</span> {device.storage}
               </div>
               <div className="p-1">
-                <span className="text-gray-600">Color:</span> {device.color}
+                <span className="text-gray-600">Color:</span> {device.deviceColor}
               </div>
               <div className="p-1">
                 <span className="text-gray-600">Condition:</span>{" "}
@@ -540,12 +594,12 @@ const UserDashboard = () => {
                           >
                             <div
                               className={`badge ${
-                                deviceList.isVerified
+                                deviceList.verified
                                   ? "badge-verified"
                                   : "badge-notverified"
                               }`}
                             >
-                              {deviceList.isVerified
+                              {deviceList.verified
                                 ? "Verified"
                                 : "Not Verified"}
                             </div>
@@ -710,6 +764,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
+                          onChange={(e) => setDeviceColor(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -725,6 +780,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
+                          onChange={(e) => setStorage(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
