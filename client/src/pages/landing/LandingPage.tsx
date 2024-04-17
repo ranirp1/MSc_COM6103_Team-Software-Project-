@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import NavBar from "../../components/NavBar";
 import "tippy.js/dist/tippy.css";
 import Lottie from "lottie-react";
@@ -13,11 +13,35 @@ import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import CheckNow from "./CheckNow";
 
 import CardPaymentModel from "../../components/CardPaymentModel";
+import { PaymentStatus } from "../../components/CardPayment";
 
 // const publicKey = process.env.PUBLIC_URL || ""
 
 const LandingPage: React.FC = () => {
-  return <CardPaymentModel></CardPaymentModel>;
+  const [paymentStatus, setPaymentStatus] = useState(
+    PaymentStatus.INTRODUCTION
+  );
+  function openPaymentModel(): void {
+    setPaymentStatus(PaymentStatus.INTRODUCTION);
+    const modal = document.getElementById(
+      "card_payment_model"
+    ) as HTMLDialogElement | null;
+    if (modal) {
+      modal.showModal();
+    }
+  }
+
+  return (
+    <div>
+      <button className=" w-full btn btn-primary" onClick={openPaymentModel}>
+        Pay with Card
+      </button>
+      <CardPaymentModel
+        status={paymentStatus}
+        setPaymentStatus={setPaymentStatus}
+      ></CardPaymentModel>
+    </div>
+  );
   return (
     <div className="bg-gray-100 flex flex-col md:flex-row w-full ">
       {/* <NavBar></NavBar> */}

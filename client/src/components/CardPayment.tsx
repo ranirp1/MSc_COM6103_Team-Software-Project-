@@ -6,6 +6,7 @@ import { StripeCardElementOptions } from "@stripe/stripe-js";
 import Lottie from "lottie-react";
 import paymentSuccessAnimation from "../../src/animation/payment_success.json";
 import paymentFailedAnimation from "../../src/animation/payment_failed.json";
+import dataRetrevialAnimation from "../../src/animation/data_retrieval.json";
 import loading from "../../src/animation/loading.json";
 
 export enum PaymentStatus {
@@ -13,6 +14,7 @@ export enum PaymentStatus {
   FAILURE = "failure",
   NOT_INITATED = "not_initiated",
   PROCESSING = "processing",
+  INTRODUCTION = "introduction",
 }
 
 function CardPayment({
@@ -25,10 +27,9 @@ function CardPayment({
   setPaymentStatus: React.Dispatch<React.SetStateAction<PaymentStatus>>;
 }) {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const stripe = useStripe();
   const elements = useElements();
-
-  const [buttonText, setButtonText] = useState("Pay");
 
   // const handleSubmitPay = async (e: React.MouseEvent<HTMLButtonElement>) => {
   const handleSubmitPay = async () => {
@@ -98,11 +99,38 @@ function CardPayment({
   };
   return (
     <div className="modal-box ">
-      {status === PaymentStatus.NOT_INITATED ? (
+      {status == PaymentStatus.INTRODUCTION ? (
+        <div className="card-body flex items-center text-black ">
+          <div className=" w-64">
+            <Lottie
+              animationData={dataRetrevialAnimation}
+              loop={true}
+              style={{ width: "100%", height: "100%" }}
+            />
+          </div>
+          <h2 className={`tex-black pb-5  font-extrabold `}>
+            In Order to procced with data retrieval, please make a payment of of
+            100$
+          </h2>
+
+          <button
+            className="btn btn-primary w-full my-1"
+            onClick={() => setPaymentStatus(PaymentStatus.NOT_INITATED)}
+          >
+            Procced
+          </button>
+        </div>
+      ) : status === PaymentStatus.NOT_INITATED ? (
         <div className="card-body">
           <h2 className={"card-title pb-5 text-primary"}>
             Payment for {amount}{" "}
           </h2>
+          <input
+            type="text"
+            placeholder={"Name"}
+            className="input input-bordered w-full bg-gray-50 text-primary my-1"
+            onChange={(e) => setName(e.target.value)}
+          />
           <input
             type="text"
             placeholder={"Email"}
@@ -117,38 +145,25 @@ function CardPayment({
               className="btn btn-primary w-full my-1"
               onClick={handleSubmitPay}
             >
-              {buttonText}
+              Pay Now
             </button>
-          </div>
-        </div>
-      ) : status === PaymentStatus.PROCESSING ? (
-        <div className="card-body flex items-center ">
-          <h2 className="card-title pb-5 font-extrabold text-2xl">
-            Processing Payment...
-          </h2>
-          <div className="w-64 h-52">
-            <Lottie
-              animationData={loading}
-              loop={true}
-              style={{ width: "100%", height: "100%" }}
-            />
           </div>
         </div>
       ) : (
         <div className="card-body flex items-center ">
           <h2
             className={`card-title pb-5  font-extrabold text-2xl ${
-              status === PaymentStatus.FAILURE ? "text-error" : "text-success"
+              status == PaymentStatus.FAILURE ? "text-error" : "text-success"
             }`}
           >
-            {status === PaymentStatus.FAILURE
+            {status == PaymentStatus.FAILURE
               ? "Payment Failed"
               : "Payment Success"}
           </h2>
           <div className=" w-64 h-52">
             <Lottie
               animationData={
-                status === PaymentStatus.FAILURE
+                status == PaymentStatus.FAILURE
                   ? paymentFailedAnimation
                   : paymentSuccessAnimation
               }
