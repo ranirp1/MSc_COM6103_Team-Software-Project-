@@ -23,13 +23,13 @@ class Device {
   verified: boolean;
   image: string;
   storage: string;
-  deviceColor: string;
+  color: string;
   dataRecovered?: boolean | null;
   condition: string;
   deviceClassification: string;
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
-  cexLink?: string; 
+  cexLink?: string;
 
   constructor(
     id: number,
@@ -39,13 +39,13 @@ class Device {
     verified: boolean,
     image: string,
     storage: string,
-    deviceColor: string,
+    color: string,
     dataRecovered: boolean | null,
     condition: string,
     deviceClassification: string,
     dataRetrievalRequested: boolean | null,
     dataRetrievalTimeLeft: string,
-    cexLink?: string 
+    cexLink?: string
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -54,7 +54,7 @@ class Device {
     this.verified = verified;
     this.image = image;
     this.storage = storage;
-    this.deviceColor = deviceColor;
+    this.color = color;
     this.dataRecovered = dataRecovered;
     this.condition = condition;
     this.deviceClassification = deviceClassification;
@@ -72,7 +72,7 @@ class Device {
       json.verified,
       json.image,
       json.storage,
-      json.deviceColor,
+      json.color,
       json.dataRecovered,
       json.condition,
       json.deviceClassification,
@@ -101,7 +101,8 @@ const UserDashboard = () => {
   const [deviceClassification, setDeviceClassification] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
-  const [deviceColor, setDeviceColor] = useState("");
+  const [color, setColor] = useState("");
+  const [condition, setCondition] = useState("");
   const [storage, setStorage] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -164,7 +165,7 @@ const UserDashboard = () => {
           imageUrl,
           dateofRelease,
           userID: 1,
-          deviceColor,
+          color,
           storage
         }),
       });
@@ -285,7 +286,7 @@ const UserDashboard = () => {
           device.brand,
           device.model,
           device.storage,
-          device.deviceColor
+          device.color
         );
         return (
           <div className="mt-2">
@@ -343,106 +344,102 @@ const UserDashboard = () => {
     };
     return (
       <div className="card w-97 bg-base-100 shadow-xl">
-      <figure><img src={image1} alt="{${device.brand} ${device.model}}" /></figure>
-      <div className="card-body">
-      <div className="flex flex-row justify-between">
-      <h2 className="card-title">{device.brand} {device.model}</h2>
-        <span
-          className={`px-3 py-1 text-sm font-semibold inline-block ${
-            device.verified
-              ? "badge badge-success gap-2 flex justify-content: center"
-              : "badge badge-error gap-2 flex justify-content: center"
-          }`}
-        >
-        {device.verified ? "Verified" : "Not Verified"}
-        </span>
-        </div>
-        <div>
-        <div className="mb-2">
-          <span className="font-bold">Specifications:</span>
-        </div>
-        <div className="p-1">
-           <span className="text-black">Storage:</span> {device.storage}
-        </div>
-        <div className="p-1">
-           <span className="text-black">Color:</span> {device.deviceColor}
-        </div>
-        <div className="p-1">
-           <span className="text-black">Condition:</span> {device.storage}
-        </div>
-        <div className="p-1">
-           <span className="text-black">Classification:</span> {device.storage}
-        </div>
-        <div className="p-1">
-           <span className="text-black">Created At:</span> {device.createdAt}
-        </div>
-        <div className="p-1">
-          <span className="text-black">
-          Data Recovery:{" "}
-          {device.deviceClassification === "Current" ||
-          device.deviceClassification === "Rare"
-            ? "Not applicable"
-            : device.dataRecovered
-            ? "Yes"
-            : "No"}  
-          </span>
-        </div>
-        <div className="p-1">
-          <span className="text-black">
-          Data Retrieval Time Left:{" "}
-          {calculateDataRetrievalTimeLeft()}  
-          </span> {device.storage}
-        </div>
-        </div>
-        {renderCexLink()}
-  <div className="mt-4">
-    <div
-      style={{
-        height: "auto",
-        margin: "0 auto",
-        maxWidth: 64,
-        width: "100%",
-      }}
-    >
-      <QRCode
-        size={256}
-        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-        value={device.brand + "\n" + device.model}
-        viewBox={`0 0 256 256`}
-      />
-    </div>
-  </div>
-  <div className="dropdown dropdown-right mt-4">
-    <div tabIndex={0} role="button" className="btn btn-primary">
-      Extend Retrieval
-    </div>
-    <ul
-      tabIndex={0}
-      className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-    >
-      <li>
-        <a>3 months</a>
-      </li>
-      <li>
-        <a>6 months</a>
-      </li>
-    </ul>
-  </div>
-  <div className="mt-4">
-    <span className="font-bold">Data Retrieval Status:</span>
-    <ul className="steps mt-4">
-      <li className="step step-primary">Device Registered</li>
-      <li className="step step-primary">Deviced Verified</li>
-      <li className="step">Data Requested</li>
-      <li className="step">Payment Processed</li>
-      <li className="step">Retrival link Received</li>
-    </ul>
-  </div>
-        <div className="card-actions justify-end">
-          <button className="btn btn-primary">Buy Now</button>
+        <figure><img src={image1} alt="{${device.brand} ${device.model}}" /></figure>
+        <div className="card-body">
+          <div className="flex flex-row justify-between">
+            <h2 className="card-title">{device.brand} {device.model}</h2>
+            <span
+              className={`px-3 py-1 text-sm font-semibold inline-block ${device.verified
+                  ? "badge badge-success gap-2 flex justify-content: center"
+                  : "badge badge-error gap-2 flex justify-content: center"
+                }`}
+            >
+              {device.verified ? "Verified" : "Not Verified"}
+            </span>
+          </div>
+          <div>
+            <div className="mb-2">
+              <span className="font-bold">Specifications:</span>
+            </div>
+            <div className="p-1">
+              <span className="text-black">Storage:</span> {device.storage}
+            </div>
+            <div className="p-1">
+              <span className="text-black">Color:</span> {device.color}
+            </div>
+            <div className="p-1">
+              <span className="text-black">Condition:</span> {device.condition}
+            </div>
+            <div className="p-1">
+              <span className="text-black">Classification:</span> {device.deviceClassification}
+            </div>
+            <div className="p-1">
+              <span className="text-black">Created At:</span> {device.createdAt}
+            </div>
+            <div className="p-1">
+              <span className="text-black">
+                Data Recovery:{" "}
+                {device.deviceClassification === "Current" ||
+                  device.deviceClassification === "Rare"
+                  ? "Not applicable"
+                  : device.dataRecovered
+                    ? "Yes"
+                    : "No"}
+              </span>
+            </div>
+            <div className="p-1">
+              <span className="text-black">
+                Data Retrieval Time Left:{" "}
+                {calculateDataRetrievalTimeLeft()}
+              </span> 
+            </div>
+          </div>
+          {renderCexLink()}
+          <div className="mt-4">
+            <div
+              style={{
+                height: "auto",
+                margin: "0 auto",
+                maxWidth: 64,
+                width: "100%",
+              }}
+            >
+              <QRCode
+                size={256}
+                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                value={device.brand + "\n" + device.model + "\n" + device.color}
+                viewBox={`0 0 256 256`}
+              />
+            </div>
+          </div>
+          <div className="dropdown dropdown-right mt-4">
+            <div tabIndex={0} role="button" className="btn btn-primary">
+              Extend Retrieval
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+            >
+              <li>
+                <a>3 months</a>
+              </li>
+              <li>
+                <a>6 months</a>
+              </li>
+            </ul>
+          </div>
+          <div className="mt-4">
+            <span className="font-bold">Data Retrieval Status:</span>
+            <ul className="steps mt-4">
+              <li className="step step-primary">Device Registered</li>
+              <li className="step step-primary">Deviced Verified</li>
+              <li className="step">Data Requested</li>
+              <li className="step">Payment Processed</li>
+              <li className="step">Retrival link Received</li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
     );
   };
 
@@ -522,7 +519,7 @@ const UserDashboard = () => {
                     </h3>
                     <img src={emptyListImage} className="h-80 w-80" />
                   </div>
-                ) : ( filteredDevices.map((device) => (
+                ) : (filteredDevices.map((device) => (
                   <div>
                     {renderDeviceDetails(device)}
                   </div>
@@ -646,7 +643,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e) => setDeviceColor(e.target.value)}
+                          onChange={(e) => setColor(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
