@@ -1,3 +1,6 @@
+import { PaymentStatus } from "../../components/CardPayment";
+import CardPaymentModel from "../../components/CardPaymentModel";
+
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import {
   RiArrowDropLeftLine,
@@ -91,6 +94,22 @@ interface DeviceDetails {
 }
 
 const UserDashboard = () => {
+  const [paymentStatus, setPaymentStatus] = useState(
+    PaymentStatus.INTRODUCTION
+  );
+
+  function openPaymentModel(): void {
+    setPaymentStatus(PaymentStatus.INTRODUCTION);
+
+    const modal = document.getElementById(
+      "card_payment_model"
+    ) as HTMLDialogElement | null;
+
+    if (modal) {
+      modal.showModal();
+    }
+  }
+
   const [devices, setDevices] = useState<Device[]>([]);
 
   const radioPackage = useRef();
@@ -145,6 +164,11 @@ const UserDashboard = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("dataRetrieval", dataRetrieval);
+    if (dataRetrieval) {
+      setShowPopup(false)
+      openPaymentModel();
+    }
     // if(e.target.checked && e.target.value === "Yes"){
     //   setShowPopup(true);
     //   return;
@@ -200,8 +224,6 @@ const UserDashboard = () => {
     console.log("e.target.checked", e.target.checked);
     if (e.target.checked && e.target.value === "Yes") {
       setDataRetrieval(e.target.checked && e.target.value === "Yes");
-      setShowPopup(true);
-      return;
     }
   };
 
@@ -731,9 +753,8 @@ const UserDashboard = () => {
                             type="radio"
                             name="data-retrieval"
                             className="radio radio-primary mr-2"
-                            checked
-                            value="Yes"
-                            onChange={handleDataRetrievalChange}
+                            checked={dataRetrieval === true}
+                            onChange={() => setDataRetrieval(true)}
                           />
                           <span className="label-text text-black">Yes</span>
                         </label>
@@ -742,9 +763,8 @@ const UserDashboard = () => {
                             type="radio"
                             name="data-retrieval"
                             className="radio radio-primary mr-2"
-                            checked
-                            value="Yes"
-                            onChange={handleDataRetrievalChange}
+                            checked={dataRetrieval === false}
+                            onChange={() => setDataRetrieval(false)}
                           />
                           <span className="label-text text-black">No</span>
                         </label>
@@ -823,6 +843,11 @@ const UserDashboard = () => {
           </div>
         </div>
       )}
+
+      <CardPaymentModel
+        status={paymentStatus}
+        setPaymentStatus={setPaymentStatus}
+      ></CardPaymentModel>
     </div>
   );
 };
