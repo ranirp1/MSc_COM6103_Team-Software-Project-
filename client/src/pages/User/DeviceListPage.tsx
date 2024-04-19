@@ -52,7 +52,7 @@ const UserDashboard = () => {
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState<string>("");
   const [dateofRelease, setDateofRelease] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,6 +63,7 @@ const UserDashboard = () => {
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
   const [open, setOpen] = useState<Boolean>(false);
+  
 
   useEffect(() => {
     fetchDevices();
@@ -100,10 +101,9 @@ const UserDashboard = () => {
     }
     const reader = new FileReader();
     reader.onloadend = () => {
-      // reader.result contains the Base64 string
-      const result = reader.result as string;
-      setImageUrl(result);
-      // Now you can send this string to the Flask backend
+      if(reader.result){
+        setImageUrl(reader.result.toString());
+      }
     };
     reader.readAsDataURL(file);
   };

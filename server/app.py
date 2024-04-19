@@ -6,8 +6,10 @@ from sqlalchemy.sql import func
 from sqlalchemy import text
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
-
+import base64
 import os
+import uuid
+
 from dotenv import load_dotenv
 import stripe
 from datetime import datetime
@@ -16,6 +18,9 @@ from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle , Spacer
+from werkzeug.utils import secure_filename
+
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -31,6 +36,10 @@ STRIPE_PUBLIC_KEY = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 CORS(app,origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+UPLOAD_FOLDER = 'uploads'  # Define the upload folder
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -397,7 +406,7 @@ def createDevice():
     Returns:
         A JSON response with a success message if the device is successfully created; A JSON response with an error message if the device model already exists in the database.
         A JSON response with a success message if the device is successfully associated with the user; A JSON response with an error message if any problems arrives.
-    """
+    """ 
     data = request.json
     userID = data.get('userID')
     deviceType = data.get('deviceType')
@@ -412,7 +421,7 @@ def createDevice():
     qrCodeUrl = data.get('qrCodeUrl')
     dateOfRelease = data.get('dateofRelease')
     dateOfPurchase = data.get('dateofPurchase')
-
+    
     """Need to finalize if the isVerified is added in the device or userDevice table"""
     if not all([dateOfPurchase, imageUrl]):
         isVerified = False
@@ -442,8 +451,18 @@ def createDevice():
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
     
-    imageUrl_truncated = imageUrl[:4000] if len(imageUrl) > 4000 else imageUrl
+        
     
+    image_data = request.json['imageUrl']
+    image_data = image_data.split(",")[1]
+    image_data_bytes = image_data.encode()
+        
+    image_filename = secure_filename(f"{uuid.uuid4().hex}.jpg")
+    image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+    with open(image_path, 'wb') as f:
+        f.write(image_data_bytes)
+    
+        
     newUserDeviceAdded = UserDevice(
         userID = userID,
         deviceID = deviceID,
@@ -452,7 +471,7 @@ def createDevice():
         deviceColor = deviceColor,
         deviceStorage = deviceStorage,
         deviceCondition = deviceCondition,
-        imageUrl = imageUrl_truncated,
+        imageUrl = image_path,
         qrCodeUrl = qrCodeUrl,
         dateOfCreation = dateOfRelease,
         dataRetrievalID = 0,
