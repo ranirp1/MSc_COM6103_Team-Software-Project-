@@ -2,16 +2,9 @@ import { PaymentStatus } from "../../components/CardPayment";
 import CardPaymentModel from "../../components/CardPaymentModel";
 
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
-import {
-  RiArrowDropLeftLine,
-  RiArrowDropRightLine,
-  RiFilter3Line,
-  RiLogoutBoxRLine,
-  RiUserSettingsFill,
-  RiUserSharedLine,
-} from "react-icons/ri";
+import {RiFilter3Line,RiLogoutBoxRLine} from "react-icons/ri";
 import image1 from "../../assets/image1.jpg";
-import React, { useState, ChangeEvent, useEffect, useRef } from "react";
+import React, { useState, ChangeEvent, useEffect } from "react";
 import "../../style.css";
 import { Navigate, useNavigate } from "react-router-dom";
 import { API_URL } from "../../constants/constant";
@@ -29,7 +22,7 @@ class Device {
   color: string;
   dataRecovered?: boolean | null;
   condition: string;
-  deviceClassification: string;
+  classification: string;
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
   cexLink?: string;
@@ -45,7 +38,7 @@ class Device {
     color: string,
     dataRecovered: boolean | null,
     condition: string,
-    deviceClassification: string,
+    classification: string,
     dataRetrievalRequested: boolean | null,
     dataRetrievalTimeLeft: string,
     cexLink?: string
@@ -60,7 +53,7 @@ class Device {
     this.color = color;
     this.dataRecovered = dataRecovered;
     this.condition = condition;
-    this.deviceClassification = deviceClassification;
+    this.classification = classification;
     this.dataRetrievalRequested = dataRetrievalRequested;
     this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
     this.cexLink = cexLink;
@@ -78,7 +71,7 @@ class Device {
       json.color,
       json.dataRecovered,
       json.condition,
-      json.deviceClassification,
+      json.classification,
       json.dataRetrievalRequested,
       json.dataRetrievalTimeLeft,
       json.cexLink
@@ -112,16 +105,15 @@ const UserDashboard = () => {
 
   const [devices, setDevices] = useState<Device[]>([]);
 
-  const radioPackage = useRef();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const [deviceId, setDeviceId] = useState("");
-  const [deviceClassification, setDeviceClassification] = useState("");
+  const [deviceClassification, setDeviceClassification] = useState("Current");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
-  const [color, setColor] = useState("");
-  const [condition, setCondition] = useState("");
-  const [storage, setStorage] = useState("");
+  const [deviceColor, setDeviceColor] = useState("");
+  const [deviceCondition, setDeviceCondition] = useState("");
+  const [deviceStorage, setDeviceStorage] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [dateofRelease, setDateofRelease] = useState("");
@@ -135,6 +127,10 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState<Boolean>(false);
 
+  const [selectedValues, setSelectedValues] = useState([]); // Array to store selected values
+  const [showInputs, setShowInputs] = useState(false); // Flag to control input display
+
+  
   useEffect(() => {
     fetchDevices();
   }, []);
@@ -164,7 +160,6 @@ const UserDashboard = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("dataRetrieval", dataRetrieval);
     if (dataRetrieval) {
       setShowPopup(false)
       openPaymentModel();
@@ -188,8 +183,9 @@ const UserDashboard = () => {
           imageUrl,
           dateofRelease,
           userID: 1,
-          color,
-          storage,
+          deviceColor,
+          deviceStorage,
+          deviceCondition
         }),
       });
 
@@ -218,6 +214,7 @@ const UserDashboard = () => {
     }
   };
 
+    
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -238,18 +235,6 @@ const UserDashboard = () => {
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
-  const getClassificationBadgeClass = (classification: string) => {
-    switch (classification) {
-      case "Current":
-        return "badge-current"; // Define badge-current in your CSS for the corresponding styling
-      case "Rare":
-        return "badge-rare"; // Define badge-rare in your CSS for the corresponding styling
-      case "Recycle":
-        return "badge-recycle"; // Define badge-recycle in your CSS for the corresponding styling
-      case "Unknown":
-        return "badge-unknown";
-    }
-  };
 
   const filterDevices = (devices: Device[]) => {
     // Apply search filter
@@ -258,7 +243,7 @@ const UserDashboard = () => {
         device.brand.toLowerCase().includes(searchQuery) ||
         device.model.includes(searchQuery) ||
         device.createdAt.toLowerCase().includes(searchQuery) ||
-        device.deviceClassification.includes(searchQuery)
+        device.classification.includes(searchQuery)
     );
 
     // Apply sort filter
@@ -290,18 +275,19 @@ const UserDashboard = () => {
       manufacturer: string,
       model: string,
       storage: string,
-      color: string
+      deviceColor: string
     ) => {
       const baseUrl = "https://uk.webuy.com/search";
       return `${baseUrl}?stext=${encodeURIComponent(
-        "${manufacturer} ${model} ${storage} ${color}"
+        "${manufacturer} ${model} ${storage} ${deviceColor}"
       )}`;
     };
 
+    
     const renderCexLink = () => {
       if (
-        device.deviceClassification === "Rare" ||
-        device.deviceClassification === "Current"
+        device.classification === "Rare" ||
+        device.classification === "Current"
       ) {
         const cexUrl = createCexSearchUrl(
           device.brand,
@@ -328,14 +314,14 @@ const UserDashboard = () => {
     const calculateDataRetrievalTimeLeft = () => {
       // Return "Not applicable" for "Current" and "Rare" classifications
       if (
-        device.deviceClassification === "Current" ||
-        device.deviceClassification === "Rare"
+        device.classification === "Current" ||
+        device.classification === "Rare"
       ) {
         return "Not applicable";
       }
 
       if (
-        device.deviceClassification === "Recycle" &&
+        device.classification === "Recycle" &&
         device.dataRetrievalRequested
       ) {
         const creationDate = new Date(device.createdAt);
@@ -385,7 +371,7 @@ const UserDashboard = () => {
           </div>
           <div>
             <div className="mb-2">
-              <span className="font-bold">Specifications:</span>
+              <span className="font-bold">Specifications</span>
             </div>
             <div className="p-1">
               <span className="text-black">Storage:</span> {device.storage}
@@ -397,8 +383,7 @@ const UserDashboard = () => {
               <span className="text-black">Condition:</span> {device.condition}
             </div>
             <div className="p-1">
-              <span className="text-black">Classification:</span>{" "}
-              {device.deviceClassification}
+              <span className="text-black">Classification:</span> {device.classification}
             </div>
             <div className="p-1">
               <span className="text-black">Created At:</span> {device.createdAt}
@@ -406,8 +391,8 @@ const UserDashboard = () => {
             <div className="p-1">
               <span className="text-black">
                 Data Recovery:{" "}
-                {device.deviceClassification === "Current" ||
-                device.deviceClassification === "Rare"
+                {device.classification === "Current" ||
+                device.classification === "Rare"
                   ? "Not applicable"
                   : device.dataRecovered
                   ? "Yes"
@@ -433,11 +418,13 @@ const UserDashboard = () => {
               <QRCode
                 size={256}
                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                value={device.brand + "\n" + device.model + "\n" + device.color}
+                value={device.brand + "\n" + device.model + "\n" + device.color + "\n" + device.storage + "\n" + device.classification +"\n" + device.condition}
                 viewBox={`0 0 256 256`}
               />
             </div>
           </div>
+          {/* diaplaying data retrieval button if selected */}
+          {dataRetrieval && ( 
           <div className="dropdown dropdown-right mt-4">
             <div tabIndex={0} role="button" className="btn btn-primary">
               Extend Retrieval
@@ -454,6 +441,7 @@ const UserDashboard = () => {
               </li>
             </ul>
           </div>
+          )}
           <div className="mt-4">
             <span className="font-bold">Data Retrieval Status:</span>
             <ul className="steps mt-4">
@@ -630,10 +618,7 @@ const UserDashboard = () => {
                           id="classification"
                           name="classification"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
-                          onChange={(e) => {
-                            console.log("e.target.value", e.target.value);
-                            setDeviceClassification(e.target.value);
-                          }}
+                          onChange={(e) => { setDeviceClassification(e.target.value) }}
                         >
                           <option>Current</option>
                           <option>Rare</option>
@@ -668,7 +653,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e) => setColor(e.target.value)}
+                          onChange={(e) => setDeviceColor(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -684,7 +669,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
-                          onChange={(e) => setStorage(e.target.value)}
+                          onChange={(e) => setDeviceStorage(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -701,7 +686,9 @@ const UserDashboard = () => {
                       <div className="mt-2">
                         <label className="cursor-pointer flex items-center">
                           <input
+                            onChange={(e) => { setDeviceCondition(e.target.value) }}
                             type="checkbox"
+                            value="New"
                             id="new-condition"
                             name="device-condition"
                             className="checkbox checkbox-primary mr-2 mb-2"
@@ -710,7 +697,9 @@ const UserDashboard = () => {
                         </label>
                         <label className="cursor-pointer flex items-center">
                           <input
+                            onChange={(e) => { setDeviceCondition(e.target.value) }}
                             type="checkbox"
+                            value="Old"
                             id="old-condition"
                             name="device-condition"
                             className="checkbox checkbox-primary mr-2 mb-2"
@@ -719,7 +708,9 @@ const UserDashboard = () => {
                         </label>
                         <label className="cursor-pointer flex items-center">
                           <input
+                            onChange={(e) => { setDeviceCondition(e.target.value) }}
                             type="checkbox"
+                            value="Damaged"
                             id="damaged-condition"
                             name="device-condition"
                             className="checkbox checkbox-primary mr-2 mb-2"

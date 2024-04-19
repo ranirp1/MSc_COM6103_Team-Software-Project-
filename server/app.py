@@ -85,7 +85,7 @@ class UserDevice(db.Model):
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
-    deviceClassification = db.Column(db.String(120), nullable=False)
+    deviceClassification = db.Column(db.String(120), nullable=False) 
     dateOfPurchase = db.Column(db.Date)
     deviceColor = db.Column(db.String(120), nullable=True)
     deviceStorage = db.Column(db.String(120), nullable=True)
