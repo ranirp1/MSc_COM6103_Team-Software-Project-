@@ -73,10 +73,7 @@ class Device(db.Model):
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
             'isVerified': self.isVerified
         }
-    
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
+
     
 class UserDevice(db.Model):
     __tablename__ = 'user_device'
@@ -88,7 +85,7 @@ class UserDevice(db.Model):
     deviceColor = db.Column(db.String(120), nullable=True)
     deviceStorage = db.Column(db.String(120), nullable=True)
     deviceCondition = db.Column(db.String(20), nullable=True)
-    imageUrl = db.Column(db.String(255))
+    imageUrl = db.Column(db.String(4000))
     qrCodeUrl = db.Column(db.String(255))
     dateOfCreation = db.Column(db.Date)
     dataRetrievalID = db.Column(db.Integer, nullable=True)
@@ -149,6 +146,9 @@ class PaymentTable(db.Model):
             'date': self.date 
         }
 
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 @cross_origin()
@@ -442,6 +442,7 @@ def createDevice():
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
     
+    imageUrl_truncated = imageUrl[:4000] if len(imageUrl) > 4000 else imageUrl
     
     newUserDeviceAdded = UserDevice(
         userID = userID,
@@ -451,7 +452,7 @@ def createDevice():
         deviceColor = deviceColor,
         deviceStorage = deviceStorage,
         deviceCondition = deviceCondition,
-        imageUrl = imageUrl,
+        imageUrl = imageUrl_truncated,
         qrCodeUrl = qrCodeUrl,
         dateOfCreation = dateOfRelease,
         dataRetrievalID = 0,

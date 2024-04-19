@@ -91,6 +91,23 @@ const UserDashboard = () => {
     }
   };
 
+  // Image
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) =>{
+    const file = e.target.files?.[0];
+    if(!file){
+      console.error("No file selected");
+        return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      // reader.result contains the Base64 string
+      const result = reader.result as string;
+      setImageUrl(result);
+      // Now you can send this string to the Flask backend
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // if(e.target.checked && e.target.value === "Yes"){
@@ -109,7 +126,7 @@ const UserDashboard = () => {
           model,
           deviceClassification,
           dateofPurchase,
-          imageUrl,
+          imageUrl: imageUrl,
           dateofRelease,
           userID: 1,
         }),
@@ -779,6 +796,8 @@ const UserDashboard = () => {
 
                       <input
                         type="file"
+                        name="imageUrl"
+                        onChange={handleFileChange}
                         className="file-input w-full max-w-xs file-input-primary"
                       ></input>
                     </div>
