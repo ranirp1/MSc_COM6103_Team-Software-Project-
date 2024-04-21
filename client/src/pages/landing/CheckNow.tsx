@@ -22,33 +22,40 @@ export enum DeviceClassification {
 
 const CheckNow = () => {
   const [formData, setFormData] = useState(new CheckRequest());
-  const [deviceType, setDeviceType] = useState(DeviceClassification.Current);
+  const [deviceType, setDeviceType] = useState(DeviceClassification.Recycle);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log(formData);
 
-    await fetch(`${API_URL}/api/getDeviceTypeAndEstimation`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        setDeviceType(data.type);
-        const modal = document.getElementById(
-          "device_type_dialog"
-        ) as HTMLDialogElement;
-        if (modal) {
-          modal.showModal();
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    const modal = document.getElementById(
+      "device_type_dialog"
+    ) as HTMLDialogElement;
+    if (modal) {
+      modal.showModal();
+    }
+
+    // await fetch(`${API_URL}/api/getDeviceTypeAndEstimation`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(formData),
+    // })
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     console.log(data);
+    //     setDeviceType(data.type);
+    //     const modal = document.getElementById(
+    //       "device_type_dialog"
+    //     ) as HTMLDialogElement;
+    //     if (modal) {
+    //       modal.showModal();
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     console.error(error);
+    //   });
   };
 
   const handleInputChange = (fieldName: string, value: string) => {
@@ -299,7 +306,9 @@ const CheckNow = () => {
         </div>
       </div>
       <dialog id="device_type_dialog" className="modal">
-        <DeviceTypeDialog deviceType={deviceType} request={formData} />
+        <div className="w-1/2 place-content-center ">
+          <DeviceTypeDialog deviceType={deviceType} request={formData} />{" "}
+        </div>
       </dialog>
     </div>
   );
