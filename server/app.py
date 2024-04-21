@@ -609,19 +609,19 @@ def get_device_type():
     
     current_year = datetime.now().year
     release_year = datetime.strptime(releaseDate, "%Y-%m-%d").year
-    purchase_year = datetime.strptime(dateOfPurchase, "%Y-%m-%d").year
+    # purchase_year = datetime.strptime(dateOfPurchase, "%Y-%m-%d").year
     device_age = current_year - release_year
+    # device_age_purchase = current_year - purchase_year
     
-    if device_age > 20:
-        # if classification == "Rare" or classification == "Unknown":
+    isDeviceRare = device_age > 20
+    isDeviceRecycle = device_age < 10 and condition == "Damaged" 
+    
+    if isDeviceRare:
             return jsonify({'type': 'Rare', 'data': ""}), 200
-        # else:
-        #     return jsonify({'type': 'Recycle', 'data': ""}), 200
-    elif device_age < 10 and (current_year - purchase_year) < 10:
+    elif isDeviceRecycle:
         return jsonify({'type': 'Recycle', 'data': ""}), 200
     else:
         return jsonify({'type': 'Current', 'data': ""}), 200
-
 
 @app.route('/api/updateDevice', methods=['POST'])
 @cross_origin()
