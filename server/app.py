@@ -421,7 +421,10 @@ def createDevice():
     imageFile = request.files.get('image')
     if(imageFile):
         filename = secure_filename(imageFile.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        upload_folder = app.config['UPLOAD_FOLDER']
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
+        filepath = os.path.join(upload_folder, filename)
         imageFile.save(filepath)
 
     """Need to finalize if the isVerified is added in the device or userDevice table"""
