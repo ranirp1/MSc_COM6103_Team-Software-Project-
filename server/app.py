@@ -6,6 +6,7 @@ from sqlalchemy.sql import func
 from sqlalchemy import text
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy import Enum
 
 import os
 from dotenv import load_dotenv
@@ -17,9 +18,11 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle , Spacer
 
+from enum import Enum as PyEnum
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
 
@@ -54,6 +57,21 @@ class User(db.Model):
             'isAdmin': self.isAdmin
         }
 
+class _DATA_RETRIEVED(PyEnum):
+    SENT = 'Sent for Processing'
+    RECEIVED = 'Received for Processing'
+    RETRIEVED = 'Data Retrieved'
+
+    def __str__(self):
+        return self.value
+class Device_Status(PyEnum):
+    DEV_REGISTERED = 'Device Registered'
+    DEV_RECEIVED = 'Device Received'
+    DATA_RETRIEVED = _DATA_RETRIEVED
+    URL_READY = 'Url Ready'
+    
+    def __str__(self):
+        return self.value
 
 class Device(db.Model):
     __tablename__ = 'device'
@@ -63,6 +81,7 @@ class Device(db.Model):
     model = db.Column(db.String(120), nullable=True)
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
+    device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
 
     def serialize(self):
         return {
@@ -71,13 +90,11 @@ class Device(db.Model):
             'brand': self.brand,
             'model': self.model,
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
-            'isVerified': self.isVerified
+            'isVerified': self.isVerified,
+            'device_status': str(self.device_status.value)
         }
-    
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
-    
+
+
 class UserDevice(db.Model):
     __tablename__ = 'user_device'
     userDeviceID = db.Column(db.Integer, primary_key=True)
@@ -119,10 +136,14 @@ class UserDevice(db.Model):
 class DataRetrieval(db.Model):
     __tablename__ = 'dataretrieval'
     dataRetrievalID = db.Column(db.Integer, primary_key=True)
+    userDeviceId = db.Column(db.Integer, ForeignKey('user_device.userDeviceID'), nullable=False)
+    userDevice = relationship('UserDevice', backref=db.backref('userDevice'))
     dataUrl = db.Column(db.String(255), nullable=True)
     dateOfCreation = db.Column(db.Date, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+
+    # user_device = relationship('UserDevice', backref='dataretrieval', foreign_keys=[userDeviceId])
 
     def serialize(self):
         return {
@@ -149,6 +170,10 @@ class PaymentTable(db.Model):
             'date': self.date 
         }
 
+
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 @cross_origin()
@@ -532,7 +557,8 @@ def getListOfDevices():
             'condition': userDevice.deviceCondition,
             'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
-            'dataRetrievalTimeLeft': ''
+            'dataRetrievalTimeLeft': '',
+            'device_status': str(device.device_status)
         }
 
         device_list.append(device_data)
@@ -673,6 +699,7 @@ def generate_report():
 
     # Fetch payment transactions and devices input by users within the specified date range
     try:
+
         payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)) 
         user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date))  
 

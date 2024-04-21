@@ -32,6 +32,7 @@ interface Device {
   deviceClassification: string;
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
+  device_status: string;
 }
 
 interface DeviceDetails {
@@ -352,6 +353,9 @@ const UserDashboard = () => {
                 <strong>Created At:</strong> {device.createdAt}
               </p>
               <p>
+                <strong>Device status: </strong> {device.device_status}
+              </p>
+              <p>
                 <strong>Data Recovery:</strong>{" "}
                 {device.deviceClassification === "Current" ||
                 device.deviceClassification === "Rare"
@@ -416,7 +420,7 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-gray-100">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex justify-between items-center p-4 shadow bg-primary">
           <img
