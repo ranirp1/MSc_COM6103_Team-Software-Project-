@@ -16,6 +16,8 @@ from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle , Spacer
+from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -25,6 +27,9 @@ CORS(app)
 
 load_dotenv()
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
+
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 STRIPE_PUBLIC_KEY = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN"
 
@@ -74,10 +79,7 @@ class Device(db.Model):
             'isVerified': self.isVerified
         }
     
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
-    
+
 class UserDevice(db.Model):
     __tablename__ = 'user_device'
     userDeviceID = db.Column(db.Integer, primary_key=True)
@@ -149,6 +151,11 @@ class PaymentTable(db.Model):
             'date': self.date 
         }
 
+
+# Create the tables when Flask starts up
+with app.app_context():
+    db.create_all()
+    
 
 @app.route("/")
 @cross_origin()
@@ -398,23 +405,27 @@ def createDevice():
         A JSON response with a success message if the device is successfully created; A JSON response with an error message if the device model already exists in the database.
         A JSON response with a success message if the device is successfully associated with the user; A JSON response with an error message if any problems arrives.
     """
-    data = request.json
-    userID = data.get('userID')
-    deviceType = data.get('deviceType')
-    deviceID = data.get('deviceID')
-    brand = data.get('brand')
-    model = data.get('model')
-    deviceClassification = data.get('deviceClassification')
-    deviceColor = data.get('deviceColor')
-    deviceStorage = data.get('deviceStorage')
-    deviceCondition = data.get('deviceCondition')
-    imageUrl = data.get('imageUrl')
-    qrCodeUrl = data.get('qrCodeUrl')
-    dateOfRelease = data.get('dateofRelease')
-    dateOfPurchase = data.get('dateofPurchase')
+    userID = request.form.get('userID')
+    deviceType = request.form.get('deviceType')
+    deviceID = request.form.get('deviceID')
+    brand = request.form.get('brand')
+    model = request.form.get('model')
+    deviceClassification = request.form.get('deviceClassification')
+    deviceColor = request.form.get('deviceColor')
+    deviceStorage = request.form.get('deviceStorage')
+    deviceCondition = request.form.get('deviceCondition')
+    qrCodeUrl = request.form.get('qrCodeUrl')
+    dateOfRelease = request.form.get('dateofRelease')
+    dateOfPurchase = request.form.get('dateofPurchase')
+    
+    imageFile = request.files.get('image')
+    if(imageFile):
+        filename = secure_filename(imageFile.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        imageFile.save(filepath)
 
     """Need to finalize if the isVerified is added in the device or userDevice table"""
-    if not all([dateOfPurchase, imageUrl]):
+    if not all([dateOfPurchase]):
         isVerified = False
     else:
         isVerified = True
@@ -451,7 +462,7 @@ def createDevice():
         deviceColor = deviceColor,
         deviceStorage = deviceStorage,
         deviceCondition = deviceCondition,
-        imageUrl = imageUrl,
+        imageUrl = filepath,
         qrCodeUrl = qrCodeUrl,
         dateOfCreation = dateOfRelease,
         dataRetrievalID = 0,

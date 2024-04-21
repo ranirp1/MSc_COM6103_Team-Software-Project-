@@ -93,52 +93,39 @@ const UserDashboard = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // if(e.target.checked && e.target.value === "Yes"){
-    //   setShowPopup(true);
-    //   return;
-    // }
+
+    const formData = new FormData();
+    formData.append('brand', brand);
+    formData.append('model', model);
+    formData.append('deviceClassification', deviceClassification);
+    formData.append('dateofPurchase', dateofPurchase);
+    formData.append('dateofRelease', dateofRelease);
+    formData.append('userID', '1'); // userID is hardcoded for now, replace with actual user ID later
+
+    const imageInput = (e.target as HTMLFormElement).querySelector<HTMLInputElement>('#imageInput');
+    const imageFile = imageInput ? imageInput.files?.[0] : null;
+
+    if (imageFile) {
+      formData.append('image', imageFile);
+  }
+        
     try {
-      const response = await fetch(`${API_URL}/api/createDevice`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        //TODO userID is hardcoded for now, need to get it from the session
-        body: JSON.stringify({
-          brand,
-          model,
-          deviceClassification,
-          dateofPurchase,
-          imageUrl,
-          dateofRelease,
-          userID: 1,
-        }),
-      });
+        const response = await fetch(`${API_URL}/api/createDevice`, {
+            method: "POST",
+            body: formData,
+        });
 
-      if (response.ok) {
-        console.log(response);
-        console.log("Creation Successful");
-        window.location.href = "/user";
-      } else {
-        console.log("Creation Error");
-
-        // get the error message from the server and save it to show in toast
-      }
+        if (response.ok) {
+            console.log("Creation Successful");
+            window.location.href = "/user";
+        } else {
+            console.log("Creation Error");
+            // Handle error
+        }
     } catch (error) {
-      console.log("Error:", error);
+        console.log("Error:", error);
     }
-    // Check if data retrieval is selected as "Yes"
-    {
-      /* if (dataRetrieval) {
-      setShowPopup(true); // Show the popup
-    } else {
-      // Handle form submission without showing popup
-      // For now, just log a message
-      console.log("Form submitted without showing popup");
-      navigate("/user");
-    }*/
-    }
-  };
+};
 
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -779,6 +766,7 @@ const UserDashboard = () => {
 
                       <input
                         type="file"
+                        id="imageInput"
                         className="file-input w-full max-w-xs file-input-primary"
                       ></input>
                     </div>
