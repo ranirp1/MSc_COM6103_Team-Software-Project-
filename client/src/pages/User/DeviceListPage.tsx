@@ -214,7 +214,7 @@ const UserDashboard = () => {
     }
   };
 
-    
+
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -349,6 +349,9 @@ const UserDashboard = () => {
       }
       return "Not applicable";
     };
+
+    const isQRCodeVisible = device.classification === 'Rare' || device.classification === 'Current';
+
     return (
       <div className="card w-97 bg-base-100 shadow-xl">
         <figure>
@@ -414,17 +417,16 @@ const UserDashboard = () => {
                 maxWidth: 64,
                 width: "100%",
               }}
-            >
+            >{isQRCodeVisible && (
               <QRCode
                 size={256}
                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                 value={device.brand + "\n" + device.model + "\n" + device.color + "\n" + device.storage + "\n" + device.classification +"\n" + device.condition}
                 viewBox={`0 0 256 256`}
-              />
+              />)}
             </div>
           </div>
           {/* diaplaying data retrieval button if selected */}
-          {dataRetrieval && ( 
           <div className="dropdown dropdown-right mt-4">
             <div tabIndex={0} role="button" className="btn btn-primary">
               Extend Retrieval
@@ -441,7 +443,7 @@ const UserDashboard = () => {
               </li>
             </ul>
           </div>
-          )}
+
           <div className="mt-4">
             <span className="font-bold">Data Retrieval Status:</span>
             <ul className="steps mt-4">
