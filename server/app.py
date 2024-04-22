@@ -148,7 +148,7 @@ class PaymentTable(db.Model):
             'date': self.date 
         }
 
-class estimateValues(db.Model):
+class EstimateValues(db.Model):
     __tablename__ = 'estimatedvalues'
     estimatedValueID = db.Column(db.Integer, primary_key=True)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
@@ -222,25 +222,25 @@ with app.app_context():
             
     # Add initial values only if they don't already exist
     estimateprices_initial_values = [
-        estimateValues(deviceID=1, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400), # S23 ultra
-        estimateValues(deviceID=2, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900, damagedDeviceEstimatedPrice=600), # S24 ultra
-        estimateValues(deviceID=3, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400), # iPhone 15
-        estimateValues(deviceID=4, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700, damagedDeviceEstimatedPrice=450), # iPhone 15 Pro
-        estimateValues(deviceID=5, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449, damagedDeviceEstimatedPrice=200), # iPhone 13
-        estimateValues(deviceID=6, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649, damagedDeviceEstimatedPrice=300), # iPhone 13 Pro Max
-        estimateValues(deviceID=7, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 14
-        estimateValues(deviceID=8, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699, damagedDeviceEstimatedPrice=400), # iPhone 14 Pro Max
-        estimateValues(deviceID=9, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349, damagedDeviceEstimatedPrice=150), # iPhone 12
-        estimateValues(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 12 Pro Max
-        estimateValues(deviceID=11, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50), # OnePlus Nord
-        estimateValues(deviceID=12, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199, damagedDeviceEstimatedPrice=100), # Google Pixel
-        estimateValues(deviceID=13, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249, damagedDeviceEstimatedPrice=100), # iPhone 11
-        estimateValues(deviceID=14, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50), # iPhone XR
+        EstimateValues(deviceID=1, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400), # S23 ultra
+        EstimateValues(deviceID=2, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900, damagedDeviceEstimatedPrice=600), # S24 ultra
+        EstimateValues(deviceID=3, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400), # iPhone 15
+        EstimateValues(deviceID=4, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700, damagedDeviceEstimatedPrice=450), # iPhone 15 Pro
+        EstimateValues(deviceID=5, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449, damagedDeviceEstimatedPrice=200), # iPhone 13
+        EstimateValues(deviceID=6, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649, damagedDeviceEstimatedPrice=300), # iPhone 13 Pro Max
+        EstimateValues(deviceID=7, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 14
+        EstimateValues(deviceID=8, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699, damagedDeviceEstimatedPrice=400), # iPhone 14 Pro Max
+        EstimateValues(deviceID=9, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349, damagedDeviceEstimatedPrice=150), # iPhone 12
+        EstimateValues(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 12 Pro Max
+        EstimateValues(deviceID=11, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50), # OnePlus Nord
+        EstimateValues(deviceID=12, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199, damagedDeviceEstimatedPrice=100), # Google Pixel
+        EstimateValues(deviceID=13, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249, damagedDeviceEstimatedPrice=100), # iPhone 11
+        EstimateValues(deviceID=14, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50), # iPhone XR
     ]
 
     # Add the instances to the session and commit only if they don't already exist
     for value in estimateprices_initial_values:
-        existing_value = estimateValues.query.filter_by(deviceID=value.deviceID).first()
+        existing_value = EstimateValues.query.filter_by(deviceID=value.deviceID).first()
         if not existing_value:
             db.session.add(value)
     # Commit changes
