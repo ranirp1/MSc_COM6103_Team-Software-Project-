@@ -11,8 +11,13 @@ import planet from "../../animation/planet.json";
 import backup from "../../animation/backup.json";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import CheckNow from "./CheckNow";
+import { useState } from "react";
+import DeviceTypeDialog from "./DeviceTypeDialog";
+import { CheckRequest, DeviceClassification } from "./CheckNow";
 
 const LandingPage: React.FC = () => {
+  const [formData, setFormData] = useState(new CheckRequest());
+  const [deviceType, setDeviceType] = useState(DeviceClassification.Current);
   return (
     <div className="bg-gray-100 flex flex-col md:flex-row w-full ">
       {/* <NavBar></NavBar> */}

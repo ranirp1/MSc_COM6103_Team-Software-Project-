@@ -311,30 +311,41 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredAndSortedUsers.map((user) => (
-                      <tr key={user.id}>
-                        <td>{user.name}</td>
-                        <td>{user.email}</td>
-                        <td>{user.phone}</td>
-                        <td>
-                          <select
-                            value={user.role}
-                            onChange={(e) =>
-                              handleRoleChange(
-                                user.id,
-                                e.target.value as UserType
-                              )
-                            }
-                            className="select select-bordered select-primary w-full max-w-xs"
-                          >
-                            <option value="employee">Employee</option>
-                            <option value="endUser">End User</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+  {filteredAndSortedUsers.map((user) => (
+    <tr key={user.id}>
+      <td>{user.name}</td>
+      <td>{user.email}</td>
+      <td>{user.phone}</td>
+      <td>
+        {user.role === "endUser" && (
+          <button
+            className="btn btn-primary"
+            onClick={() => handleRoleChange(user.id, "employee")}
+          >
+            Upgrade to Employee
+          </button>
+        )}
+        {user.role === "employee" && (
+          <button
+            className="btn btn-success"
+            onClick={() => handleRoleChange(user.id, "admin")}
+          >
+            Promote to Admin
+          </button>
+        )}
+        {user.role === "admin" && (
+          <button
+            className="btn btn-warning"
+            onClick={() => handleRoleChange(user.id, "employee")}
+          >
+            Downgrade to Employee
+          </button>
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>
+
                 </table>
               </div>
             )}
