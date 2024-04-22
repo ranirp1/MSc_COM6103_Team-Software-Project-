@@ -63,23 +63,20 @@ class User(db.Model):
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
-    deviceType = db.Column(db.String(120), nullable=True)
     brand = db.Column(db.String(120), nullable=True)
-    model = db.Column(db.String(120), nullable=True)
+    model = db.Column(db.String(120), nullable=True, unique=True)
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
 
     def serialize(self):
         return {
             'deviceID': self.deviceID,
-            'deviceType': self.deviceType,
             'brand': self.brand,
             'model': self.model,
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
             'isVerified': self.isVerified
         }
-    
-
+        
 class UserDevice(db.Model):
     __tablename__ = 'user_device'
     userDeviceID = db.Column(db.Integer, primary_key=True)
@@ -151,12 +148,105 @@ class PaymentTable(db.Model):
             'date': self.date 
         }
 
+class estimateValues(db.Model):
+    __tablename__ = 'estimatedvalues'
+    estimatedValueID = db.Column(db.Integer, primary_key=True)
+    deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    newDeviceEstimatedPrice = db.Column(db.Integer)
+    usedDeviceEstimatedPrice = db.Column(db.Integer)
+    damagedDeviceEstimatedPrice = db.Column(db.Integer)
+    
+    device = relationship('Device', backref='estimatedvalues', foreign_keys=[deviceID])
+
+@classmethod
+def add_estimatedprices_initial_values(cls):
+        # Add initial values here
+        initial_values = [
+            cls(deviceID=1, newDeviceEstimatedPrice=1000, usedDeviceEstimatedPrice=500, damagedDeviceEstimatedPrice=100),
+            cls(deviceID=2, newDeviceEstimatedPrice=1200, usedDeviceEstimatedPrice=600, damagedDeviceEstimatedPrice=150),
+            cls(deviceID=3, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400),  # S23 ultra
+            cls(deviceID=4, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900, damagedDeviceEstimatedPrice=600),  # S24 ultra
+            cls(deviceID=5, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400),   # iPhone 15
+            cls(deviceID=6, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700, damagedDeviceEstimatedPrice=450),   # iPhone 15 Pro
+            cls(deviceID=7, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449, damagedDeviceEstimatedPrice=200),  # iPhone 13
+            cls(deviceID=8, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649, damagedDeviceEstimatedPrice=300), # iPhone 13 Pro Max
+            cls(deviceID=9, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300),  # iPhone 14
+            cls(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699, damagedDeviceEstimatedPrice=400), # iPhone 14 Pro Max
+            cls(deviceID=11, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349, damagedDeviceEstimatedPrice=150), # iPhone 12
+            cls(deviceID=12, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 12 Pro Max
+            cls(deviceID=13, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50),   # OnePlus Nord
+            cls(deviceID=14, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199, damagedDeviceEstimatedPrice=100),  # Google Pixel
+            cls(deviceID=15, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249, damagedDeviceEstimatedPrice=100),  # iPhone 11
+            cls(deviceID=16, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50),   # iPhone XR
+        ]
+
+        # Add the instances to the session and commit
+        for value in initial_values:
+            db.session.add(value)
+        db.session.commit()
 
 # Create the tables when Flask starts up
 with app.app_context():
+    # Create tables
     db.create_all()
-    
 
+    # Dictionary to map model names to device data including release dates
+    device_data = {
+        "Samsung S23 Ultra": {"brand": "Samsung", "model": "S23 Ultra", "dateOfRelease": "2023-02-17"},
+        "Samsung S24 Ultra": {"brand": "Samsung", "model": "S24 Ultra", "dateOfRelease": "2024-02-01"},
+        "iPhone 15": {"brand": "Apple", "model": "iPhone 15", "dateOfRelease": "2023-09-01"},
+        "iPhone 15 Pro": {"brand": "Apple", "model": "iPhone 15 Pro", "dateOfRelease": "2023-09-01"},
+        "iPhone 13": {"brand": "Apple", "model": "iPhone 13", "dateOfRelease": "2021-09-24"},
+        "iPhone 13 Pro Max": {"brand": "Apple", "model": "iPhone 13 Pro Max", "dateOfRelease": "2021-09-24"},
+        "iPhone 14": {"brand": "Apple", "model": "iPhone 14", "dateOfRelease": "2022-09-16"},
+        "iPhone 14 Pro Max": {"brand": "Apple", "model": "iPhone 14 Pro Max", "dateOfRelease": "2022-09-16"},
+        "iPhone 12": {"brand": "Apple", "model": "iPhone 12", "dateOfRelease": "2020-10-23"},
+        "iPhone 12 Pro Max": {"brand": "Apple", "model": "iPhone 12 Pro Max", "dateOfRelease": "2020-11-13"},
+        "OnePlus Nord": {"brand": "OnePlus", "model": "OnePlus Nord", "dateOfRelease": "2020-07-21"},
+        "Google Pixel": {"brand": "Google", "model": "Google Pixel", "dateOfRelease": "2016-10-04"},
+        "iPhone 11": {"brand": "Apple", "model": "iPhone 11", "dateOfRelease": "2019-09-20"},
+        "iPhone XR": {"brand": "Apple", "model": "iPhone XR", "dateOfRelease": "2018-10-26"}
+    }
+
+    # Add devices with data including release dates if they don't already exist
+    for device_name, data in device_data.items():
+        existing_device = Device.query.filter_by(model=data["model"]).first()
+        if not existing_device:
+            device = Device(
+                brand=data["brand"],
+                model=data["model"],
+                dateOfRelease=datetime.strptime(data["dateOfRelease"], "%Y-%m-%d").date(),
+                isVerified=True
+            )
+            db.session.add(device)
+            
+    # Add initial values only if they don't already exist
+    estimateprices_initial_values = [
+        estimateValues(deviceID=1, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400), # S23 ultra
+        estimateValues(deviceID=2, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900, damagedDeviceEstimatedPrice=600), # S24 ultra
+        estimateValues(deviceID=3, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400), # iPhone 15
+        estimateValues(deviceID=4, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700, damagedDeviceEstimatedPrice=450), # iPhone 15 Pro
+        estimateValues(deviceID=5, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449, damagedDeviceEstimatedPrice=200), # iPhone 13
+        estimateValues(deviceID=6, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649, damagedDeviceEstimatedPrice=300), # iPhone 13 Pro Max
+        estimateValues(deviceID=7, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 14
+        estimateValues(deviceID=8, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699, damagedDeviceEstimatedPrice=400), # iPhone 14 Pro Max
+        estimateValues(deviceID=9, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349, damagedDeviceEstimatedPrice=150), # iPhone 12
+        estimateValues(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 12 Pro Max
+        estimateValues(deviceID=11, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50), # OnePlus Nord
+        estimateValues(deviceID=12, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199, damagedDeviceEstimatedPrice=100), # Google Pixel
+        estimateValues(deviceID=13, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249, damagedDeviceEstimatedPrice=100), # iPhone 11
+        estimateValues(deviceID=14, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50), # iPhone XR
+    ]
+
+    # Add the instances to the session and commit only if they don't already exist
+    for value in estimateprices_initial_values:
+        existing_value = estimateValues.query.filter_by(deviceID=value.deviceID).first()
+        if not existing_value:
+            db.session.add(value)
+    # Commit changes
+    db.session.commit()
+
+        
 @app.route("/")
 @cross_origin()
 def check_sql_connection():
@@ -165,8 +255,7 @@ def check_sql_connection():
         return 'Connection to MySQL is successful!'
     except Exception as e:
         return f'Error: {str(e)}'
-
-
+    
 @app.route('/api/login', methods=['POST'])
 @cross_origin()
 def login():
@@ -406,7 +495,6 @@ def createDevice():
         A JSON response with a success message if the device is successfully associated with the user; A JSON response with an error message if any problems arrives.
     """
     userID = request.form.get('userID')
-    deviceType = request.form.get('deviceType')
     deviceID = request.form.get('deviceID')
     brand = request.form.get('brand')
     model = request.form.get('model')
@@ -419,6 +507,7 @@ def createDevice():
     dateOfPurchase = request.form.get('dateofPurchase')
     
     imageFile = request.files.get('image')
+    filepath = None
     if(imageFile):
         filename = secure_filename(imageFile.filename)
         upload_folder = app.config['UPLOAD_FOLDER']
@@ -426,18 +515,62 @@ def createDevice():
             os.makedirs(upload_folder)
         filepath = os.path.join(upload_folder, filename)
         imageFile.save(filepath)
-
-    """Need to finalize if the isVerified is added in the device or userDevice table"""
-    if not all([dateOfPurchase]):
-        isVerified = False
-    else:
-        isVerified = True
-
     
-    if(deviceID is None):
+    # Convert dateOfRelease to datetime object or set to None if not provided
+    if dateOfRelease:
+        try:
+            dateOfRelease = datetime.strptime(dateOfRelease, "%Y-%m-%d").date()
+        except ValueError:
+            return jsonify({'error': 'Invalid date format for dateOfRelease. Use format YYYY-MM-DD'}), 400
+    else:
+        dateOfRelease = None
+        
+    # Convert dateOfPurchase to datetime object or set to None if not provided
+    if dateOfPurchase:
+        try:
+            dateOfPurchase = datetime.strptime(dateOfPurchase, "%Y-%m-%d").date()
+        except ValueError:
+            return jsonify({'error': 'Invalid date format for dateOfPurchase. Use format YYYY-MM-DD'}), 400
+    else:
+        dateOfPurchase = None
+
+    # Check if the device with the provided model already exists in the Device table
+    existing_device = Device.query.filter_by(model=model).first()
+
+    # Get the current date
+    current_date = datetime.now().date()
+
+    # If the device already exists, skip populating the Device table
+    if existing_device:
+        # Create an entry in the userDevice table
+        user_device = UserDevice(
+            userID=userID,
+            deviceID=existing_device.deviceID,
+            deviceClassification=deviceClassification,
+            dateOfPurchase=dateOfPurchase,
+            deviceColor=deviceColor,
+            deviceStorage=deviceStorage,
+            deviceCondition=deviceCondition,
+            imageUrl=filepath,
+            qrCodeUrl=qrCodeUrl,
+            dateOfCreation=current_date.strftime("%Y-%m-%d"),
+            dataRetrievalID=0,
+            estimatedValue=""
+        )
+        try:
+            db.session.add(user_device)
+            db.session.commit()
+            return jsonify({'message': 'Device already exists. Entry created in userDevice table only.'}), 200
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+            db.session.flush()
+            return jsonify({'message': 'User device creation error'}), 500
+
+    # If the device does not exist, populate the Device table first
+    else:
         try:
             newDeviceAdded = Device(
-                deviceType=deviceType,
                 brand=brand,
                 model=model,
                 dateOfRelease=dateOfRelease,
@@ -447,39 +580,33 @@ def createDevice():
             db.session.commit()
             
             # Read the device ID from the database for the newly inserted device
-
             deviceID = newDeviceAdded.deviceID
             print('deviceID',deviceID)
+            
+            # Create an entry in the userDevice table
+            newUserDeviceAdded = UserDevice(
+                userID=userID,
+                deviceID=deviceID,
+                deviceClassification=deviceClassification,
+                dateOfPurchase=dateOfPurchase,
+                deviceColor=deviceColor,
+                deviceStorage=deviceStorage,
+                deviceCondition=deviceCondition,
+                imageUrl=filepath,
+                qrCodeUrl=qrCodeUrl,
+                dateOfCreation=current_date.strftime("%Y-%m-%d"),
+                dataRetrievalID=0,
+                estimatedValue=""
+            )
+            db.session.add(newUserDeviceAdded)
+            db.session.commit()
+            return jsonify({'message': 'User Device creation successful'}), 200
         except Exception as e:
             print(e)
             db.session.rollback()
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
-    
-    
-    newUserDeviceAdded = UserDevice(
-        userID = userID,
-        deviceID = deviceID,
-        deviceClassification = deviceClassification,
-        dateOfPurchase = dateOfPurchase,
-        deviceColor = deviceColor,
-        deviceStorage = deviceStorage,
-        deviceCondition = deviceCondition,
-        imageUrl = filepath,
-        qrCodeUrl = qrCodeUrl,
-        dateOfCreation = dateOfRelease,
-        dataRetrievalID = 0,
-        estimatedValue = ""
-    )
-    try:
-        db.session.add(newUserDeviceAdded)
-        db.session.commit()
-        return jsonify({'message': 'User Device creation successful'}), 200
-    except Exception as e:
-        print(e)
-        db.session.rollback()
-        db.session.flush()
-        return jsonify({'message': 'User device creation error'}), 500
+
 
 
 @app.route('/api/customer_device', methods=['POST'])
