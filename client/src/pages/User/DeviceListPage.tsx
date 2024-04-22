@@ -160,18 +160,13 @@ const UserDashboard = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (dataRetrieval) {
-      setShowPopup(false)
-      openPaymentModel();
-    }
-    // if(e.target.checked && e.target.value === "Yes"){
-    //   setShowPopup(true);
-    //   return;
-    // }
 
     const formData = new FormData();
     formData.append('brand', brand);
     formData.append('model', model);
+    formData.append('storage', deviceStorage);
+    formData.append('color', deviceColor);
+    formData.append('condition', deviceCondition);
     formData.append('deviceClassification', deviceClassification);
     formData.append('dateofPurchase', dateofPurchase);
     formData.append('dateofRelease', dateofRelease);
@@ -203,7 +198,9 @@ const UserDashboard = () => {
     // Check if data retrieval is selected as "Yes"
     {
       /* if (dataRetrieval) {
-      setShowPopup(true); // Show the popup
+      setShowPopup(false)
+      openPaymentModel();
+      return;
     } else {
       // Handle form submission without showing popup
       // For now, just log a message

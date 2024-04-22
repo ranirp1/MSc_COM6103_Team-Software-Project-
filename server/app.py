@@ -36,10 +36,6 @@ STRIPE_PUBLIC_KEY = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 CORS(app,origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
-# Create the tables when Flask starts up
-
-with app.app_context():
-    db.create_all()
 
 class User(db.Model):
     __tablename__ = 'user'
