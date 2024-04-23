@@ -289,9 +289,7 @@ def register():
     token = generate_token(newUser)
 
     # Return success message and the JWT token
-    # return jsonify({'message': 'Registration Successful', 'token': token})
-    return jsonify({'message': 'Login Successful'}), 200
-
+    return jsonify({'message': 'Registration Successful', 'token': token}) , 200
 
 @app.route('/api/getAllUsers', methods=['GET'])
 @cross_origin()
