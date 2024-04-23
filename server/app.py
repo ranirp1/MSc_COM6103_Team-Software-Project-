@@ -28,7 +28,7 @@ CORS(app)
 load_dotenv()
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
 
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = '../client/public/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 STRIPE_PUBLIC_KEY = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN"

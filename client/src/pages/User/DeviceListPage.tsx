@@ -354,7 +354,7 @@ const UserDashboard = () => {
         <figure>
           {device.image ? (
             <img
-              src={device.image}
+              src={device.image.replace("../client/public/", "")}
               alt={device.image}
               className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
             />
