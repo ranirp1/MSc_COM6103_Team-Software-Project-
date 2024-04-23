@@ -21,6 +21,12 @@ from werkzeug.utils import secure_filename
 from flask_mail import Mail
 from flask_mail import Message
 
+# pip install python-jose to work with JWT tokens
+from jose import JWTError, jwt
+from functools import wraps
+from os import environ
+
+SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -302,6 +308,69 @@ def check_sql_connection():
         return f'Error: {str(e)}'
 
 
+# Function to generate JWT token for a user
+def generate_token(user):
+    payload = {
+        'user_id': user.id,  # Use existing user.id
+        'exp': datetime.utcnow() + timedelta(minutes=60)  # Token expires in 60 minutes
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+
+# Function to Verify JWT token
+def verify_token(token):
+    try:
+        token = token.split()[1]  # Assuming 'Bearer token' format
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['user_id']
+    except jwt.exceptions.DecodeError:
+        return None  # Token is malformed
+    except jwt.exceptions.ExpiredSignatureError:
+        return None  # Token has expired
+    
+def verify_jwt(inner_func):
+    @wraps(inner_func)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization', None)
+        if not token:
+            return jsonify({'error': 'Missing authorization token'}), 401
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'error': 'Invalid or expired token'}), 401
+        # Add user_id to request object for further use
+        request.user_id = user_id
+        return inner_func(*args, **kwargs)
+
+    return decorated_function
+
+
+@app.route('/api/protected_endpoint')
+@verify_jwt
+def protected_endpoint():
+    """
+    Protected endpoint accessible only with a valid JWT token.
+
+    Returns:
+        A JSON response with user information or an error message.
+    """
+
+    # Access user ID from request object (added by verify_jwt decorator)
+    user_id = request.user_id
+
+    # Retrieve user information from database based on user_id
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    # Example usage: Return basic user information (modify as needed)
+    user_data = {
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+    }
+    return jsonify(user_data)
+    
+
 @app.route('/api/login', methods=['POST'])
 @cross_origin()
 def login():
@@ -316,6 +385,7 @@ def login():
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and user.password == password:
+        token = generate_token(user)
         return jsonify(user.serialize()), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
@@ -352,6 +422,9 @@ def register():
         password=password,
         phoneNumber=phoneNumber,
     )
+
+    # Generate JWT token for the newly created user
+    token = generate_token(newUser)
 
     # source:
     # https://stackoverflow.com/a/16336401/11449502
