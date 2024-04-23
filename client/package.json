@@ -12,7 +12,6 @@
     "@types/node": "^16.18.82",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "axios": "^1.6.7",
     "ajv-keywords": "^5.1.0",
     "axios": "^1.6.8",
     "concat-map": "^0.0.2",
