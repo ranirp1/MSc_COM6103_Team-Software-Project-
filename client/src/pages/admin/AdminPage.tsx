@@ -284,7 +284,7 @@ const AdminDashboard = () => {
             </h5>
             {filteredAndSortedUsers.length == 0 ? (
               <div className="flex flex-col  w-full h-full items-center mt-16">
-                <h3 className="text-3xl font-bold text-center mb-5 ">
+                <h3 className="text-4xl font-bold text-center mb-5 ">
                   No{" "}
                   {getUserType()}
                   Found
@@ -296,16 +296,16 @@ const AdminDashboard = () => {
                 <table className="table w-full text-black">
                   <thead>
                     <tr>
-                      <th className="text-black text-lg font-bold min-w-[200px]">
+                      <th className="text-black text-lg font-bold min-w-[250px]">
                         Name
                       </th>
-                      <th className="text-black text-lg font-bold min-w-[200px]">
+                      <th className="text-black text-lg font-bold min-w-[250px]">
                         Email
                       </th>
-                      <th className="text-black text-lg font-bold min-w-[150px]">
+                      <th className="text-black text-lg font-bold min-w-[200px]">
                         Phone
                       </th>
-                      <th className="text-black text-lg font-bold min-w-[150px]">
+                      <th className="text-black text-lg font-bold min-w-[200px]">
                         Role
                       </th>
                     </tr>
