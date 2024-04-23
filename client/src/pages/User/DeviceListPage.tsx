@@ -164,9 +164,9 @@ const UserDashboard = () => {
     const formData = new FormData();
     formData.append('brand', brand);
     formData.append('model', model);
-    formData.append('storage', deviceStorage);
-    formData.append('color', deviceColor);
-    formData.append('condition', deviceCondition);
+    formData.append('deviceStorage', deviceStorage);
+    formData.append('deviceColor', deviceColor);
+    formData.append('deviceCondition', deviceCondition);
     formData.append('deviceClassification', deviceClassification);
     formData.append('dateofPurchase', dateofPurchase);
     formData.append('dateofRelease', dateofRelease);
@@ -178,7 +178,7 @@ const UserDashboard = () => {
     if (imageFile) {
       formData.append('image', imageFile);
   }
-        
+        console.log("formData", formData);
     try {
         const response = await fetch(`${API_URL}/api/createDevice`, {
             method: "POST",
