@@ -108,7 +108,7 @@ class UserDevice(db.Model):
     imageUrl = db.Column(db.String(255))
     qrCodeUrl = db.Column(db.String(255))
     dateOfCreation = db.Column(db.Date)
-    dataRetrievalID = db.Column(db.Integer, nullable=True)
+    # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
 
     # Define foreign key relationships
@@ -128,7 +128,7 @@ class UserDevice(db.Model):
             'imageUrl': self.imageUrl,
             'qrCodeUrl': self.qrCodeUrl,
             'dateOfCreation': str(self.dateOfCreation) if self.dateOfCreation else None,
-            'dataRetrievalID': self.dataRetrievalID,
+            # 'dataRetrievalID': self.dataRetrievalID,
             'estimatedValue': self.estimatedValue
         }
 
@@ -437,6 +437,10 @@ def createDevice():
     qrCodeUrl = data.get('qrCodeUrl')
     dateOfRelease = data.get('dateofRelease')
     dateOfPurchase = data.get('dateofPurchase')
+    print("here")
+    print(data)
+    dataRetieval = data.get('dataRetieval')
+    duration = data.get('duration')
 
     """Need to finalize if the isVerified is added in the device or userDevice table"""
     if not all([dateOfPurchase, imageUrl]):
@@ -452,7 +456,7 @@ def createDevice():
                 brand=brand,
                 model=model,
                 dateOfRelease=dateOfRelease,
-                isVerified=False            
+                isVerified=False
             )
             db.session.add(newDeviceAdded)
             db.session.commit()
@@ -466,8 +470,8 @@ def createDevice():
             db.session.rollback()
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
-    
-    
+
+
     newUserDeviceAdded = UserDevice(
         userID = userID,
         deviceID = deviceID,
@@ -479,7 +483,7 @@ def createDevice():
         imageUrl = imageUrl,
         qrCodeUrl = qrCodeUrl,
         dateOfCreation = dateOfRelease,
-        dataRetrievalID = 0,
+        #  dataRetrievalID = 0,
         estimatedValue = ""
     )
     try:
@@ -491,6 +495,42 @@ def createDevice():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'User device creation error'}), 500
+
+@app.route('/api/create-data-retrieval', methods=['POST'])
+@cross_origin()
+def createRetrievalData():
+    data = request.json()
+    dataRetrieval = data.get('dataRetrieval')
+    duration = data.get('duration')
+    userDeviceID = data.get('userDeviceID')
+
+    if dataRetrieval:
+        print("retrieving data has been selected")
+        print(f"duation: {duration}")
+        newDataRetrieval = DataRetrieval(
+            userDeviceID = userDeviceID,
+            dataUrl = "https://google.com",
+            dateOfCreation = datetime.now(),
+            duration=3,
+            password="122"
+                     """
+                     userDeviceID
+                     dataUrl
+                     dateOfCreation
+                     duration
+                     password
+                     """
+        )
+
+    try:
+        db.session.add(newDataRetrieval)
+        db.session.commit()
+        return jsonify({'message': 'Data Retrieval creation successful'}), 200
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'Data Retrieval creation error'}), 500
 
 
 @app.route('/api/customer_device', methods=['POST'])
