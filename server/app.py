@@ -57,22 +57,6 @@ class User(db.Model):
             'isAdmin': self.isAdmin
         }
 
-class _DATA_RETRIEVED(PyEnum):
-    SENT = 'Sent for Processing'
-    RECEIVED = 'Received for Processing'
-    RETRIEVED = 'Data Retrieved'
-
-    def __str__(self):
-        return self.value
-class Device_Status(PyEnum):
-    DEV_REGISTERED = 'Device Registered'
-    DEV_RECEIVED = 'Device Received'
-    DATA_RETRIEVED = _DATA_RETRIEVED
-    URL_READY = 'Url Ready'
-    
-    def __str__(self):
-        return self.value
-
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
@@ -81,7 +65,6 @@ class Device(db.Model):
     model = db.Column(db.String(120), nullable=True)
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
-    device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
 
     def serialize(self):
         return {
@@ -91,8 +74,25 @@ class Device(db.Model):
             'model': self.model,
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
             'isVerified': self.isVerified,
-            'device_status': str(self.device_status.value)
         }
+
+class _DATA_RETRIEVED(PyEnum):
+    SENT = 'Sent for Processing'
+    RECEIVED = 'Received for Processing'
+    RETRIEVED = 'Data Retrieved'
+
+    def __str__(self):
+        return self.value
+
+
+class Device_Status(PyEnum):
+    DEV_REGISTERED = 'Device Registered'
+    DEV_RECEIVED = 'Device Received'
+    DATA_RETRIEVED = _DATA_RETRIEVED
+    URL_READY = 'Url Ready'
+
+    def __str__(self):
+        return self.value
 
 
 class UserDevice(db.Model):
@@ -110,6 +110,7 @@ class UserDevice(db.Model):
     dateOfCreation = db.Column(db.Date)
     # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
+    device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
 
     # Define foreign key relationships
     user = relationship('User', backref='user_device', foreign_keys=[userID])
@@ -129,7 +130,8 @@ class UserDevice(db.Model):
             'qrCodeUrl': self.qrCodeUrl,
             'dateOfCreation': str(self.dateOfCreation) if self.dateOfCreation else None,
             # 'dataRetrievalID': self.dataRetrievalID,
-            'estimatedValue': self.estimatedValue
+            'estimatedValue': self.estimatedValue,
+            'device_status': str(self.device_status.value)
         }
 
 
