@@ -1,5 +1,4 @@
-from flask import Flask, request, jsonify , send_file
-
+from flask import Flask, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
@@ -11,13 +10,22 @@ import os
 from dotenv import load_dotenv
 import stripe
 from datetime import datetime
-from flask_cors import CORS , cross_origin
+from flask_cors import CORS, cross_origin
 from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle , Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
 from werkzeug.utils import secure_filename
 
+from flask_mail import Mail
+from flask_mail import Message
+
+# pip install python-jose to work with JWT tokens
+from jose import JWTError, jwt
+from functools import wraps
+from os import environ
+
+SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -25,17 +33,28 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_
 db = SQLAlchemy(app)
 CORS(app)
 
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'your_email@gmail.com'  # Your Gmail address
+app.config['MAIL_PASSWORD'] = 'your_password'  # Your Gmail password or app-specific password
+app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
+
+mail = Mail(app)
+
 load_dotenv()
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
 
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = '../client/public/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 STRIPE_PUBLIC_KEY = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN"
 
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
-CORS(app,origins=["http://localhost:3000"])
+CORS(app, origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -47,7 +66,7 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     isStaff = db.Column(db.Boolean, default=False)
     isAdmin = db.Column(db.Boolean, default=False)
-    
+
     def serialize(self):
         return {
             'id': self.id,
@@ -76,13 +95,14 @@ class Device(db.Model):
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
             'isVerified': self.isVerified
         }
-        
+
+
 class UserDevice(db.Model):
     __tablename__ = 'user_device'
     userDeviceID = db.Column(db.Integer, primary_key=True)
     userID = db.Column(db.Integer, ForeignKey('user.id'), nullable=False)
     deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
-    deviceClassification = db.Column(db.String(120), nullable=False) 
+    deviceClassification = db.Column(db.String(120), nullable=False)
     dateOfPurchase = db.Column(db.Date)
     deviceColor = db.Column(db.String(120), nullable=True)
     deviceStorage = db.Column(db.String(120), nullable=True)
@@ -138,15 +158,16 @@ class PaymentTable(db.Model):
     paymentID = db.Column(db.Integer, primary_key=True)
     dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
     userID = db.Column(db.Integer, nullable=False)
-    date = db.Column(db.Date, nullable=False) 
+    date = db.Column(db.Date, nullable=False)
 
     def serialize(self):
         return {
             'paymentID': self.paymentID,
             'dataRetrievalID': self.dataRetrievalID,
             'userID': self.userID,
-            'date': self.date 
+            'date': self.date
         }
+
 
 class estimateValues(db.Model):
     __tablename__ = 'estimatedvalues'
@@ -155,35 +176,50 @@ class estimateValues(db.Model):
     newDeviceEstimatedPrice = db.Column(db.Integer)
     usedDeviceEstimatedPrice = db.Column(db.Integer)
     damagedDeviceEstimatedPrice = db.Column(db.Integer)
-    
     device = relationship('Device', backref='estimatedvalues', foreign_keys=[deviceID])
+
 
 @classmethod
 def add_estimatedprices_initial_values(cls):
-        # Add initial values here
-        initial_values = [
-            cls(deviceID=1, newDeviceEstimatedPrice=1000, usedDeviceEstimatedPrice=500, damagedDeviceEstimatedPrice=100),
-            cls(deviceID=2, newDeviceEstimatedPrice=1200, usedDeviceEstimatedPrice=600, damagedDeviceEstimatedPrice=150),
-            cls(deviceID=3, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400),  # S23 ultra
-            cls(deviceID=4, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900, damagedDeviceEstimatedPrice=600),  # S24 ultra
-            cls(deviceID=5, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400),   # iPhone 15
-            cls(deviceID=6, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700, damagedDeviceEstimatedPrice=450),   # iPhone 15 Pro
-            cls(deviceID=7, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449, damagedDeviceEstimatedPrice=200),  # iPhone 13
-            cls(deviceID=8, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649, damagedDeviceEstimatedPrice=300), # iPhone 13 Pro Max
-            cls(deviceID=9, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300),  # iPhone 14
-            cls(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699, damagedDeviceEstimatedPrice=400), # iPhone 14 Pro Max
-            cls(deviceID=11, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349, damagedDeviceEstimatedPrice=150), # iPhone 12
-            cls(deviceID=12, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 12 Pro Max
-            cls(deviceID=13, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50),   # OnePlus Nord
-            cls(deviceID=14, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199, damagedDeviceEstimatedPrice=100),  # Google Pixel
-            cls(deviceID=15, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249, damagedDeviceEstimatedPrice=100),  # iPhone 11
-            cls(deviceID=16, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50),   # iPhone XR
-        ]
+    # Add initial values here
+    initial_values = [
+        cls(deviceID=1, newDeviceEstimatedPrice=1000, usedDeviceEstimatedPrice=500, damagedDeviceEstimatedPrice=100),
+        cls(deviceID=2, newDeviceEstimatedPrice=1200, usedDeviceEstimatedPrice=600, damagedDeviceEstimatedPrice=150),
+        cls(deviceID=3, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400),
+        # S23 ultra
+        cls(deviceID=4, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900, damagedDeviceEstimatedPrice=600),
+        # S24 ultra
+        cls(deviceID=5, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400),
+        # iPhone 15
+        cls(deviceID=6, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700, damagedDeviceEstimatedPrice=450),
+        # iPhone 15 Pro
+        cls(deviceID=7, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449, damagedDeviceEstimatedPrice=200),
+        # iPhone 13
+        cls(deviceID=8, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649, damagedDeviceEstimatedPrice=300),
+        # iPhone 13 Pro Max
+        cls(deviceID=9, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300),
+        # iPhone 14
+        cls(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699, damagedDeviceEstimatedPrice=400),
+        # iPhone 14 Pro Max
+        cls(deviceID=11, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349, damagedDeviceEstimatedPrice=150),
+        # iPhone 12
+        cls(deviceID=12, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300),
+        # iPhone 12 Pro Max
+        cls(deviceID=13, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50),
+        # OnePlus Nord
+        cls(deviceID=14, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199, damagedDeviceEstimatedPrice=100),
+        # Google Pixel
+        cls(deviceID=15, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249, damagedDeviceEstimatedPrice=100),
+        # iPhone 11
+        cls(deviceID=16, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50),
+        # iPhone XR
+    ]
 
-        # Add the instances to the session and commit
-        for value in initial_values:
-            db.session.add(value)
-        db.session.commit()
+    # Add the instances to the session and commit
+    for value in initial_values:
+        db.session.add(value)
+    db.session.commit()
+
 
 # Create the tables when Flask starts up
 with app.app_context():
@@ -219,23 +255,37 @@ with app.app_context():
                 isVerified=True
             )
             db.session.add(device)
-            
+
     # Add initial values only if they don't already exist
     estimateprices_initial_values = [
-        estimateValues(deviceID=1, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400), # S23 ultra
-        estimateValues(deviceID=2, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900, damagedDeviceEstimatedPrice=600), # S24 ultra
-        estimateValues(deviceID=3, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400), # iPhone 15
-        estimateValues(deviceID=4, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700, damagedDeviceEstimatedPrice=450), # iPhone 15 Pro
-        estimateValues(deviceID=5, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449, damagedDeviceEstimatedPrice=200), # iPhone 13
-        estimateValues(deviceID=6, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649, damagedDeviceEstimatedPrice=300), # iPhone 13 Pro Max
-        estimateValues(deviceID=7, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 14
-        estimateValues(deviceID=8, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699, damagedDeviceEstimatedPrice=400), # iPhone 14 Pro Max
-        estimateValues(deviceID=9, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349, damagedDeviceEstimatedPrice=150), # iPhone 12
-        estimateValues(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300), # iPhone 12 Pro Max
-        estimateValues(deviceID=11, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50), # OnePlus Nord
-        estimateValues(deviceID=12, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199, damagedDeviceEstimatedPrice=100), # Google Pixel
-        estimateValues(deviceID=13, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249, damagedDeviceEstimatedPrice=100), # iPhone 11
-        estimateValues(deviceID=14, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50), # iPhone XR
+        estimateValues(deviceID=1, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665,
+                       damagedDeviceEstimatedPrice=400),  # S23 ultra
+        estimateValues(deviceID=2, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900,
+                       damagedDeviceEstimatedPrice=600),  # S24 ultra
+        estimateValues(deviceID=3, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665,
+                       damagedDeviceEstimatedPrice=400),  # iPhone 15
+        estimateValues(deviceID=4, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700,
+                       damagedDeviceEstimatedPrice=450),  # iPhone 15 Pro
+        estimateValues(deviceID=5, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449,
+                       damagedDeviceEstimatedPrice=200),  # iPhone 13
+        estimateValues(deviceID=6, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649,
+                       damagedDeviceEstimatedPrice=300),  # iPhone 13 Pro Max
+        estimateValues(deviceID=7, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549,
+                       damagedDeviceEstimatedPrice=300),  # iPhone 14
+        estimateValues(deviceID=8, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699,
+                       damagedDeviceEstimatedPrice=400),  # iPhone 14 Pro Max
+        estimateValues(deviceID=9, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349,
+                       damagedDeviceEstimatedPrice=150),  # iPhone 12
+        estimateValues(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549,
+                       damagedDeviceEstimatedPrice=300),  # iPhone 12 Pro Max
+        estimateValues(deviceID=11, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149,
+                       damagedDeviceEstimatedPrice=50),  # OnePlus Nord
+        estimateValues(deviceID=12, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199,
+                       damagedDeviceEstimatedPrice=100),  # Google Pixel
+        estimateValues(deviceID=13, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249,
+                       damagedDeviceEstimatedPrice=100),  # iPhone 11
+        estimateValues(deviceID=14, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149,
+                       damagedDeviceEstimatedPrice=50),  # iPhone XR
     ]
 
     # Add the instances to the session and commit only if they don't already exist
@@ -246,7 +296,33 @@ with app.app_context():
     # Commit changes
     db.session.commit()
 
-        
+
+@app.route('/api/getEstimatedValue', methods=['GET'])
+@cross_origin()
+def getEstimatedValue():
+    """
+    Get the estimated value of a device based on the device model.
+    """
+    device_model = request.args.get('model')
+    condition = request.args.get('condition')
+    device = Device.query.filter_by(model=device_model).first()
+    if not device:
+        return jsonify({'message': 'Device not found'}), 404
+
+    estimated_value = estimateValues.query.filter_by(deviceID=device.deviceID).first()
+    if not estimated_value:
+        return jsonify({'message': 'Estimated value not found'}), 404
+
+    if condition == 'new':
+        return jsonify({'estimatedValue': estimated_value.newDeviceEstimatedPrice})
+    elif condition == 'used':
+        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
+    elif condition == 'damaged':
+        return jsonify({'estimatedValue': estimated_value.damagedDeviceEstimatedPrice})
+    else:
+        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
+
+
 @app.route("/")
 @cross_origin()
 def check_sql_connection():
@@ -255,7 +331,72 @@ def check_sql_connection():
         return 'Connection to MySQL is successful!'
     except Exception as e:
         return f'Error: {str(e)}'
-    
+
+
+# Function to generate JWT token for a user
+def generate_token(user):
+    payload = {
+        'user_id': user.id,  # Use existing user.id
+        'exp': datetime.utcnow() + timedelta(minutes=60)  # Token expires in 60 minutes
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+
+# Function to Verify JWT token
+def verify_token(token):
+    try:
+        token = token.split()[1]  # Assuming 'Bearer token' format
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['user_id']
+    except jwt.exceptions.DecodeError:
+        return None  # Token is malformed
+    except jwt.exceptions.ExpiredSignatureError:
+        return None  # Token has expired
+
+
+def verify_jwt(inner_func):
+    @wraps(inner_func)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization', None)
+        if not token:
+            return jsonify({'error': 'Missing authorization token'}), 401
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'error': 'Invalid or expired token'}), 401
+        # Add user_id to request object for further use
+        request.user_id = user_id
+        return inner_func(*args, **kwargs)
+
+    return decorated_function
+
+
+@app.route('/api/protected_endpoint')
+@verify_jwt
+def protected_endpoint():
+    """
+    Protected endpoint accessible only with a valid JWT token.
+
+    Returns:
+        A JSON response with user information or an error message.
+    """
+
+    # Access user ID from request object (added by verify_jwt decorator)
+    user_id = request.user_id
+
+    # Retrieve user information from database based on user_id
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    # Example usage: Return basic user information (modify as needed)
+    user_data = {
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+    }
+    return jsonify(user_data)
+
+
 @app.route('/api/login', methods=['POST'])
 @cross_origin()
 def login():
@@ -270,6 +411,7 @@ def login():
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and user.password == password:
+        token = generate_token(user)
         return jsonify(user.serialize()), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
@@ -307,6 +449,9 @@ def register():
         phoneNumber=phoneNumber,
     )
 
+    # Generate JWT token for the newly created user
+    token = generate_token(newUser)
+
     # source:
     # https://stackoverflow.com/a/16336401/11449502
     try:
@@ -320,7 +465,7 @@ def register():
     return jsonify({'message': 'Login Successful'}), 200
 
 
-@app.route('/api/getAllUsers', methods=['GET']) 
+@app.route('/api/getAllUsers', methods=['GET'])
 @cross_origin()
 def getAllUsers():
     """
@@ -383,6 +528,7 @@ def updateUserToAdmin():
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
 
+
 # Source: https://github.com/Vuka951/tutorial-code/tree/master/react-flask-stripe/payment-and-hooks
 @app.route('/api/create-payment-intent', methods=['POST'])
 def pay():
@@ -390,7 +536,7 @@ def pay():
 
     if not email:
         print("email is blank")
-        return {'message': 'You need to send an Email!', 'error':True}, 400
+        return {'message': 'You need to send an Email!', 'error': True}, 400
 
     print(f"email is: {email}")
 
@@ -401,6 +547,7 @@ def pay():
     )
 
     return {"client_secret": intent['client_secret']}, 200
+
 
 @app.route('/api/deleteUser', methods=['POST'])
 @cross_origin()
@@ -505,17 +652,17 @@ def createDevice():
     qrCodeUrl = request.form.get('qrCodeUrl')
     dateOfRelease = request.form.get('dateofRelease')
     dateOfPurchase = request.form.get('dateofPurchase')
-    
+
     imageFile = request.files.get('image')
     filepath = None
-    if(imageFile):
+    if (imageFile):
         filename = secure_filename(imageFile.filename)
         upload_folder = app.config['UPLOAD_FOLDER']
         if not os.path.exists(upload_folder):
             os.makedirs(upload_folder)
         filepath = os.path.join(upload_folder, filename)
         imageFile.save(filepath)
-    
+
     # Convert dateOfRelease to datetime object or set to None if not provided
     if dateOfRelease:
         try:
@@ -524,7 +671,7 @@ def createDevice():
             return jsonify({'error': 'Invalid date format for dateOfRelease. Use format YYYY-MM-DD'}), 400
     else:
         dateOfRelease = None
-        
+
     # Convert dateOfPurchase to datetime object or set to None if not provided
     if dateOfPurchase:
         try:
@@ -574,15 +721,15 @@ def createDevice():
                 brand=brand,
                 model=model,
                 dateOfRelease=dateOfRelease,
-                isVerified=False            
+                isVerified=False
             )
             db.session.add(newDeviceAdded)
             db.session.commit()
-            
+
             # Read the device ID from the database for the newly inserted device
             deviceID = newDeviceAdded.deviceID
-            print('deviceID',deviceID)
-            
+            print('deviceID', deviceID)
+
             # Create an entry in the userDevice table
             newUserDeviceAdded = UserDevice(
                 userID=userID,
@@ -606,7 +753,6 @@ def createDevice():
             db.session.rollback()
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
-
 
 
 @app.route('/api/customer_device', methods=['POST'])
@@ -656,7 +802,7 @@ def getListOfDevices():
     # combine the device and UserDevice tables to get the list of devices
     print('inside get list of devices')
     userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
-    
+
     device_list = []
     for userDevice in userDevice:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
@@ -715,7 +861,7 @@ def update_device_visibility():
 
     # Check if the staff user is authenticated
     staff_user = User.query.filter_by(email='staff@example.com',
-                                       isStaff=True).first()  # Adjust the email as per your staff user
+                                      isStaff=True).first()  # Adjust the email as per your staff user
 
     if not staff_user:
         return jsonify({'message': 'Unauthorized access'}), 403
@@ -735,6 +881,7 @@ def update_device_visibility():
     else:
         return jsonify({'message': 'User not found'}), 404
 
+
 @app.route('/api/getDeviceTypeAndEstimation', methods=['POST'])
 @cross_origin()
 def get_device_type():
@@ -747,22 +894,23 @@ def get_device_type():
     color = data.get('color')
     storage = data.get('storage')
     condition = data.get('condition')
-    
+
     current_year = datetime.now().year
     release_year = datetime.strptime(releaseDate, "%Y-%m-%d").year
     # purchase_year = datetime.strptime(dateOfPurchase, "%Y-%m-%d").year
     device_age = current_year - release_year
     # device_age_purchase = current_year - purchase_year
-    
+
     isDeviceRare = device_age > 20
-    isDeviceRecycle = device_age < 10 and condition == "Damaged" 
-    
+    isDeviceRecycle = device_age < 10 and condition == "Damaged"
+
     if isDeviceRare:
-            return jsonify({'type': 'Rare', 'data': ""}), 200
+        return jsonify({'type': 'Rare', 'data': ""}), 200
     elif isDeviceRecycle:
         return jsonify({'type': 'Recycle', 'data': ""}), 200
     else:
         return jsonify({'type': 'Current', 'data': ""}), 200
+
 
 @app.route('/api/updateDevice', methods=['POST'])
 @cross_origin()
@@ -780,7 +928,8 @@ def update_device():
         if not device:
             return jsonify({'message': 'Device not found'}), 404
 
-        for field in ['brand', 'model', 'storage', 'color', 'condition', 'classification', 'dateOfRelease', 'isVerified', 'dataRecovered']:
+        for field in ['brand', 'model', 'storage', 'color', 'condition', 'classification', 'dateOfRelease',
+                      'isVerified', 'dataRecovered']:
             if field in data:
                 setattr(device, field, data[field])
 
@@ -805,7 +954,7 @@ def generate_report():
 
     # Convert start_date and end_date strings to datetime 
     # Validate date format
-    
+
     try:
         start_date = datetime.strptime(start_date, '%Y-%m-%d')
         end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
@@ -814,14 +963,14 @@ def generate_report():
 
     # Fetch payment transactions and devices input by users within the specified date range
     try:
-        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)) 
-        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date))  
+        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date))
+        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date))
 
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
     # Generate PDF report
-    try: 
+    try:
         pdf_filename = 'report.pdf'
         doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
         elements = []
@@ -829,7 +978,8 @@ def generate_report():
         # Add payments data to PDF
         payments_data = [['Payment ID', 'Data Retrieval ID', 'User ID', 'Date']]
         for payment in payments:
-            payments_data.append([payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
+            payments_data.append(
+                [payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
         payments_table = Table(payments_data)
         payments_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                                             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -844,7 +994,8 @@ def generate_report():
         # Add user devices data to PDF
         devices_data = [['User Device ID', 'User ID', 'Device ID', 'Date of Creation']]
         for device in user_devices:
-            devices_data.append([device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
+            devices_data.append(
+                [device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
         devices_table = Table(devices_data)
         devices_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -862,3 +1013,67 @@ def generate_report():
         return send_file(pdf_filename, as_attachment=True)
     except Exception as e:
         return jsonify({'error': 'Failed to generate PDF report.', 'details': str(e)}), 500
+
+
+@app.route('/api/send-payment-confirmation-mail', methods=['POST'])
+def send_email(email):
+    # Set up the email message
+    sender_email = "your_email@example.com"
+    receiver_email = email
+
+    # Create the email body
+    email_body = """
+    Dear User,
+
+    Thank you for your payment. 
+    Best regards,
+    eWaste
+    """
+
+    # Send the email using Flask-Mail
+    try:
+        msg = Message('Payment Confirmation', sender=sender_email, recipients=[receiver_email])
+        msg.body = email_body
+        mail.send(msg)
+        print("Email sent successfully!")
+    except Exception as e:
+        print("Failed to send email:", str(e))
+
+
+@app.route('/api/send-data-retrieval-link', methods=['POST'])
+def send_email_link(email):
+    email = request.json.get('email', None)
+    if not email:
+        print("email is blank")
+        return {'message': 'You need to send an Email!', 'error': True}, 400
+
+    # Generate link for data retrieval
+    data_retrieval_link = "https://example.com/data-retrieval"
+
+    # Set up the email message
+    sender_email = "your_email@example.com"
+    receiver_email = email
+
+    # Create the email body
+    email_body = f"""
+    Dear User,
+
+    Great news! The data you requested is now ready for download. 
+    You can access it using the following link:  {data_retrieval_link}
+    
+    If you have any trouble accessing the data, please don't hesitate to contact eWaste for assistance.
+
+    Best regards,
+    eWaste
+    """
+
+    # Send the email using Flask-Mail
+    try:
+        msg = Message('Your Data Retrieval Link', sender=sender_email, recipients=[receiver_email])
+        msg.body = email_body
+        mail.send(msg)
+        print("Email sent successfully!")
+        return {'message': 'Email sent successfully!', 'data_retrieval_link': data_retrieval_link}, 200
+    except Exception as e:
+        print("Failed to send email:", str(e))
+        return {'message': 'Failed to send email.', 'error': True}, 500
