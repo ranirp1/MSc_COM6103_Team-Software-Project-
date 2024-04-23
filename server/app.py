@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify , send_file
+from flask import Flask, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
@@ -296,6 +296,7 @@ with app.app_context():
     # Commit changes
     db.session.commit()
 
+
 @app.route('/api/getEstimatedValue', methods=['GET'])
 @cross_origin()
 def getEstimatedValue():
@@ -320,7 +321,8 @@ def getEstimatedValue():
         return jsonify({'estimatedValue': estimated_value.damagedDeviceEstimatedPrice})
     else:
         return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
-        
+
+
 @app.route("/")
 @cross_origin()
 def check_sql_connection():
@@ -350,27 +352,8 @@ def verify_token(token):
         return None  # Token is malformed
     except jwt.exceptions.ExpiredSignatureError:
         return None  # Token has expired
-    
-# Function to generate JWT token for a user
-def generate_token(user):
-    payload = {
-        'user_id': user.id,  # Use existing user.id
-        'exp': datetime.utcnow() + timedelta(minutes=60)  # Token expires in 60 minutes
-    }
-    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
 
 
-# Function to Verify JWT token
-def verify_token(token):
-    try:
-        token = token.split()[1]  # Assuming 'Bearer token' format
-        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return payload['user_id']
-    except jwt.exceptions.DecodeError:
-        return None  # Token is malformed
-    except jwt.exceptions.ExpiredSignatureError:
-        return None  # Token has expired
-    
 def verify_jwt(inner_func):
     @wraps(inner_func)
     def decorated_function(*args, **kwargs):
@@ -412,8 +395,8 @@ def protected_endpoint():
         'last_name': user.last_name,
     }
     return jsonify(user_data)
-    
-    
+
+
 @app.route('/api/login', methods=['POST'])
 @cross_origin()
 def login():
@@ -482,9 +465,7 @@ def register():
     return jsonify({'message': 'Login Successful'}), 200
 
 
-
-
-@app.route('/api/getAllUsers', methods=['GET']) 
+@app.route('/api/getAllUsers', methods=['GET'])
 @cross_origin()
 def getAllUsers():
     """
@@ -1034,29 +1015,7 @@ def generate_report():
         return jsonify({'error': 'Failed to generate PDF report.', 'details': str(e)}), 500
 
 
-@app.route('/api/create-payment-intent', methods=['POST'])
-def pay():
-    email = request.json.get('email', None)
-
-    if not email:
-        print("email is blank")
-        return {'message': 'You need to send an Email!', 'error': True}, 400
-
-    print(f"email is: {email}")
-
-    intent = stripe.PaymentIntent.create(
-        amount=500,
-        currency='gbp',
-        receipt_email=email
-    )
-
-    # Send an email with the data storage link
-    send_email(email)
-
-    return {'message': 'Payment successful. Email with data storage link sent.'}, 200
-
-
-@app.route('/api/send-email', methods=['POST'])
+@app.route('/api/send-payment-confirmation-mail', methods=['POST'])
 def send_email(email):
     # Set up the email message
     sender_email = "your_email@example.com"
@@ -1073,7 +1032,7 @@ def send_email(email):
 
     # Send the email using Flask-Mail
     try:
-        msg = Message('Your Data Storage Link', sender=sender_email, recipients=[receiver_email])
+        msg = Message('Payment Confirmation', sender=sender_email, recipients=[receiver_email])
         msg.body = email_body
         mail.send(msg)
         print("Email sent successfully!")
@@ -1081,21 +1040,20 @@ def send_email(email):
         print("Failed to send email:", str(e))
 
 
-
-@app.route('/api/send-email-link', methods=['POST'])
+@app.route('/api/send-data-retrieval-link', methods=['POST'])
 def send_email_link(email):
     email = request.json.get('email', None)
     if not email:
         print("email is blank")
         return {'message': 'You need to send an Email!', 'error': True}, 400
-    
+
     # Generate link for data retrieval
     data_retrieval_link = "https://example.com/data-retrieval"
-    
+
     # Set up the email message
     sender_email = "your_email@example.com"
     receiver_email = email
-    
+
     # Create the email body
     email_body = f"""
     Dear User,
@@ -1108,7 +1066,7 @@ def send_email_link(email):
     Best regards,
     eWaste
     """
-    
+
     # Send the email using Flask-Mail
     try:
         msg = Message('Your Data Retrieval Link', sender=sender_email, recipients=[receiver_email])
@@ -1119,5 +1077,3 @@ def send_email_link(email):
     except Exception as e:
         print("Failed to send email:", str(e))
         return {'message': 'Failed to send email.', 'error': True}, 500
-    
-    
