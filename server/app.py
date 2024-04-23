@@ -899,6 +899,7 @@ def pay():
 
     return {'message': 'Payment successful. Email with data storage link sent.'}, 200
 
+@app.route ('/api/send-email', methods=['POST'])
 def send_email(email):
     # Set up the email message
     sender_email = "your_email@example.com"
@@ -908,8 +909,7 @@ def send_email(email):
     email_body = """
     Dear User,
 
-    Thank you for your payment. Your data storage link is: <insert_link_here>
-
+    Thank you for your payment. 
     Best regards,
     eWaste
     """
@@ -922,3 +922,5 @@ def send_email(email):
         print("Email sent successfully!")
     except Exception as e:
         print("Failed to send email:", str(e))
+
+@app.route ('/api/send-email-link', methods=['POST'])
