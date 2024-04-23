@@ -558,22 +558,22 @@ const toggleDeviceVerification = async (deviceId: number) => {
               <table className="table w-full text-black ">
                 <thead>
                   <tr>
-                    <th className="text-black text-lg font-bold min-w-[150px] ">
+                    <th className="text-black text-lg font-bold min-w-[200px] ">
                       Image
                     </th>
-                    <th className="text-black text-lg font-bold min-w-[200px]">
+                    <th className="text-black text-lg font-bold min-w-[250px]">
                       Name
                     </th>
-                    <th className="text-black text-lg font-bold min-w-[200px]">
+                    <th className="text-black text-lg font-bold min-w-[250px]">
                       Model
                     </th>
-                    <th className="text-black text-lg font-bold min-w-[150px]">
+                    <th className="text-black text-lg font-bold min-w-[200px]">
                       Created At
                     </th>
-                    <th className="text-black text-lg font-bold min-w-[200px]">
+                    <th className="text-black text-lg font-bold min-w-[250px]">
                       Classification
                     </th>
-                    <th className="text-black text-lg font-bold min-w-[200px]">
+                    <th className="text-black text-lg font-bold min-w-[250px]">
                       Status
                     </th>
                     </tr>
