@@ -631,17 +631,20 @@ def generate_report():
     Generate a report in PDF format for payment transactions and devices input by users within a specified date range.
     """
     data = request.json
-    start_date = data.get('start_date')
-    end_date = data.get('end_date')
+    start_date_str = data.get('start_date')
+    end_date_str = data.get('end_date')
 
     # Convert start_date and end_date strings to datetime 
     # Validate date format
 
     try:
-        start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
-    except Exception as e:
-        return jsonify({'error': 'Invalid date format. Please use YYYY-MM-DD.'}), 400
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+    except ValueError:
+        return jsonify({'error': 'Invalid date format. Please use YYYY-MM-DD.', 'details': str(e)}), 400
+    
+     # Ensure end_date is inclusive by adding one day
+    end_date += timedelta(days=1)
 
     # Fetch payment transactions and devices input by users within the specified date range
     try:
