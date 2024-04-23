@@ -72,7 +72,7 @@ const CheckNow = () => {
           <div className="text-center flex flex-col justify-center items-center lg:text-left">
             <h1 className="text-5xl font-bold text-white">Check now!</h1>
             <p className="pb-6 text-white">
-              Check if your device needs to be recycled!
+              Are you wondering which category your device belongs to?
             </p>
             <div className="card shrink-0 h-full w-full md:w-[80vh]  shadow-2xl bg-base-100">
               <form className="card-body rounded-lg" onSubmit={handleSubmit}>
@@ -81,7 +81,7 @@ const CheckNow = () => {
                   {/* Device Brand */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text text-black">Brand</span>
+                      <span className="label-text text-black">Brand *</span>
                       <Tippy content="The manufacturer of the device, such as Apple, Samsung, or Sony.">
                         <span
                           style={{
@@ -109,7 +109,7 @@ const CheckNow = () => {
                   {/* Device Model */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text text-black">Model</span>
+                      <span className="label-text text-black">Model *</span>
                       <Tippy content="The specific model or version of the device, like iPhone 12 or Galaxy S21.">
                         <span
                           style={{
@@ -136,7 +136,9 @@ const CheckNow = () => {
                   {/* Release Date */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text text-black">Release Date*</span>
+                      <span className="label-text text-black">
+                        Release Date *
+                      </span>
                       <Tippy content="The official market release date of the device. Newer devices might have a higher resale value.">
                         <span
                           style={{
@@ -162,7 +164,9 @@ const CheckNow = () => {
                   {/* Device Date of Purchase */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text text-black">Date of Purchase</span>
+                      <span className="label-text text-black">
+                        Date of Purchase
+                      </span>
                       <Tippy content="The date when you originally purchased the device. This can affect its current value and recyclability.">
                         <span
                           style={{
@@ -239,7 +243,9 @@ const CheckNow = () => {
                   {/* Device Condition */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text text-black">Device Condition</span>
+                      <span className="label-text text-black">
+                        Device Condition
+                      </span>
                       <Tippy content="The physical state of the device: New, Old, or Damaged. This affects the device's value and recyclability.">
                         <span
                           style={{
@@ -290,7 +296,9 @@ const CheckNow = () => {
                             handleInputChange("condition", e.target.value)
                           }
                         />
-                        <span className="label-text text-black ml-2">Damaged</span>
+                        <span className="label-text text-black ml-2">
+                          Damaged
+                        </span>
                       </label>
                     </div>
                   </div>
