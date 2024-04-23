@@ -1,5 +1,4 @@
-from flask import Flask, request, jsonify, send_file
-
+from flask import Flask, request, jsonify , send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
@@ -47,7 +46,7 @@ mail = Mail(app)
 load_dotenv()
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
 
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = '../client/public/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 STRIPE_PUBLIC_KEY = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN"
@@ -297,7 +296,31 @@ with app.app_context():
     # Commit changes
     db.session.commit()
 
+@app.route('/api/getEstimatedValue', methods=['GET'])
+@cross_origin()
+def getEstimatedValue():
+    """
+    Get the estimated value of a device based on the device model.
+    """
+    device_model = request.args.get('model')
+    condition = request.args.get('condition')
+    device = Device.query.filter_by(model=device_model).first()
+    if not device:
+        return jsonify({'message': 'Device not found'}), 404
 
+    estimated_value = estimateValues.query.filter_by(deviceID=device.deviceID).first()
+    if not estimated_value:
+        return jsonify({'message': 'Estimated value not found'}), 404
+
+    if condition == 'new':
+        return jsonify({'estimatedValue': estimated_value.newDeviceEstimatedPrice})
+    elif condition == 'used':
+        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
+    elif condition == 'damaged':
+        return jsonify({'estimatedValue': estimated_value.damagedDeviceEstimatedPrice})
+    else:
+        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
+        
 @app.route("/")
 @cross_origin()
 def check_sql_connection():
@@ -308,6 +331,26 @@ def check_sql_connection():
         return f'Error: {str(e)}'
 
 
+# Function to generate JWT token for a user
+def generate_token(user):
+    payload = {
+        'user_id': user.id,  # Use existing user.id
+        'exp': datetime.utcnow() + timedelta(minutes=60)  # Token expires in 60 minutes
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+
+# Function to Verify JWT token
+def verify_token(token):
+    try:
+        token = token.split()[1]  # Assuming 'Bearer token' format
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['user_id']
+    except jwt.exceptions.DecodeError:
+        return None  # Token is malformed
+    except jwt.exceptions.ExpiredSignatureError:
+        return None  # Token has expired
+    
 # Function to generate JWT token for a user
 def generate_token(user):
     payload = {
@@ -370,7 +413,7 @@ def protected_endpoint():
     }
     return jsonify(user_data)
     
-
+    
 @app.route('/api/login', methods=['POST'])
 @cross_origin()
 def login():
@@ -439,7 +482,9 @@ def register():
     return jsonify({'message': 'Login Successful'}), 200
 
 
-@app.route('/api/getAllUsers', methods=['GET'])
+
+
+@app.route('/api/getAllUsers', methods=['GET']) 
 @cross_origin()
 def getAllUsers():
     """

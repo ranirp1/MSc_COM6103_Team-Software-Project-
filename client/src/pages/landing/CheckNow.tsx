@@ -28,34 +28,27 @@ const CheckNow = () => {
     event.preventDefault();
     console.log(formData);
 
-    const modal = document.getElementById(
-      "device_type_dialog"
-    ) as HTMLDialogElement;
-    if (modal) {
-      modal.showModal();
-    }
-
-    // await fetch(`${API_URL}/api/getDeviceTypeAndEstimation`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(formData),
-    // })
-    //   .then((response) => response.json())
-    //   .then((data) => {
-    //     console.log(data);
-    //     setDeviceType(data.type);
-    //     const modal = document.getElementById(
-    //       "device_type_dialog"
-    //     ) as HTMLDialogElement;
-    //     if (modal) {
-    //       modal.showModal();
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     console.error(error);
-    //   });
+    await fetch(`${API_URL}/api/getDeviceTypeAndEstimation`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        setDeviceType(data.type);
+        const modal = document.getElementById(
+          "device_type_dialog"
+        ) as HTMLDialogElement;
+        if (modal) {
+          modal.showModal();
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   const handleInputChange = (fieldName: string, value: string) => {

@@ -7,6 +7,18 @@ import sellingAnimation from "../../animation/sell.json";
 import QRCode from "react-qr-code";
 import Lottie from "lottie-react";
 
+export const createCexSearchUrl = (
+  manufacturer: string,
+  model: string,
+  storage: string,
+  deviceColor: string
+) => {
+  const baseUrl = "https://uk.webuy.com/search";
+  return `${baseUrl}?stext=${encodeURIComponent(
+    manufacturer + " " + model + " " + storage + " " + deviceColor
+  )}`;
+};
+
 const DeviceTypeDialog = ({
   deviceType,
   request,
@@ -14,20 +26,6 @@ const DeviceTypeDialog = ({
   deviceType?: DeviceClassification;
   request: CheckRequest;
 }) => {
-  const createCexSearchUrl = (
-    manufacturer: string,
-    model: string,
-    storage: string,
-    color: string
-  ) => {
-    const baseUrl = "https://uk.webuy.com/search";
-    const queryParts = [manufacturer, model, storage, color].filter(
-      (part) => part
-    ); // Filters out null or empty strings
-    const query = queryParts.join(" "); // Joins the parts into a single string with spaces
-    return `${baseUrl}?stext=${encodeURIComponent(query)}`;
-  };
-
   const isDeviceRecyclable = deviceType === DeviceClassification.Recycle;
   const isDeviceRareOrCurrent =
     deviceType === DeviceClassification.Rare ||
@@ -55,9 +53,9 @@ const DeviceTypeDialog = ({
     } else {
       return (
         <div className="bg-yellow-100 rounded my-3 p-5 text-black text-lg w-full">
-          Your device belongs to the {deviceType} type. Please check the link
-          below or scan the QR code to get more information about your device,
-          which will make it easier to sell.
+          Your device belongs to the {deviceType} type. Please check the link or
+          scan the QR code to get more information about your device, which will
+          make it easier to sell.
         </div>
       );
     }
@@ -94,11 +92,23 @@ const DeviceTypeDialog = ({
           </div>
 
           {isDeviceRareOrCurrent && (
-            <div className="flex flex-1  place-content-center">
+            <div className="flex flex-1 flex-col place-content-center items-center">
               <QRCode
                 value={request.brand + "\n" + request.model}
                 className="w-1/2"
               />
+              <a
+                href={createCexSearchUrl(
+                  request.brand,
+                  request.model,
+                  request.storage,
+                  request.color
+                )}
+                className="btn btn-link text-lg"
+                target="_blank"
+              >
+                Estimated Price : £{700}
+              </a>
             </div>
           )}
         </div>

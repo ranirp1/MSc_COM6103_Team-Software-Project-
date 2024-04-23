@@ -11,6 +11,7 @@ import { API_URL } from "../../constants/constant";
 import QRCode from "react-qr-code";
 import emptyListImage from "../../assets/empty_device_list.svg";
 import { GrImage } from "react-icons/gr";
+import { createCexSearchUrl } from "../landing/DeviceTypeDialog";
 
 class Device {
   id: number;
@@ -189,7 +190,7 @@ const UserDashboard = () => {
 
       if (response.ok) {
         console.log("Creation Successful");
-        window.location.href = "/user";
+        // window.location.href = "/user";
       } else {
         console.log("Creation Error");
         // Handle error
@@ -199,16 +200,15 @@ const UserDashboard = () => {
     }
     // Check if data retrieval is selected as "Yes"
     {
-      /* if (dataRetrieval) {
-      setShowPopup(false)
-      openPaymentModel();
-      return;
-    } else {
-      // Handle form submission without showing popup
-      // For now, just log a message
-      console.log("Form submitted without showing popup");
-      navigate("/user");
-    }*/
+      if (dataRetrieval) {
+        openPaymentModel();
+        return;
+      } else {
+        // Handle form submission without showing popup
+        // For now, just log a message
+        console.log("Form submitted without showing popup");
+        navigate("/user");
+      }
     }
   };
 
@@ -268,18 +268,6 @@ const UserDashboard = () => {
   };
 
   const renderDeviceDetails = (device: Device) => {
-    const createCexSearchUrl = (
-      manufacturer: string,
-      model: string,
-      storage: string,
-      deviceColor: string
-    ) => {
-      const baseUrl = "https://uk.webuy.com/search";
-      return `${baseUrl}?stext=${encodeURIComponent(
-        "${manufacturer} ${model} ${storage} ${deviceColor}"
-      )}`;
-    };
-
     const renderCexLink = () => {
       if (
         device.classification === "Rare" ||
@@ -354,7 +342,7 @@ const UserDashboard = () => {
         <figure>
           {device.image ? (
             <img
-              src={device.image}
+              src={device.image.replace("../client/public/", "")}
               alt={device.image}
               className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
             />
