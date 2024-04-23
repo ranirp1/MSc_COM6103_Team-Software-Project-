@@ -163,15 +163,15 @@ const UserDashboard = () => {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append("brand", brand);
-    formData.append("model", model);
-    formData.append("storage", deviceStorage);
-    formData.append("color", deviceColor);
-    formData.append("condition", deviceCondition);
-    formData.append("deviceClassification", deviceClassification);
-    formData.append("dateofPurchase", dateofPurchase);
-    formData.append("dateofRelease", dateofRelease);
-    formData.append("userID", "1"); // userID is hardcoded for now, replace with actual user ID later
+    formData.append('brand', brand);
+    formData.append('model', model);
+    formData.append('deviceStorage', deviceStorage);
+    formData.append('deviceColor', deviceColor);
+    formData.append('deviceCondition', deviceCondition);
+    formData.append('deviceClassification', deviceClassification);
+    formData.append('dateofPurchase', dateofPurchase);
+    formData.append('dateofRelease', dateofRelease);
+    formData.append('userID', '1'); // userID is hardcoded for now, replace with actual user ID later
 
     const imageInput = (
       e.target as HTMLFormElement
@@ -179,9 +179,9 @@ const UserDashboard = () => {
     const imageFile = imageInput ? imageInput.files?.[0] : null;
 
     if (imageFile) {
-      formData.append("image", imageFile);
-    }
-
+      formData.append('image', imageFile);
+  }
+        
     try {
       const response = await fetch(`${API_URL}/api/createDevice`, {
         method: "POST",
@@ -334,8 +334,14 @@ const UserDashboard = () => {
       return "Not applicable";
     };
 
-    const isQRCodeVisible =
-      device.classification === "Rare" || device.classification === "Current";
+    const isQRCodeVisible = device.classification === 'Rare' || device.classification === 'Current';
+    const isVerified = device.verified;
+
+    function handlePaymentModal(): void {
+      setShowPopup(false)
+      openPaymentModel();
+      return;
+    }
 
     return (
       <div className="card w-97 bg-base-100 shadow-xl">
@@ -437,8 +443,20 @@ const UserDashboard = () => {
               )}
             </div>
           </div>
-          {/* diaplaying data retrieval button if selected */}
-          <div className="dropdown dropdown-right mt-4">
+         {isVerified &&(
+          <div className="mt-2">
+            <a
+              //href={""}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              onClick={handlePaymentModal}
+            >
+              Proceed for Data Retrieval
+            </a>
+          </div>
+         )}
+          {/* <div className="dropdown dropdown-right mt-4">
             <div tabIndex={0} role="button" className="btn btn-primary">
               Extend Retrieval
             </div>
@@ -453,7 +471,7 @@ const UserDashboard = () => {
                 <a>6 months</a>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           <div className="mt-4">
             <span className="font-bold">Data Retrieval Status:</span>
