@@ -11,6 +11,7 @@ import { API_URL } from "../../constants/constant";
 import QRCode from "react-qr-code";
 import emptyListImage from "../../assets/empty_device_list.svg";
 import { GrImage } from "react-icons/gr";
+import { createCexSearchUrl } from "../landing/DeviceTypeDialog";
 
 class Device {
   id: number;
@@ -268,18 +269,6 @@ const UserDashboard = () => {
   };
 
   const renderDeviceDetails = (device: Device) => {
-    const createCexSearchUrl = (
-      manufacturer: string,
-      model: string,
-      storage: string,
-      deviceColor: string
-    ) => {
-      const baseUrl = "https://uk.webuy.com/search";
-      return `${baseUrl}?stext=${encodeURIComponent(
-        "${manufacturer} ${model} ${storage} ${deviceColor}"
-      )}`;
-    };
-
     const renderCexLink = () => {
       if (
         device.classification === "Rare" ||
