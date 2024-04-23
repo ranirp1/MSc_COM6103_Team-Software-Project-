@@ -190,7 +190,7 @@ const UserDashboard = () => {
 
       if (response.ok) {
         console.log("Creation Successful");
-        window.location.href = "/user";
+        // window.location.href = "/user";
       } else {
         console.log("Creation Error");
         // Handle error
@@ -200,16 +200,15 @@ const UserDashboard = () => {
     }
     // Check if data retrieval is selected as "Yes"
     {
-      /* if (dataRetrieval) {
-      setShowPopup(false)
-      openPaymentModel();
-      return;
-    } else {
-      // Handle form submission without showing popup
-      // For now, just log a message
-      console.log("Form submitted without showing popup");
-      navigate("/user");
-    }*/
+      if (dataRetrieval) {
+        openPaymentModel();
+        return;
+      } else {
+        // Handle form submission without showing popup
+        // For now, just log a message
+        console.log("Form submitted without showing popup");
+        navigate("/user");
+      }
     }
   };
 

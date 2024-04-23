@@ -246,6 +246,30 @@ with app.app_context():
     # Commit changes
     db.session.commit()
 
+@app.route('/api/getEstimatedValue', methods=['GET'])
+@cross_origin()
+def getEstimatedValue():
+    """
+    Get the estimated value of a device based on the device model.
+    """
+    device_model = request.args.get('model')
+    condition = request.args.get('condition')
+    device = Device.query.filter_by(model=device_model).first()
+    if not device:
+        return jsonify({'message': 'Device not found'}), 404
+
+    estimated_value = estimateValues.query.filter_by(deviceID=device.deviceID).first()
+    if not estimated_value:
+        return jsonify({'message': 'Estimated value not found'}), 404
+
+    if condition == 'new':
+        return jsonify({'estimatedValue': estimated_value.newDeviceEstimatedPrice})
+    elif condition == 'used':
+        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
+    elif condition == 'damaged':
+        return jsonify({'estimatedValue': estimated_value.damagedDeviceEstimatedPrice})
+    else:
+        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
         
 @app.route("/")
 @cross_origin()
