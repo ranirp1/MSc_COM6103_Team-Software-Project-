@@ -2,7 +2,7 @@ import { PaymentStatus } from "../../components/CardPayment";
 import CardPaymentModel from "../../components/CardPaymentModel";
 
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
-import {RiFilter3Line,RiLogoutBoxRLine} from "react-icons/ri";
+import { RiFilter3Line, RiLogoutBoxRLine } from "react-icons/ri";
 import image1 from "../../assets/image1.jpg";
 import React, { useState, ChangeEvent, useEffect } from "react";
 import "../../style.css";
@@ -10,6 +10,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { API_URL } from "../../constants/constant";
 import QRCode from "react-qr-code";
 import emptyListImage from "../../assets/empty_device_list.svg";
+import { GrImage } from "react-icons/gr";
 
 class Device {
   id: number;
@@ -130,7 +131,6 @@ const UserDashboard = () => {
   const [selectedValues, setSelectedValues] = useState([]); // Array to store selected values
   const [showInputs, setShowInputs] = useState(false); // Flag to control input display
 
-  
   useEffect(() => {
     fetchDevices();
   }, []);
@@ -162,38 +162,40 @@ const UserDashboard = () => {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append('brand', brand);
-    formData.append('model', model);
-    formData.append('storage', deviceStorage);
-    formData.append('color', deviceColor);
-    formData.append('condition', deviceCondition);
-    formData.append('deviceClassification', deviceClassification);
-    formData.append('dateofPurchase', dateofPurchase);
-    formData.append('dateofRelease', dateofRelease);
-    formData.append('userID', '1'); // userID is hardcoded for now, replace with actual user ID later
+    formData.append("brand", brand);
+    formData.append("model", model);
+    formData.append("storage", deviceStorage);
+    formData.append("color", deviceColor);
+    formData.append("condition", deviceCondition);
+    formData.append("deviceClassification", deviceClassification);
+    formData.append("dateofPurchase", dateofPurchase);
+    formData.append("dateofRelease", dateofRelease);
+    formData.append("userID", "1"); // userID is hardcoded for now, replace with actual user ID later
 
-    const imageInput = (e.target as HTMLFormElement).querySelector<HTMLInputElement>('#imageInput');
+    const imageInput = (
+      e.target as HTMLFormElement
+    ).querySelector<HTMLInputElement>("#imageInput");
     const imageFile = imageInput ? imageInput.files?.[0] : null;
 
     if (imageFile) {
-      formData.append('image', imageFile);
-  }
-        
-    try {
-        const response = await fetch(`${API_URL}/api/createDevice`, {
-            method: "POST",
-            body: formData,
-        });
+      formData.append("image", imageFile);
+    }
 
-        if (response.ok) {
-            console.log("Creation Successful");
-            window.location.href = "/user";
-        } else {
-            console.log("Creation Error");
-            // Handle error
-        }
+    try {
+      const response = await fetch(`${API_URL}/api/createDevice`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        console.log("Creation Successful");
+        window.location.href = "/user";
+      } else {
+        console.log("Creation Error");
+        // Handle error
+      }
     } catch (error) {
-        console.log("Error:", error);
+      console.log("Error:", error);
     }
     // Check if data retrieval is selected as "Yes"
     {
@@ -209,7 +211,6 @@ const UserDashboard = () => {
     }*/
     }
   };
-
 
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -279,7 +280,6 @@ const UserDashboard = () => {
       )}`;
     };
 
-    
     const renderCexLink = () => {
       if (
         device.classification === "Rare" ||
@@ -346,13 +346,25 @@ const UserDashboard = () => {
       return "Not applicable";
     };
 
-    const isQRCodeVisible = device.classification === 'Rare' || device.classification === 'Current';
+    const isQRCodeVisible =
+      device.classification === "Rare" || device.classification === "Current";
 
     return (
       <div className="card w-97 bg-base-100 shadow-xl">
         <figure>
-          <img src={"../../../../server/uploads/image.webp"} alt={device.image} />
+          {device.image ? (
+            <img
+              src={device.image}
+              alt={device.image}
+              className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
+            />
+          ) : (
+            <div className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90">
+              <GrImage size={100} color="White" />
+            </div>
+          )}
         </figure>
+        {/* Rest of the code */}
         <div className="card-body">
           <div className="flex flex-row justify-between">
             <h2 className="card-title">
@@ -382,7 +394,8 @@ const UserDashboard = () => {
               <span className="text-black">Condition:</span> {device.condition}
             </div>
             <div className="p-1">
-              <span className="text-black">Classification:</span> {device.classification}
+              <span className="text-black">Classification:</span>{" "}
+              {device.classification}
             </div>
             <div className="p-1">
               <span className="text-black">Created At:</span> {device.createdAt}
@@ -413,13 +426,27 @@ const UserDashboard = () => {
                 maxWidth: 64,
                 width: "100%",
               }}
-            >{isQRCodeVisible && (
-              <QRCode
-                size={256}
-                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                value={device.brand + "\n" + device.model + "\n" + device.color + "\n" + device.storage + "\n" + device.classification +"\n" + device.condition}
-                viewBox={`0 0 256 256`}
-              />)}
+            >
+              {isQRCodeVisible && (
+                <QRCode
+                  size={256}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  value={
+                    device.brand +
+                    "\n" +
+                    device.model +
+                    "\n" +
+                    device.color +
+                    "\n" +
+                    device.storage +
+                    "\n" +
+                    device.classification +
+                    "\n" +
+                    device.condition
+                  }
+                  viewBox={`0 0 256 256`}
+                />
+              )}
             </div>
           </div>
           {/* diaplaying data retrieval button if selected */}
@@ -616,7 +643,9 @@ const UserDashboard = () => {
                           id="classification"
                           name="classification"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
-                          onChange={(e) => { setDeviceClassification(e.target.value) }}
+                          onChange={(e) => {
+                            setDeviceClassification(e.target.value);
+                          }}
                         >
                           <option>Current</option>
                           <option>Rare</option>
@@ -684,7 +713,9 @@ const UserDashboard = () => {
                       <div className="mt-2">
                         <label className="cursor-pointer flex items-center">
                           <input
-                            onChange={(e) => { setDeviceCondition(e.target.value) }}
+                            onChange={(e) => {
+                              setDeviceCondition(e.target.value);
+                            }}
                             type="checkbox"
                             value="New"
                             id="new-condition"
@@ -695,7 +726,9 @@ const UserDashboard = () => {
                         </label>
                         <label className="cursor-pointer flex items-center">
                           <input
-                            onChange={(e) => { setDeviceCondition(e.target.value) }}
+                            onChange={(e) => {
+                              setDeviceCondition(e.target.value);
+                            }}
                             type="checkbox"
                             value="Old"
                             id="old-condition"
@@ -706,7 +739,9 @@ const UserDashboard = () => {
                         </label>
                         <label className="cursor-pointer flex items-center">
                           <input
-                            onChange={(e) => { setDeviceCondition(e.target.value) }}
+                            onChange={(e) => {
+                              setDeviceCondition(e.target.value);
+                            }}
                             type="checkbox"
                             value="Damaged"
                             id="damaged-condition"
