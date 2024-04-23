@@ -6,7 +6,6 @@ import RegistrationPage from "./pages/registration/RegistrationPage";
 import LoginPage from "./pages/login/LoginPage";
 import AdminPage from "./pages/admin/AdminPage";
 import DeviceListPage from "./pages/User/DeviceListPage";
-import DeviceCreationForm from "./pages/User/DeviceCreationForm";
 import StaffPage from "./pages/staff/StaffPage";
 
 
