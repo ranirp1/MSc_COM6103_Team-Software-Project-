@@ -347,6 +347,13 @@ const UserDashboard = () => {
     };
 
     const isQRCodeVisible = device.classification === 'Rare' || device.classification === 'Current';
+    const isVerified = device.verified;
+
+    function handlePaymentModal(): void {
+      setShowPopup(false)
+      openPaymentModel();
+      return;
+    }
 
     return (
       <div className="card w-97 bg-base-100 shadow-xl">
@@ -422,8 +429,20 @@ const UserDashboard = () => {
               />)}
             </div>
           </div>
-          {/* diaplaying data retrieval button if selected */}
-          <div className="dropdown dropdown-right mt-4">
+         {isVerified &&(
+          <div className="mt-2">
+            <a
+              //href={""}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              onClick={handlePaymentModal}
+            >
+              Proceed for Data Retrieval
+            </a>
+          </div>
+         )}
+          {/* <div className="dropdown dropdown-right mt-4">
             <div tabIndex={0} role="button" className="btn btn-primary">
               Extend Retrieval
             </div>
@@ -438,7 +457,7 @@ const UserDashboard = () => {
                 <a>6 months</a>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           <div className="mt-4">
             <span className="font-bold">Data Retrieval Status:</span>
