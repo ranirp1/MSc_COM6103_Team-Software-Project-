@@ -18,12 +18,25 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle , Spacer
 from werkzeug.utils import secure_filename
 
+from flask_mail import Mail
+from flask_mail import Message
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'your_email@gmail.com'  # Your Gmail address
+app.config['MAIL_PASSWORD'] = 'your_password'         # Your Gmail password or app-specific password
+app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
+
+mail = Mail(app)
 
 load_dotenv()
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
@@ -608,7 +621,6 @@ def createDevice():
             return jsonify({'message': 'Device creation error'}), 500
 
 
-
 @app.route('/api/customer_device', methods=['POST'])
 @cross_origin()
 def create_customer_device():
@@ -764,6 +776,7 @@ def get_device_type():
     else:
         return jsonify({'type': 'Current', 'data': ""}), 200
 
+
 @app.route('/api/updateDevice', methods=['POST'])
 @cross_origin()
 def update_device():
@@ -862,3 +875,50 @@ def generate_report():
         return send_file(pdf_filename, as_attachment=True)
     except Exception as e:
         return jsonify({'error': 'Failed to generate PDF report.', 'details': str(e)}), 500
+
+
+
+@app.route('/api/create-payment-intent', methods=['POST'])
+def pay():
+    email = request.json.get('email', None)
+
+    if not email:
+        print("email is blank")
+        return {'message': 'You need to send an Email!', 'error': True}, 400
+
+    print(f"email is: {email}")
+
+    intent = stripe.PaymentIntent.create(
+        amount=500,
+        currency='gbp',
+        receipt_email=email
+    )
+
+    # Send an email with the data storage link
+    send_email(email)
+
+    return {'message': 'Payment successful. Email with data storage link sent.'}, 200
+
+def send_email(email):
+    # Set up the email message
+    sender_email = "your_email@example.com"
+    receiver_email = email
+
+    # Create the email body
+    email_body = """
+    Dear User,
+
+    Thank you for your payment. Your data storage link is: <insert_link_here>
+
+    Best regards,
+    eWaste
+    """
+
+    # Send the email using Flask-Mail
+    try:
+        msg = Message('Your Data Storage Link', sender=sender_email, recipients=[receiver_email])
+        msg.body = email_body
+        mail.send(msg)
+        print("Email sent successfully!")
+    except Exception as e:
+        print("Failed to send email:", str(e))
