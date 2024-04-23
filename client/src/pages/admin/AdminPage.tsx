@@ -35,7 +35,7 @@ const AdminDashboard = () => {
       case "employees":
         return "Employees";
       case "endUsers":
-        return "End Users";
+        return "Customers";
       case "admins":
         return "Admins";
       default:
@@ -262,7 +262,7 @@ const AdminDashboard = () => {
             }`}
             onClick={() => showList("endUsers")}
           >
-            <RiUserSettingsFill className="text-lg mr-2" /> End Users
+            <RiUserSettingsFill className="text-lg mr-2" /> Customers
           </a>
           <a
             role="tab"
