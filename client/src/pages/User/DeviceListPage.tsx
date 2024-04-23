@@ -351,7 +351,7 @@ const UserDashboard = () => {
     return (
       <div className="card w-97 bg-base-100 shadow-xl">
         <figure>
-          <img src={image1} alt="{${device.brand} ${device.model}}" />
+          <img src={"../../../../server/uploads/image.webp"} alt={device.image} />
         </figure>
         <div className="card-body">
           <div className="flex flex-row justify-between">

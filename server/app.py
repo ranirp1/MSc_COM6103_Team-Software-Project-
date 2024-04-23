@@ -666,7 +666,7 @@ def getListOfDevices():
             'model': device.model,
             'createdAt': userDevice.dateOfCreation.strftime("%Y-%m-%d"),
             'verified': device.isVerified,
-            'image': '',
+            'image': userDevice.imageUrl,
             'storage': userDevice.deviceStorage,
             'color': userDevice.deviceColor,
             'dataRecovered': None,
