@@ -28,6 +28,7 @@ class Device {
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
   cexLink?: string;
+  estimatedValue?:String
 
   constructor(
     id: number,
@@ -43,7 +44,8 @@ class Device {
     classification: string,
     dataRetrievalRequested: boolean | null,
     dataRetrievalTimeLeft: string,
-    cexLink?: string
+    cexLink?: string,
+    estimatedValue?:String
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -59,6 +61,7 @@ class Device {
     this.dataRetrievalRequested = dataRetrievalRequested;
     this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
     this.cexLink = cexLink;
+    this.estimatedValue = estimatedValue
   }
 
   static fromJson(json: any): Device {
@@ -76,7 +79,8 @@ class Device {
       json.classification,
       json.dataRetrievalRequested,
       json.dataRetrievalTimeLeft,
-      json.cexLink
+      json.cexLink,
+      json.estimatedValue
     );
   }
 }
@@ -121,6 +125,7 @@ const UserDashboard = () => {
   const [dateofRelease, setDateofRelease] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isOnlyVerified, setIsOnlyVerified] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
 
@@ -181,6 +186,7 @@ const UserDashboard = () => {
     if (imageFile) {
       formData.append('image', imageFile);
   }
+  console.log(formData);
         
     try {
       const response = await fetch(`${API_URL}/api/createDevice`, {
@@ -190,17 +196,19 @@ const UserDashboard = () => {
 
       if (response.ok) {
         console.log("Creation Successful");
-        // window.location.href = "/user";
+         window.location.href = "/user";
       } else {
         console.log("Creation Error");
         // Handle error
       }
-    } catch (error) {
+    } 
+    catch (error) {
       console.log("Error:", error);
     }
     // Check if data retrieval is selected as "Yes"
     {
       if (dataRetrieval) {
+        setShowPopup(false);
         openPaymentModel();
         return;
       } else {
@@ -211,6 +219,7 @@ const UserDashboard = () => {
       }
     }
   };
+
 
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -233,6 +242,10 @@ const UserDashboard = () => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
+  const handleVerificationChange = (isChecked: boolean) => {
+    setIsOnlyVerified(isChecked);
+  };
+
   const filterDevices = (devices: Device[]) => {
     // Apply search filter
     let filteredDevices = devices.filter(
@@ -244,12 +257,11 @@ const UserDashboard = () => {
     );
 
     // Apply sort filter
-    if (sortOrder === "ascending") {
-      filteredDevices.sort((a, b) => a.brand.localeCompare(b.brand));
-    } else if (sortOrder === "descending") {
-      filteredDevices.sort((a, b) => b.brand.localeCompare(a.brand));
-    }
-
+    if (sortOrder === "verified") {
+      filteredDevices = filteredDevices.filter((device) => device.verified);
+    } else if (sortOrder === "non-verified") {
+      filteredDevices = filteredDevices.filter((device) => !device.verified);
+    }    
     return filteredDevices;
   };
 
@@ -344,7 +356,7 @@ const UserDashboard = () => {
     }
 
     return (
-      <div className="card w-97 bg-base-100 shadow-xl">
+      <div className="card w-94 bg-base-100 shadow-xl">
         <figure>
           {device.image ? (
             <img
@@ -412,6 +424,10 @@ const UserDashboard = () => {
             </div>
           </div>
           {renderCexLink()}
+          <div className="p-1">
+              <span className="text-black">Estimated Price:</span>
+             {device.estimatedValue}
+          </div>
           <div className="mt-4">
             <div
               style={{
@@ -480,7 +496,7 @@ const UserDashboard = () => {
               <li className="step step-primary">Deviced Verified</li>
               <li className="step">Data Requested</li>
               <li className="step">Payment Processed</li>
-              <li className="step">Retrival link Received</li>
+              <li className="step">link Received</li>
             </ul>
           </div>
         </div>
@@ -541,30 +557,30 @@ const UserDashboard = () => {
             </summary>
             <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
               <li>
-                <a onClick={() => handleFilterChange("ascending")}>Ascending</a>
+                <a onClick={() => handleFilterChange("verified")}>Verified</a>
               </li>
               <li>
-                <a onClick={() => handleFilterChange("descending")}>
-                  Descending
+                <a onClick={() => handleFilterChange("non-verified")}>
+                  Non verified
                 </a>
               </li>
             </ul>
           </details>
         </header>
         {/* Main content */}
-        <main className="overflow-x-hidden overflow-y-auto">
+        <main className="overflow-x-hidden overflow-y-auto p-5">
           <div className="mx-auto">
             <h5 className="text-black text-3xl font-medium mb-6"></h5>
             <div className="">
               {filteredDevices.length == 0 ? (
-                <div className="flex flex-col  w-full h-full items-center mt-16">
+                <div className="flex flex-col w-full h-full items-center mt-16">
                   <h3 className="text-3xl font-bold text-center mb-5 ">
                     No Devices Found
                   </h3>
                   <img src={emptyListImage} className="h-80 w-80" />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 gap-4 ">
+                <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-3 ">
                   {filteredDevices.map((device) => (
                     <div>{renderDeviceDetails(device)}</div>
                   ))}
@@ -774,7 +790,7 @@ const UserDashboard = () => {
                       ></input>
                     </div>
 
-                    <div className="sm:col-span-4 flex items-center">
+                    {/* <div className="sm:col-span-4 flex items-center">
                       <span className="font-medium leading-6  mr-4 text-black">
                         Data Retrieval:
                       </span>
@@ -800,7 +816,7 @@ const UserDashboard = () => {
                           <span className="label-text text-black">No</span>
                         </label>
                       </div>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>

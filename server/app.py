@@ -28,7 +28,7 @@ from os import environ
 SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
@@ -297,30 +297,27 @@ with app.app_context():
     db.session.commit()
 
 
-@app.route('/api/getEstimatedValue', methods=['GET'])
-@cross_origin()
-def getEstimatedValue():
+
+def getEstimatedValue(model, condition):
     """
     Get the estimated value of a device based on the device model.
     """
-    device_model = request.args.get('model')
-    condition = request.args.get('condition')
-    device = Device.query.filter_by(model=device_model).first()
+    device = Device.query.filter_by(model=model).first()
     if not device:
         return jsonify({'message': 'Device not found'}), 404
 
     estimated_value = estimateValues.query.filter_by(deviceID=device.deviceID).first()
     if not estimated_value:
-        return jsonify({'message': 'Estimated value not found'}), 404
+        return "NA"
 
     if condition == 'new':
-        return jsonify({'estimatedValue': estimated_value.newDeviceEstimatedPrice})
+        return str(estimated_value.newDeviceEstimatedPrice)
     elif condition == 'used':
-        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
+        return str(estimated_value.usedDeviceEstimatedPrice)
     elif condition == 'damaged':
-        return jsonify({'estimatedValue': estimated_value.damagedDeviceEstimatedPrice})
+        return  str(estimated_value.damagedDeviceEstimatedPrice)
     else:
-        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
+        return str(estimated_value.usedDeviceEstimatedPrice)
 
 
 @app.route("/")
@@ -511,7 +508,7 @@ def updateUserToStaff():
 @app.route('/api/updateUserToAdmin', methods=['POST'])
 @cross_origin()
 def updateUserToAdmin():
-    """
+    """ 
     Update a user's role to admin.
     Args:
         email (str): The email of the user to update.
@@ -652,6 +649,7 @@ def createDevice():
     qrCodeUrl = request.form.get('qrCodeUrl')
     dateOfRelease = request.form.get('dateofRelease')
     dateOfPurchase = request.form.get('dateofPurchase')
+    estimatedValue = getEstimatedValue(model, deviceCondition)
 
     imageFile = request.files.get('image')
     filepath = None
@@ -702,7 +700,7 @@ def createDevice():
             qrCodeUrl=qrCodeUrl,
             dateOfCreation=current_date.strftime("%Y-%m-%d"),
             dataRetrievalID=0,
-            estimatedValue=""
+            estimatedValue=estimatedValue
         )
         try:
             db.session.add(user_device)
@@ -743,7 +741,7 @@ def createDevice():
                 qrCodeUrl=qrCodeUrl,
                 dateOfCreation=current_date.strftime("%Y-%m-%d"),
                 dataRetrievalID=0,
-                estimatedValue=""
+                estimatedValue=estimatedValue
             )
             db.session.add(newUserDeviceAdded)
             db.session.commit()
@@ -801,11 +799,16 @@ def create_customer_device():
 def getListOfDevices():
     # combine the device and UserDevice tables to get the list of devices
     print('inside get list of devices')
-    userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
+    userDevices = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
+    
+
 
     device_list = []
-    for userDevice in userDevice:
+    for userDevice in userDevices:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
+        estimatedValues =  userDevice.estimatedValue
+        if not estimatedValues:
+            estimatedValues = getEstimatedValue(device.model, userDevice.deviceCondition)
         device_data = {
             'id': userDevice.deviceID,
             'brand': device.brand,
@@ -819,7 +822,8 @@ def getListOfDevices():
             'condition': userDevice.deviceCondition,
             'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
-            'dataRetrievalTimeLeft': ''
+            'dataRetrievalTimeLeft': '',
+            'estimatedValue': userDevice.estimatedValue
         }
 
         device_list.append(device_data)
