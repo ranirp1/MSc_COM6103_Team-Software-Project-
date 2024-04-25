@@ -28,6 +28,7 @@ class Device {
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
   cexLink?: string;
+  device_status?: string;
 
   constructor(
     id: number,
@@ -43,7 +44,8 @@ class Device {
     classification: string,
     dataRetrievalRequested: boolean | null,
     dataRetrievalTimeLeft: string,
-    cexLink?: string
+    cexLink?: string,
+    device_status?: string
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -59,6 +61,7 @@ class Device {
     this.dataRetrievalRequested = dataRetrievalRequested;
     this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
     this.cexLink = cexLink;
+    this.device_status = device_status;
   }
 
   static fromJson(json: any): Device {
@@ -76,10 +79,10 @@ class Device {
       json.classification,
       json.dataRetrievalRequested,
       json.dataRetrievalTimeLeft,
-      json.cexLink
+      json.cexLink,
+      json.device_status
     );
   }
-  device_status: string;
 }
 
 interface DeviceDetails {
