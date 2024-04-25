@@ -233,7 +233,6 @@ const UserDashboard = () => {
   const handleCancel = () => {
     window.location.href = "/user";
   };
-
   const handleToggleExpand = () => {
     setExpanded(!expanded);
   };
@@ -824,14 +823,15 @@ const UserDashboard = () => {
               <div className="flex flex-row  justify-between">
                 <button
                   className="btn border w-1/2 mr-3"
-                  onClick={handleCancel}
+                  type="button"
+                  onClick={() => handleCancel()}
                 >
-                  {" "}
                   Cancel
                 </button>
                 <button
                   className="btn btn-primary w-1/2"
                   onClick={() => setOpen(false)}
+                  type="submit"
                 >
                   Save
                 </button>
