@@ -1,37 +1,84 @@
+import { PaymentStatus } from "../../components/CardPayment";
+import CardPaymentModel from "../../components/CardPaymentModel";
+
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
-import Samsung from "../../assets/Samsung.png";
-import IPhone from "../../assets/IPhone.png";
-import OnePlus from "../../assets/OnePlus.jpg";
-import {
-  RiArrowDropLeftLine,
-  RiArrowDropRightLine,
-  RiFilter3Line,
-  RiLogoutBoxRLine,
-  RiUserSettingsFill,
-  RiUserSharedLine,
-} from "react-icons/ri";
+import { RiFilter3Line, RiLogoutBoxRLine } from "react-icons/ri";
 import image1 from "../../assets/image1.jpg";
-import React, { useState, ChangeEvent, useEffect, useRef } from "react";
+import React, { useState, ChangeEvent, useEffect } from "react";
 import "../../style.css";
 import { Navigate, useNavigate } from "react-router-dom";
 import { API_URL } from "../../constants/constant";
 import QRCode from "react-qr-code";
 import emptyListImage from "../../assets/empty_device_list.svg";
+import { GrImage } from "react-icons/gr";
+import { createCexSearchUrl } from "../landing/DeviceTypeDialog";
 
-interface Device {
+class Device {
   id: number;
   brand: string;
   model: string;
   createdAt: string;
-  isVerified: boolean;
+  verified: boolean;
   image: string;
   storage: string;
   color: string;
-  dataRecovered: boolean | null;
+  dataRecovered?: boolean | null;
   condition: string;
-  deviceClassification: string;
+  classification: string;
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
+  cexLink?: string;
+
+  constructor(
+    id: number,
+    manufacturer: string,
+    model: string,
+    createdAt: string,
+    verified: boolean,
+    image: string,
+    storage: string,
+    color: string,
+    dataRecovered: boolean | null,
+    condition: string,
+    classification: string,
+    dataRetrievalRequested: boolean | null,
+    dataRetrievalTimeLeft: string,
+    cexLink?: string
+  ) {
+    this.id = id;
+    this.brand = manufacturer;
+    this.model = model;
+    this.createdAt = createdAt;
+    this.verified = verified;
+    this.image = image;
+    this.storage = storage;
+    this.color = color;
+    this.dataRecovered = dataRecovered;
+    this.condition = condition;
+    this.classification = classification;
+    this.dataRetrievalRequested = dataRetrievalRequested;
+    this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
+    this.cexLink = cexLink;
+  }
+
+  static fromJson(json: any): Device {
+    return new Device(
+      json.id,
+      json.manufacturer,
+      json.model,
+      json.createdAt,
+      json.verified,
+      json.image,
+      json.storage,
+      json.color,
+      json.dataRecovered,
+      json.condition,
+      json.classification,
+      json.dataRetrievalRequested,
+      json.dataRetrievalTimeLeft,
+      json.cexLink
+    );
+  }
   device_status: string;
 }
 
@@ -43,15 +90,33 @@ interface DeviceDetails {
 }
 
 const UserDashboard = () => {
+  const [paymentStatus, setPaymentStatus] = useState(
+    PaymentStatus.INTRODUCTION
+  );
+
+  function openPaymentModel(): void {
+    setPaymentStatus(PaymentStatus.INTRODUCTION);
+
+    const modal = document.getElementById(
+      "card_payment_model"
+    ) as HTMLDialogElement | null;
+
+    if (modal) {
+      modal.showModal();
+    }
+  }
+
   const [devices, setDevices] = useState<Device[]>([]);
 
-  const radioPackage = useRef();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const [deviceId, setDeviceId] = useState("");
-  const [deviceClassification, setDeviceClassification] = useState("");
+  const [deviceClassification, setDeviceClassification] = useState("Current");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
+  const [deviceColor, setDeviceColor] = useState("");
+  const [deviceCondition, setDeviceCondition] = useState("");
+  const [deviceStorage, setDeviceStorage] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [dateofRelease, setDateofRelease] = useState("");
@@ -64,6 +129,9 @@ const UserDashboard = () => {
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
   const [open, setOpen] = useState<Boolean>(false);
+
+  const [selectedValues, setSelectedValues] = useState([]); // Array to store selected values
+  const [showInputs, setShowInputs] = useState(false); // Flag to control input display
 
   useEffect(() => {
     fetchDevices();
@@ -94,50 +162,54 @@ const UserDashboard = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // if(e.target.checked && e.target.value === "Yes"){
-    //   setShowPopup(true);
-    //   return;
-    // }
+
+    const formData = new FormData();
+    formData.append('brand', brand);
+    formData.append('model', model);
+    formData.append('deviceStorage', deviceStorage);
+    formData.append('deviceColor', deviceColor);
+    formData.append('deviceCondition', deviceCondition);
+    formData.append('deviceClassification', deviceClassification);
+    formData.append('dateofPurchase', dateofPurchase);
+    formData.append('dateofRelease', dateofRelease);
+    formData.append('userID', '1'); // userID is hardcoded for now, replace with actual user ID later
+
+    const imageInput = (
+      e.target as HTMLFormElement
+    ).querySelector<HTMLInputElement>("#imageInput");
+    const imageFile = imageInput ? imageInput.files?.[0] : null;
+
+    if (imageFile) {
+      formData.append('image', imageFile);
+  }
+        
     try {
       const response = await fetch(`${API_URL}/api/createDevice`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        //TODO userID is hardcoded for now, need to get it from the session
-        body: JSON.stringify({
-          brand,
-          model,
-          deviceClassification,
-          dateofPurchase,
-          imageUrl,
-          dateofRelease,
-          userID: 1,
-        }),
+        body: formData,
       });
 
       if (response.ok) {
-        console.log(response);
         console.log("Creation Successful");
-        window.location.href = "/user";
+        // window.location.href = "/user";
       } else {
         console.log("Creation Error");
-
-        // get the error message from the server and save it to show in toast
+        // Handle error
       }
     } catch (error) {
       console.log("Error:", error);
     }
     // Check if data retrieval is selected as "Yes"
     {
-      /* if (dataRetrieval) {
-      setShowPopup(true); // Show the popup
-    } else {
-      // Handle form submission without showing popup
-      // For now, just log a message
-      console.log("Form submitted without showing popup");
-      navigate("/user");
-    }*/
+      if (dataRetrieval) {
+        openPaymentModel();
+        return;
+      } else {
+        // Handle form submission without showing popup
+        // For now, just log a message
+        console.log("Form submitted without showing popup");
+        navigate("/user");
+      }
     }
   };
 
@@ -147,8 +219,6 @@ const UserDashboard = () => {
     console.log("e.target.checked", e.target.checked);
     if (e.target.checked && e.target.value === "Yes") {
       setDataRetrieval(e.target.checked && e.target.value === "Yes");
-      setShowPopup(true);
-      return;
     }
   };
 
@@ -163,18 +233,6 @@ const UserDashboard = () => {
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
-  const getClassificationBadgeClass = (classification: string) => {
-    switch (classification) {
-      case "Current":
-        return "badge-current"; // Define badge-current in your CSS for the corresponding styling
-      case "Rare":
-        return "badge-rare"; // Define badge-rare in your CSS for the corresponding styling
-      case "Recycle":
-        return "badge-recycle"; // Define badge-recycle in your CSS for the corresponding styling
-      case "Unknown":
-        return "badge-unknown";
-    }
-  };
 
   const filterDevices = (devices: Device[]) => {
     // Apply search filter
@@ -183,7 +241,7 @@ const UserDashboard = () => {
         device.brand.toLowerCase().includes(searchQuery) ||
         device.model.includes(searchQuery) ||
         device.createdAt.toLowerCase().includes(searchQuery) ||
-        device.deviceClassification.includes(searchQuery)
+        device.classification.includes(searchQuery)
     );
 
     // Apply sort filter
@@ -211,22 +269,10 @@ const UserDashboard = () => {
   };
 
   const renderDeviceDetails = (device: Device) => {
-    const createCexSearchUrl = (
-      manufacturer: string,
-      model: string,
-      storage: string,
-      color: string
-    ) => {
-      const baseUrl = "https://uk.webuy.com/search";
-      return `${baseUrl}?stext=${encodeURIComponent(
-        "${manufacturer} ${model} ${storage} ${color}"
-      )}`;
-    };
-
     const renderCexLink = () => {
       if (
-        device.deviceClassification === "Rare" ||
-        device.deviceClassification === "Current"
+        device.classification === "Rare" ||
+        device.classification === "Current"
       ) {
         const cexUrl = createCexSearchUrl(
           device.brand,
@@ -253,14 +299,14 @@ const UserDashboard = () => {
     const calculateDataRetrievalTimeLeft = () => {
       // Return "Not applicable" for "Current" and "Rare" classifications
       if (
-        device.deviceClassification === "Current" ||
-        device.deviceClassification === "Rare"
+        device.classification === "Current" ||
+        device.classification === "Rare"
       ) {
         return "Not applicable";
       }
 
       if (
-        device.deviceClassification === "Recycle" &&
+        device.classification === "Recycle" &&
         device.dataRetrievalRequested
       ) {
         const creationDate = new Date(device.createdAt);
@@ -288,132 +334,159 @@ const UserDashboard = () => {
       }
       return "Not applicable";
     };
+
+    const isQRCodeVisible = device.classification === 'Rare' || device.classification === 'Current';
+    const isVerified = device.verified;
+
+    function handlePaymentModal(): void {
+      setShowPopup(false)
+      openPaymentModel();
+      return;
+    }
+
     return (
-      <div className="bg-white p-5 rounded-lg shadow-md">
-        {/* Manufacturer and model name above the photo */}
-        <h3 className="text-2xl font-bold mb-4">
-          {device.brand} {device.model}
-        </h3>
-        <div className="mt-3">
-          <span
-            className={`px-3 py-1 text-sm font-semibold inline-block ${
-              device.isVerified
-                ? "bg-green-200 text-green-800"
-                : "bg-red-200 text-red-800"
-            }`}
-          >
-            {device.isVerified ? "Verified" : "Not Verified"}
-          </span>
-        </div>
-        <div className="flex flex-col md:flex-row md:items-start">
-          <div className="w-full md:w-3/4 lg:w-3/4">
-            {" "}
-            {/* Adjust width here */}
-            {/* Larger image size */}
+      <div className="card w-97 bg-base-100 shadow-xl">
+        <figure>
+          {device.image ? (
             <img
-              src={image1}
-              alt="{${device.brand} ${device.model}}"
-              className="w-full h-auto rounded"
+              src={device.image.replace("../client/public/", "")}
+              alt={device.image}
+              className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
             />
-          </div>
-
-          <div className="md:ml-4 flex-1">
-            {/* Increase margin-top here for more space */}
-            <div className="flex flex-wrap -m-1 mt-20 md:mt-22">
-              {" "}
-              {/* Adjust mt- class here */}
-              <div className="p-1">
-                <span className="text-gray-600">Storage:</span> {device.storage}
-              </div>
-              <div className="p-1">
-                <span className="text-gray-600">Color:</span> {device.color}
-              </div>
-              <div className="p-1">
-                <span className="text-gray-600">Condition:</span>{" "}
-                {device.condition}
-              </div>
-              <div className="p-1">
-                <span className="text-gray-600">Classification:</span>{" "}
-                {device.deviceClassification}
-              </div>
+          ) : (
+            <div className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90">
+              <GrImage size={100} color="White" />
             </div>
+          )}
+        </figure>
+        {/* Rest of the code */}
+        <div className="card-body">
+          <div className="flex flex-row justify-between">
+            <h2 className="card-title">
+              {device.brand} {device.model}
+            </h2>
+            <span
+              className={`px-3 py-1 text-sm font-semibold inline-block ${
+                device.verified
+                  ? "badge badge-success gap-2 flex justify-content: center"
+                  : "badge badge-error gap-2 flex justify-content: center"
+              }`}
+            >
+              {device.verified ? "Verified" : "Not Verified"}
+            </span>
           </div>
-        </div>
-
-        <div className="mt-4">
-          <div className="mb-2">
-            <span className="font-bold">Specifications:</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p>
-                <strong>Model Name:</strong> {device.brand} {device.model}
-              </p>
-              <p>
-                <strong>Created At:</strong> {device.createdAt}
-              </p>
+          <div>
+            <div className="mb-2">
+              <span className="font-bold">Specifications</span>
+            </div>
+            <div className="p-1">
+              <span className="text-black">Storage:</span> {device.storage}
+            </div>
+            <div className="p-1">
+              <span className="text-black">Color:</span> {device.color}
+            </div>
+            <div className="p-1">
+              <span className="text-black">Condition:</span> {device.condition}
+            </div>
+            <div className="p-1">
+              <span className="text-black">Classification:</span>{" "}
+              {device.classification}
+            </div>
+            <div className="p-1">
+              <span className="text-black">Created At:</span> {device.createdAt}
+            </div>
+            <div className="p-1">
+              <span className="text-black">
               <p>
                 <strong>Device status: </strong> {device.device_status}
               </p>
-              <p>
-                <strong>Data Recovery:</strong>{" "}
-                {device.deviceClassification === "Current" ||
-                device.deviceClassification === "Rare"
+                Data Recovery:{" "}
+                {device.classification === "Current" ||
+                device.classification === "Rare"
                   ? "Not applicable"
                   : device.dataRecovered
                   ? "Yes"
                   : "No"}
-              </p>
-              <p>
-                <strong>Data Retrieval Time Left:</strong>{" "}
-                {calculateDataRetrievalTimeLeft()}
-              </p>
+              </span>
+            </div>
+            <div className="p-1">
+              <span className="text-black">
+                Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}
+              </span>
             </div>
           </div>
-        </div>
-        {renderCexLink()}
-        <div className="mt-4">
-          <div
-            style={{
-              height: "auto",
-              margin: "0 auto",
-              maxWidth: 64,
-              width: "100%",
-            }}
-          >
-            <QRCode
-              size={256}
-              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-              value={device.brand + "\n" + device.model}
-              viewBox={`0 0 256 256`}
-            />
+          {renderCexLink()}
+          <div className="mt-4">
+            <div
+              style={{
+                height: "auto",
+                margin: "0 auto",
+                maxWidth: 64,
+                width: "100%",
+              }}
+            >
+              {isQRCodeVisible && (
+                <QRCode
+                  size={256}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  value={
+                    device.brand +
+                    "\n" +
+                    device.model +
+                    "\n" +
+                    device.color +
+                    "\n" +
+                    device.storage +
+                    "\n" +
+                    device.classification +
+                    "\n" +
+                    device.condition
+                  }
+                  viewBox={`0 0 256 256`}
+                />
+              )}
+            </div>
           </div>
-        </div>
-        <div className="dropdown dropdown-right mt-4">
-          <div tabIndex={0} role="button" className="btn btn-info">
-            Extend Retrieval
+         {isVerified &&(
+          <div className="mt-2">
+            <a
+              //href={""}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              onClick={handlePaymentModal}
+            >
+              Proceed for Data Retrieval
+            </a>
           </div>
-          <ul
-            tabIndex={0}
-            className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-          >
-            <li>
-              <a>3 months</a>
-            </li>
-            <li>
-              <a>6 months</a>
-            </li>
-          </ul>
-        </div>
-        <div className="mt-4">
-          <span className="font-bold">Data Retrieval Status:</span>
-          <ul className="steps mt-4">
-            <li className="step step-primary">Device Registered</li>
-            <li className="step step-primary">Deviced Verified</li>
-            <li className="step">Data Requested</li>
-            <li className="step">Payment Processed</li>
-            <li className="step">Retrival link Received</li>
-          </ul>
+         )}
+          {/* <div className="dropdown dropdown-right mt-4">
+            <div tabIndex={0} role="button" className="btn btn-primary">
+              Extend Retrieval
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+            >
+              <li>
+                <a>3 months</a>
+              </li>
+              <li>
+                <a>6 months</a>
+              </li>
+            </ul>
+          </div> */}
+
+          <div className="mt-4">
+            <span className="font-bold">Data Retrieval Status:</span>
+            <ul className="steps mt-4">
+              <li className="step step-primary">Device Registered</li>
+              <li className="step step-primary">Deviced Verified</li>
+              <li className="step">Data Requested</li>
+              <li className="step">Payment Processed</li>
+              <li className="step">Retrival link Received</li>
+            </ul>
+          </div>
         </div>
       </div>
     );
@@ -484,120 +557,24 @@ const UserDashboard = () => {
         </header>
         {/* Main content */}
         <main className="overflow-x-hidden overflow-y-auto">
-          <div className="mx-auto px-6 py-8">
+          <div className="mx-auto">
             <h5 className="text-black text-3xl font-medium mb-6"></h5>
-
-            <div className="overflow-x-auto">
-              <div className="overflow-x-auto">
-                {filteredDevices.length == 0 ? (
-                  <div className="flex flex-col  w-full h-full items-center mt-16">
-                    <h3 className="text-3xl font-bold text-center mb-5 ">
-                      No Devices Found
-                    </h3>
-                    <img src={emptyListImage} className="h-80 w-80" />
-                  </div>
-                ) : (
-                  <table className="table">
-                    {/* head */}
-                    <thead>
-                      <tr>
-                        <th className="font-bold text-base min-w-[150px]">
-                          Image
-                        </th>
-                        <th className="font-bold text-base min-w-[150px]">
-                          Device Name
-                        </th>
-                        <th className="font-bold text-base min-w-[100px]">
-                          Model
-                        </th>
-                        <th className="font-bold text-base min-w-[150px]">
-                          CreatedAt
-                        </th>
-                        <th className="font-bold text-base min-w-[150px]">
-                          Verified
-                        </th>
-                        <th className="font-bold text-base min-w-[150px]">
-                          Classification
-                        </th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredDevices.map((deviceList, index) => (
-                        <tr key={index}>
-                          <td>
-                            <img
-                              src={image1}
-                              style={{
-                                width: "100px",
-                                height: "100px",
-                                objectFit: "cover",
-                              }}
-                            />
-                          </td>
-                          <td className="font-bold">{deviceList.brand}</td>
-                          <td className="text-sm">{deviceList.model}</td>
-                          <td className="text-sm">{deviceList.createdAt}</td>
-                          <td
-                            className="justify-center"
-                            style={{ alignItems: "center" }}
-                          >
-                            <div
-                              className={`badge ${
-                                deviceList.isVerified
-                                  ? "badge-verified"
-                                  : "badge-notverified"
-                              }`}
-                            >
-                              {deviceList.isVerified
-                                ? "Verified"
-                                : "Not Verified"}
-                            </div>
-                          </td>
-                          <td className="text-sm">
-                            <span
-                              className={`badge ${getClassificationBadgeClass(
-                                deviceList.deviceClassification
-                              )}`}
-                            >
-                              {deviceList.deviceClassification}
-                            </span>
-                          </td>
-                          <th>
-                            <button
-                              onClick={() => toggleDeviceDetails(deviceList.id)}
-                            >
-                              {selectedDeviceId === deviceList.id ? (
-                                <RiArrowDropLeftLine size={32} />
-                              ) : (
-                                <RiArrowDropRightLine size={32} />
-                              )}
-                            </button>
-                          </th>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
+            <div className="">
+              {filteredDevices.length == 0 ? (
+                <div className="flex flex-col  w-full h-full items-center mt-16">
+                  <h3 className="text-3xl font-bold text-center mb-5 ">
+                    No Devices Found
+                  </h3>
+                  <img src={emptyListImage} className="h-80 w-80" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 gap-4 ">
+                  {filteredDevices.map((device) => (
+                    <div>{renderDeviceDetails(device)}</div>
+                  ))}
+                </div>
+              )}
             </div>
-            {/* Overlay to fade out content and close details pane */}
-            {selectedDeviceId && (
-              <div
-                className="fixed inset-0 bg-black bg-opacity-50 z-20"
-                onClick={() => setSelectedDeviceId(null)}
-              ></div>
-            )}
-
-            {/* Detailed view section */}
-            {selectedDeviceId && (
-              <div className="device-details w-1/3 bg-white p-4 overflow-y-auto absolute right-0 top-0 h-full z-30">
-                {/* Find the selected device and render its details */}
-                {devices
-                  .filter((device) => device.id === selectedDeviceId)
-                  .map((device) => renderDeviceDetails(device))}
-              </div>
-            )}
           </div>
         </main>
       </div>
@@ -677,7 +654,6 @@ const UserDashboard = () => {
                           name="classification"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
                           onChange={(e) => {
-                            console.log("e.target.value", e.target.value);
                             setDeviceClassification(e.target.value);
                           }}
                         >
@@ -714,6 +690,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
+                          onChange={(e) => setDeviceColor(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -729,6 +706,7 @@ const UserDashboard = () => {
                       </label>
                       <div className="mt-2">
                         <input
+                          onChange={(e) => setDeviceStorage(e.target.value)}
                           type="text"
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
@@ -745,7 +723,11 @@ const UserDashboard = () => {
                       <div className="mt-2">
                         <label className="cursor-pointer flex items-center">
                           <input
+                            onChange={(e) => {
+                              setDeviceCondition(e.target.value);
+                            }}
                             type="checkbox"
+                            value="New"
                             id="new-condition"
                             name="device-condition"
                             className="checkbox checkbox-primary mr-2 mb-2"
@@ -754,7 +736,11 @@ const UserDashboard = () => {
                         </label>
                         <label className="cursor-pointer flex items-center">
                           <input
+                            onChange={(e) => {
+                              setDeviceCondition(e.target.value);
+                            }}
                             type="checkbox"
+                            value="Old"
                             id="old-condition"
                             name="device-condition"
                             className="checkbox checkbox-primary mr-2 mb-2"
@@ -763,7 +749,11 @@ const UserDashboard = () => {
                         </label>
                         <label className="cursor-pointer flex items-center">
                           <input
+                            onChange={(e) => {
+                              setDeviceCondition(e.target.value);
+                            }}
                             type="checkbox"
+                            value="Damaged"
                             id="damaged-condition"
                             name="device-condition"
                             className="checkbox checkbox-primary mr-2 mb-2"
@@ -783,6 +773,7 @@ const UserDashboard = () => {
 
                       <input
                         type="file"
+                        id="imageInput"
                         className="file-input w-full max-w-xs file-input-primary"
                       ></input>
                     </div>
@@ -797,9 +788,8 @@ const UserDashboard = () => {
                             type="radio"
                             name="data-retrieval"
                             className="radio radio-primary mr-2"
-                            checked
-                            value="Yes"
-                            onChange={handleDataRetrievalChange}
+                            checked={dataRetrieval === true}
+                            onChange={() => setDataRetrieval(true)}
                           />
                           <span className="label-text text-black">Yes</span>
                         </label>
@@ -808,9 +798,8 @@ const UserDashboard = () => {
                             type="radio"
                             name="data-retrieval"
                             className="radio radio-primary mr-2"
-                            checked
-                            value="Yes"
-                            onChange={handleDataRetrievalChange}
+                            checked={dataRetrieval === false}
+                            onChange={() => setDataRetrieval(false)}
                           />
                           <span className="label-text text-black">No</span>
                         </label>
@@ -889,6 +878,11 @@ const UserDashboard = () => {
           </div>
         </div>
       )}
+
+      <CardPaymentModel
+        status={paymentStatus}
+        setPaymentStatus={setPaymentStatus}
+      ></CardPaymentModel>
     </div>
   );
 };

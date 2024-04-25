@@ -7,7 +7,6 @@ export class CheckRequest {
   brand = "";
   model = "";
   dateOfPurchase = "";
-  classification = "Current";
   releaseDate = "";
   color = "";
   storage = "";
@@ -23,7 +22,7 @@ export enum DeviceClassification {
 
 const CheckNow = () => {
   const [formData, setFormData] = useState(new CheckRequest());
-  const [deviceType, setDeviceType] = useState(DeviceClassification.Current);
+  const [deviceType, setDeviceType] = useState(DeviceClassification.Recycle);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,13 +59,13 @@ const CheckNow = () => {
   };
 
   return (
-    <div className="w-1/2 bg-green-100">
+    <div className="w-1/2 bg-primary opacity-90 shadow-2xl shadow-black">
       <div className="hero h-screen">
-        <div className="hero-content flex flex-col  ">
+        <div className="hero-content flex flex-col   ">
           <div className="text-center flex flex-col justify-center items-center lg:text-left">
-            <h1 className="text-5xl font-bold text-primary">Check now!</h1>
-            <p className="py-6 text-primary">
-              Check if your device needs to be recycled!
+            <h1 className="text-5xl font-bold text-white">Check now!</h1>
+            <p className="pb-6 text-white">
+              Are you wondering which category your device belongs to?
             </p>
             <div className="card shrink-0 h-full w-full md:w-[80vh]  shadow-2xl bg-base-100">
               <form className="card-body rounded-lg" onSubmit={handleSubmit}>
@@ -75,7 +74,7 @@ const CheckNow = () => {
                   {/* Device Brand */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text">Brand</span>
+                      <span className="label-text text-black">Brand *</span>
                       <Tippy content="The manufacturer of the device, such as Apple, Samsung, or Sony.">
                         <span
                           style={{
@@ -92,7 +91,7 @@ const CheckNow = () => {
                       type="text"
                       placeholder="Brand"
                       value={formData.brand}
-                      className="input input-bordered"
+                      className="input input-bordered bg-gray-50"
                       required
                       onChange={(e) =>
                         handleInputChange("brand", e.target.value)
@@ -103,7 +102,7 @@ const CheckNow = () => {
                   {/* Device Model */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text">Model</span>
+                      <span className="label-text text-black">Model *</span>
                       <Tippy content="The specific model or version of the device, like iPhone 12 or Galaxy S21.">
                         <span
                           style={{
@@ -119,7 +118,7 @@ const CheckNow = () => {
                     <input
                       type="text"
                       placeholder="Model"
-                      className="input input-bordered"
+                      className="input input-bordered bg-gray-50"
                       required
                       onChange={(e) =>
                         handleInputChange("model", e.target.value)
@@ -127,90 +126,12 @@ const CheckNow = () => {
                     />
                   </div>
 
-                  {/* Device Date of Purchase */}
-                  <div className="form-control">
-                    <label className="label flex justify-between items-center">
-                      <span className="label-text">Date of Purchase</span>
-                      <Tippy content="The date when you originally purchased the device. This can affect its current value and recyclability.">
-                        <span
-                          style={{
-                            cursor: "help",
-                            fontSize: "20px",
-                            color: "blue",
-                          }}
-                        >
-                          ?
-                        </span>
-                      </Tippy>
-                    </label>
-                    <input
-                      type="date"
-                      className="input input-bordered"
-                      required
-                      onChange={(e) =>
-                        handleInputChange("dateOfPurchase", e.target.value)
-                      }
-                    />
-                  </div>
-
-                  {/* Device Classification with detailed tooltips for each option */}
-                  <div className="form-control">
-                    <label className="label flex justify-between items-center">
-                      <span className="label-text">Device Classification</span>
-                      <Tippy
-                        content={
-                          <div>
-                            <p>
-                              <strong>Current:</strong> Devices that are
-                              currently in demand and have a higher market
-                              value.
-                            </p>
-                            <p>
-                              <strong>Rare:</strong> Unique or older devices
-                              that may be valuable to collectors or for specific
-                              parts.
-                            </p>
-                            <p>
-                              <strong>Unknown:</strong> Devices that require
-                              further evaluation to determine their
-                              classification.
-                            </p>
-                            <p>
-                              <strong>Recycle:</strong> Devices that are best
-                              suited for recycling due to age, condition, or
-                              lack of demand.
-                            </p>
-                          </div>
-                        }
-                      >
-                        <span
-                          style={{
-                            cursor: "help",
-                            fontSize: "20px",
-                            color: "blue",
-                          }}
-                        >
-                          ?
-                        </span>
-                      </Tippy>
-                    </label>
-                    <select
-                      className="select select-bordered"
-                      onChange={(e) =>
-                        handleInputChange("classification", e.target.value)
-                      }
-                    >
-                      <option value="Current">Current</option>
-                      <option value="Rare">Rare</option>
-                      <option value="Unknown">Unknown</option>
-                      <option value="Recycle">Recycle</option>
-                    </select>
-                  </div>
-
                   {/* Release Date */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text">Release Date</span>
+                      <span className="label-text text-black">
+                        Release Date *
+                      </span>
                       <Tippy content="The official market release date of the device. Newer devices might have a higher resale value.">
                         <span
                           style={{
@@ -225,7 +146,7 @@ const CheckNow = () => {
                     </label>
                     <input
                       type="date"
-                      className="input input-bordered"
+                      className="input input-bordered bg-gray-50"
                       required
                       onChange={(e) =>
                         handleInputChange("releaseDate", e.target.value)
@@ -233,10 +154,37 @@ const CheckNow = () => {
                     />
                   </div>
 
+                  {/* Device Date of Purchase */}
+                  <div className="form-control">
+                    <label className="label flex justify-between items-center">
+                      <span className="label-text text-black">
+                        Date of Purchase
+                      </span>
+                      <Tippy content="The date when you originally purchased the device. This can affect its current value and recyclability.">
+                        <span
+                          style={{
+                            cursor: "help",
+                            fontSize: "20px",
+                            color: "blue",
+                          }}
+                        >
+                          ?
+                        </span>
+                      </Tippy>
+                    </label>
+                    <input
+                      type="date"
+                      className="input input-bordered bg-gray-50"
+                      onChange={(e) =>
+                        handleInputChange("dateOfPurchase", e.target.value)
+                      }
+                    />
+                  </div>
+
                   {/* Color */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text">Color</span>
+                      <span className="label-text text-black">Color</span>
                       <Tippy content="The color of your device. Some colors may be more rare or sought after.">
                         <span
                           style={{
@@ -252,7 +200,7 @@ const CheckNow = () => {
                     <input
                       type="text"
                       placeholder="Color"
-                      className="input input-bordered"
+                      className="input input-bordered bg-gray-50"
                       onChange={(e) =>
                         handleInputChange("color", e.target.value)
                       }
@@ -262,7 +210,7 @@ const CheckNow = () => {
                   {/* Storage */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text">Storage</span>
+                      <span className="label-text text-black">Storage</span>
                       <Tippy content="The internal storage capacity of the device, usually measured in gigabytes (GB) or terabytes (TB).">
                         <span
                           style={{
@@ -278,7 +226,7 @@ const CheckNow = () => {
                     <input
                       type="text"
                       placeholder="Storage"
-                      className="input input-bordered"
+                      className="input input-bordered bg-gray-50"
                       onChange={(e) =>
                         handleInputChange("storage", e.target.value)
                       }
@@ -288,7 +236,9 @@ const CheckNow = () => {
                   {/* Device Condition */}
                   <div className="form-control">
                     <label className="label flex justify-between items-center">
-                      <span className="label-text">Device Condition</span>
+                      <span className="label-text text-black">
+                        Device Condition
+                      </span>
                       <Tippy content="The physical state of the device: New, Old, or Damaged. This affects the device's value and recyclability.">
                         <span
                           style={{
@@ -308,23 +258,25 @@ const CheckNow = () => {
                           className="checkbox checkbox-primary"
                           value={"New"}
                           name="condition"
+                          checked={formData.condition === "New"}
                           onChange={(e) =>
                             handleInputChange("condition", e.target.value)
                           }
                         />
-                        <span className="label-text ml-2">New</span>
+                        <span className="label-text text-black ml-2">New</span>
                       </label>
                       <label className="cursor-pointer label">
                         <input
                           type="checkbox"
                           className="checkbox checkbox-primary"
                           value={"Old"}
+                          checked={formData.condition === "Old"}
                           name="condition"
                           onChange={(e) =>
                             handleInputChange("condition", e.target.value)
                           }
                         />
-                        <span className="label-text ml-2">Old</span>
+                        <span className="label-text text-black ml-2">Old</span>
                       </label>
                       <label className="cursor-pointer label">
                         <input
@@ -332,11 +284,14 @@ const CheckNow = () => {
                           className="checkbox checkbox-primary"
                           value={"Damaged"}
                           name="condition"
+                          checked={formData.condition === "Damaged"}
                           onChange={(e) =>
                             handleInputChange("condition", e.target.value)
                           }
                         />
-                        <span className="label-text ml-2">Damaged</span>
+                        <span className="label-text text-black ml-2">
+                          Damaged
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -352,7 +307,9 @@ const CheckNow = () => {
         </div>
       </div>
       <dialog id="device_type_dialog" className="modal">
-        <DeviceTypeDialog deviceType={deviceType} request={formData} />
+        <div className="w-1/2 place-content-center ">
+          <DeviceTypeDialog deviceType={deviceType} request={formData} />{" "}
+        </div>
       </dialog>
     </div>
   );

@@ -88,8 +88,8 @@ const LoginPage = ({ fullScreen = true }) => {
         }`}
       >
         <div
-          className={`max-w-4xl w-full bg-white rounded-lg overflow-hidden flex lg:flex-row flex-col-reverse animate-fade-in ${
-            fullScreen ? "shadow-2xl" : ""
+          className={`max-w-4xl w-full bg-white rounded-xl overflow-hidden flex lg:flex-row flex-col-reverse animate-fade-in ${
+            fullScreen ? "shadow-lg" : ""
           }`}
         >
           {" "}

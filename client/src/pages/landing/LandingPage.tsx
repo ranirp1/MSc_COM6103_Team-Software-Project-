@@ -11,8 +11,13 @@ import planet from "../../animation/planet.json";
 import backup from "../../animation/backup.json";
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import CheckNow from "./CheckNow";
+import { useState } from "react";
+import DeviceTypeDialog from "./DeviceTypeDialog";
+import { CheckRequest, DeviceClassification } from "./CheckNow";
 
 const LandingPage: React.FC = () => {
+  const [formData, setFormData] = useState(new CheckRequest());
+  const [deviceType, setDeviceType] = useState(DeviceClassification.Current);
   return (
     <div className="bg-gray-100 flex flex-col md:flex-row w-full ">
       {/* <NavBar></NavBar> */}
@@ -49,7 +54,7 @@ const LandingPage: React.FC = () => {
                 {/* Text container with higher z-index to ensure it's on top */}
                 <div className="absolute bottom-0 py-5 left-0 p-10 z-10 text-center flex justify-center items-center w-full">
                   <div className="text-primary">
-                    <h2 className="text-4xl font-bold text-green-600">
+                    <h2 className="text-4xl font-bold text-primary">
                       What is E-Waste?
                     </h2>
                     <p>
@@ -72,7 +77,7 @@ const LandingPage: React.FC = () => {
                 <div className="absolute bottom-0 left-0 p-10 z-10 text-center flex justify-center items-center w-full">
                   <div className="text-primary">
                     <h2 className="text-4xl font-bold">
-                      <div className="text-green-600">Environmental Impact</div>
+                      <div className="text-primary">Environmental Impact</div>
                     </h2>
                     <p className="">
                       Every device contains valuable materials that can be
@@ -93,7 +98,7 @@ const LandingPage: React.FC = () => {
                 <div className="absolute bottom-0 py-2 left-0 p-10 z-10 text-center flex justify-center items-center w-full">
                   <div className="text-primary">
                     <h2 className="text-4xl font-bold">
-                      <div className="text-green-600">
+                      <div className="text-primary">
                         Help reduce landfills
                       </div>
                     </h2>
@@ -116,7 +121,7 @@ const LandingPage: React.FC = () => {
                 <div className="absolute bottom-0 left-0 p-10 z-10 text-center flex justify-center items-center w-full">
                   <div className="text-primary">
                     <h2 className="text-4xl font-bold">
-                      <div className="text-green-600"> Easy data retrieval</div>
+                      <div className="text-primary"> Easy data retrieval</div>
                     </h2>
                     <p>
                       We offer secure data retrieval services, ensuring that
@@ -138,7 +143,7 @@ const LandingPage: React.FC = () => {
                 <div className="absolute bottom-0 left-0 p-10 z-10 text-center flex justify-center items-center w-full">
                   <div className="text-primary">
                     <h2 className="text-4xl font-bold">
-                      <div className="text-green-600"> Data security</div>
+                      <div className="text-primary"> Data security</div>
                     </h2>
                     <p>
                       Selling your old electronics through a reputable platform
@@ -160,7 +165,7 @@ const LandingPage: React.FC = () => {
                 <div className="absolute bottom-0 left-0 p-5 z-10 text-center flex justify-center items-center w-full">
                   <div className="text-primary">
                     <h2 className="text-4xl font-bold">
-                      <div className="text-green-600">
+                      <div className="text-primary">
                         Diverse payment options
                       </div>
                     </h2>
@@ -186,7 +191,7 @@ const LandingPage: React.FC = () => {
                 <div className="absolute bottom-0 left-0 p-9 z-10 text-center flex justify-center items-center w-full">
                   <div className="text-primary">
                     <h2 className="text-4xl font-bold">
-                      <div className="text-green-600">
+                      <div className="text-primary">
                         Earn cash for your clutter
                       </div>
                     </h2>
