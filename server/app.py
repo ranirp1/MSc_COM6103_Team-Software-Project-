@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify , send_file
+from flask import Flask, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
@@ -13,6 +13,8 @@ from flask import jsonify
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from flask import request
+from io import BytesIO
+from models import PaymentTable, UserDevice
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -631,36 +633,36 @@ def generate_report():
     Generate a report in PDF format for payment transactions and devices input by users within a specified date range.
     """
     data = request.json
-    start_date_str = data.get('start_date')
-    end_date_str = data.get('end_date')
+    userId = data.get('userId')
+    start_date = data.get('startDate')
+    end_date = data.get('endDate')
 
-    # Convert start_date and end_date strings to datetime 
+    # Convert start_date and end_date strings to datetime
     # Validate date format
 
     try:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
-    except ValueError:
-        return jsonify({'error': 'Invalid date format. Please use YYYY-MM-DD.', 'details': str(e)}), 400
-    
-     # Ensure end_date is inclusive by adding one day
-    end_date += timedelta(days=1)
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+    except Exception as e:
+        return jsonify({'error': 'Invalid date format. Please use YYYY-MM-DD.'}), 400
 
     # Fetch payment transactions and devices input by users within the specified date range
     try:
         payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
         user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
+
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
     # Generate PDF report
     try:
         pdf_filename = 'report.pdf'
-        doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
         elements = []
 
         # Add payments data to PDF
-        payments_data = [['Payment ID', 'Data Retrieval ID', 'User ID', 'Date']]
+        payments_data = [['PaymentID', 'DataRetrievalID', 'UserID', 'Date']]
         for payment in payments:
             payments_data.append(
                 [payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
@@ -676,7 +678,7 @@ def generate_report():
         elements.append(Spacer(1, 12))
 
         # Add user devices data to PDF
-        devices_data = [['User Device ID', 'User ID', 'Device ID', 'Date of Creation']]
+        devices_data = [['UserDeviceID', 'UserID', 'DeviceID', 'DateofCreation']]
         for device in user_devices:
             devices_data.append(
                 [device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
@@ -693,7 +695,11 @@ def generate_report():
         # Build PDF document
         doc.build(elements)
 
+        # Get PDF file content
+        pdf = buffer.getvalue()
+        buffer.close()
+
         # Return the PDF file
-        return send_file(pdf_filename, as_attachment=True)
+        return send_file(BytesIO(pdf), mimetype='application/pdf', as_attachment=True, attachment_filename='report.pdf')
     except Exception as e:
         return jsonify({'error': 'Failed to generate PDF report.', 'details': str(e)}), 500
