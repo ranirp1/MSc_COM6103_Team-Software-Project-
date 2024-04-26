@@ -661,11 +661,14 @@ def generate_report():
         doc = SimpleDocTemplate(buffer, pagesize=letter)
         elements = []
 
-        # Add payments data to PDF
-        payments_data = [['PaymentID', 'DataRetrievalID', 'UserID', 'Date']]
+        # Get column names for PaymentTable and UserDevice models
+        payment_columns = [column.key for column in PaymentTable.__table__.columns]
+        user_device_columns = [column.key for column in UserDevice.__table__.columns]
+
+        # Add payments data to PDF with dynamic headers
+        payments_data = [payment_columns]
         for payment in payments:
-            payments_data.append(
-                [payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
+            payments_data.append([getattr(payment, column) for column in payment_columns])
         payments_table = Table(payments_data)
         payments_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                                             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -677,11 +680,10 @@ def generate_report():
         elements.append(payments_table)
         elements.append(Spacer(1, 12))
 
-        # Add user devices data to PDF
-        devices_data = [['UserDeviceID', 'UserID', 'DeviceID', 'DateofCreation']]
+        # Add user devices data to PDF with dynamic headers
+        devices_data = [user_device_columns]
         for device in user_devices:
-            devices_data.append(
-                [device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
+            devices_data.append([getattr(device, column) for column in user_device_columns])
         devices_table = Table(devices_data)
         devices_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
