@@ -501,16 +501,16 @@ def createDevice():
 @app.route('/api/create-data-retrieval', methods=['POST'])
 @cross_origin()
 def createRetrievalData():
-    data = request.json()
+    data = request.json
     dataRetrieval = data.get('dataRetrieval')
-    duration = data.get('duration')
+    duration = 3 # data.get('duration')
     userDeviceID = data.get('userDeviceID')
 
     if dataRetrieval:
         print("retrieving data has been selected")
         print(f"duation: {duration}")
         newDataRetrieval = DataRetrieval(
-            userDeviceID = userDeviceID,
+            userDeviceId = userDeviceID,
             dataUrl = "https://google.com",
             dateOfCreation = datetime.now(),
             duration=3,
@@ -533,6 +533,35 @@ def createRetrievalData():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'Data Retrieval creation error'}), 500
+
+@app.route('/api/update-data-retrieval-url', methods=['POST'])
+@cross_origin()
+def updateRetrievalData():
+    print("here")
+    data = request.json
+
+    userDeviceID = data.get('userDeviceID')
+    url = data.get('dataRetrievalUrl')
+
+    # userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
+
+    # if not userDevice:
+    #     return jsonify({'message': 'User Device not found'}), 400
+
+    dataRetrieval = DataRetrieval.query.filter_by(userDeviceID=userDeviceID).first()
+    if not dataRetrieval:
+        return jsonify({'message': 'DR with that device not found'}), 400
+
+    dataRetrieval.dataUrl = url
+    try:
+        db.session.commit()
+        # TODO
+        # SEND EMAIL HERE
+        return jsonify({'message': 'Url updated'}), 200
+    except Exception as e:
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'Error updating url'}), 500
 
 
 @app.route('/api/customer_device', methods=['POST'])
@@ -600,7 +629,7 @@ def getListOfDevices():
             'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
             'dataRetrievalTimeLeft': '',
-            'device_status': str(device.device_status)
+            'device_status': str(userDevice.device_status)
         }
 
         device_list.append(device_data)
