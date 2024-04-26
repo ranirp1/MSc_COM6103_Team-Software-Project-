@@ -21,3 +21,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+// ignore upload image 
+# ignore public uploads folders
+/public/uploads/*
