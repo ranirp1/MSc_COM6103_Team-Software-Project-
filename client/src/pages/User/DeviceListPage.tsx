@@ -205,11 +205,11 @@ const UserDashboard = () => {
     catch (error) {
       console.log("Error:", error);
     }
-    // Check if data retrieval is selected as "Yes"
+    //Check if data retrieval is selected as "Yes"
     {
       if (dataRetrieval) {
         setShowPopup(false);
-        openPaymentModel();
+       // openPaymentModel();
         return;
       } else {
         // Handle form submission without showing popup
@@ -347,6 +347,7 @@ const UserDashboard = () => {
 
     const isQRCodeVisible = device.classification === 'Rare' || device.classification === 'Current';
     const isVerified = device.verified;
+    const isRecycled = device.classification === 'Recycle';
 
     function handlePaymentModal(): void {
       setShowPopup(false)
@@ -355,7 +356,7 @@ const UserDashboard = () => {
     }
 
     return (
-      <div className="card w-94 bg-base-100 shadow-xl">
+      <div className="card w-94 bg-base-100 shadow-xl h-74 p-4">
         <figure>
           {device.image ? (
             <img
@@ -440,28 +441,16 @@ const UserDashboard = () => {
                 <QRCode
                   size={256}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={
-                    device.brand +
-                    "\n" +
-                    device.model +
-                    "\n" +
-                    device.color +
-                    "\n" +
-                    device.storage +
-                    "\n" +
-                    device.classification +
-                    "\n" +
-                    device.condition
-                  }
+                  value={"Brand: "+device.brand +"\nModel: "+device.model +"\nColor: "+device.color +"\nStorage: "+device.storage +"\nClassification: "+device.classification +"\nCondition: "+device.condition +"\nEstimated Price: "+device.estimatedValue}
                   viewBox={`0 0 256 256`}
+                  className="w-1/2"
                 />
               )}
             </div>
           </div>
-         {isVerified &&(
+         {isVerified && isRecycled&&(
           <div className="mt-2">
             <a
-              //href={""}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -579,7 +568,7 @@ const UserDashboard = () => {
                   <img src={emptyListImage} className="h-80 w-80" />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-3 ">
+                <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-3">
                   {filteredDevices.map((device) => (
                     <div>{renderDeviceDetails(device)}</div>
                   ))}
@@ -789,7 +778,7 @@ const UserDashboard = () => {
                       ></input>
                     </div>
 
-                    {/* <div className="sm:col-span-4 flex items-center">
+                    <div className="sm:col-span-4 flex items-center">
                       <span className="font-medium leading-6  mr-4 text-black">
                         Data Retrieval:
                       </span>
@@ -815,7 +804,7 @@ const UserDashboard = () => {
                           <span className="label-text text-black">No</span>
                         </label>
                       </div>
-                    </div> */}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -839,7 +828,7 @@ const UserDashboard = () => {
             </form>
           </div>
         </div>
-        {/* Popup */}
+        {/* Popup
         {showPopup && (
           <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white rounded-lg p-8">
@@ -863,7 +852,7 @@ const UserDashboard = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </dialog>
       {showLogoutModal && (
         <div className="modal modal-open">
