@@ -87,7 +87,7 @@ class _DATA_RETRIEVED(PyEnum):
 
 class Device_Status(PyEnum):
     DEV_REGISTERED = 'Device Registered'
-    DEV_RECEIVED = 'Device Received'
+    DEV_VERIF = 'Device Verified'
     DATA_RETRIEVED = _DATA_RETRIEVED
     URL_READY = 'Url Ready'
 
