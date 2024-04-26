@@ -322,6 +322,41 @@ with app.app_context():
     # Commit changes
     db.session.commit()
 
+def updateDeviceStatus(user_device, newStatus):
+
+    user_device.device_status = newStatus
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        raise e
+
+@app.route('/api/updateDeviceStatus', methods=['POST'])
+@cross_origin()
+def updateDeviceStatus_api():
+    data = request.json
+    userDeviceId = data.get("userDeviceId")
+    newStatus = data.get("newStatus")
+    statusEnum = Device_Status[newStatus]
+
+    userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceId).first()
+    if not userDevice:
+        return jsonify({'message': 'user device not found'}), 400
+
+
+    try:
+        userDevice.device_status = statusEnum
+        db.session.commit()
+        return jsonify({'message': 'successfully updated device status'}), 200
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'error updating device status'}), 500
+
 
 @app.route('/api/getEstimatedValue', methods=['GET'])
 @cross_origin()
@@ -735,7 +770,6 @@ def createDevice():
             imageUrl=filepath,
             qrCodeUrl=qrCodeUrl,
             dateOfCreation=current_date.strftime("%Y-%m-%d"),
-            dataRetrievalID=0,
             estimatedValue=""
         )
         try:
@@ -776,13 +810,13 @@ def createDevice():
                 imageUrl=filepath,
                 qrCodeUrl=qrCodeUrl,
                 dateOfCreation=current_date.strftime("%Y-%m-%d"),
-                dataRetrievalID=0,
                 estimatedValue=""
             )
             db.session.add(newUserDeviceAdded)
             db.session.commit()
             return jsonify({'message': 'User Device creation successful'}), 200
         except Exception as e:
+            print("error at create Device")
             print(e)
             db.session.rollback()
             db.session.flush()
