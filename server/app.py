@@ -450,7 +450,7 @@ def register():
     )
 
     # Generate JWT token for the newly created user
-    token = generate_token(newUser)
+    # token = generate_token(newUser)
 
     # source:
     # https://stackoverflow.com/a/16336401/11449502
@@ -806,6 +806,7 @@ def getListOfDevices():
     device_list = []
     for userDevice in userDevice:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
+        user = User.query.filter_by(id=userDevice.userID).first()
         device_data = {
             'id': userDevice.deviceID,
             'brand': device.brand,
@@ -819,7 +820,9 @@ def getListOfDevices():
             'condition': userDevice.deviceCondition,
             'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
-            'dataRetrievalTimeLeft': ''
+            'dataRetrievalTimeLeft': '',
+            'user_name':user.first_name + ' ' + user.last_name,
+            'user_email':user.email,
         }
 
         device_list.append(device_data)
