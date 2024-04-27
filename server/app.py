@@ -1060,12 +1060,21 @@ def update_device():
         return jsonify({'message': 'Device ID is required'}), 400
 
     try:
-        device = Device.query.filter_by(deviceID=device_id).first()
+        device = UserDevice.query.filter_by(deviceID=device_id).first()
         if not device:
             return jsonify({'message': 'Device not found'}), 404
-
-        for field in ['brand', 'model', 'storage', 'color', 'condition', 'classification', 'dateOfRelease',
-                      'isVerified', 'dataRecovered']:
+        
+        if 'storage' in data:
+            setattr(device, 'deviceStorage', data['storage'])
+        if 'color' in data:
+            setattr(device, 'deviceColor', data['color'])
+        if 'condition' in data:
+            setattr(device, 'deviceCondition', data['condition'])
+        if 'classification' in data:
+            setattr(device, 'deviceClassification', data['classification'])
+        
+        for field in ['brand', 'model',  'dateOfRelease',
+                      'isVerified','device_status','estimatedValue']:
             if field in data:
                 setattr(device, field, data[field])
 

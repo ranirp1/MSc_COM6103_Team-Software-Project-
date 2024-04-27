@@ -453,6 +453,15 @@ const StaffDashboard = () => {
                     <option value="URL_READY">Link Received</option>
                   </select>
                 </div>
+                <div>
+                  <span className="block mt-4 mb-2 text-lg font-medium text-black">Estimated Price</span>
+                  <input
+                    type="text"
+                    value={device.estimatedValue?.toString() || ""}
+                    onChange={(e) => handleDeviceUpdate('color', e.target.value)}
+                    className="input input-bordered bg-gray-200 text-black w-full"
+                  />
+                </div>
               </div>
             </div>
           </div>

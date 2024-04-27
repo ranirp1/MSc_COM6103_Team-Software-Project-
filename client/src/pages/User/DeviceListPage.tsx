@@ -412,9 +412,6 @@ const UserDashboard = () => {
             </div>
             <div className="p-1">
               <span className="text-black">
-                <p>
-                  <strong>Device status: </strong> {device.device_status}
-                </p>
                 Data Recovery:{" "}
                 {device.classification === "Current" ||
                   device.classification === "Rare"
@@ -432,7 +429,7 @@ const UserDashboard = () => {
           </div>
           {renderCexLink()}
           <div className="p-1">
-            <span className="text-black">Estimated Price:</span>
+            <span className="text-black font-bold">Estimated Price: </span>
             {device.estimatedValue}
           </div>
           <div className="mt-4">
