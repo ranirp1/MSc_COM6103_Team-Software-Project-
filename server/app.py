@@ -931,9 +931,9 @@ def getListOfDevices():
     data = request.json
     userID = data.get('userID')
     if(userID):
-        userDevice = UserDevice.query.filter_by(userID=userID).join(Device, UserDevice.deviceID == Device.deviceID).all()
+        userDevices = UserDevice.query.filter_by(userID=userID).join(Device, UserDevice.deviceID == Device.deviceID).all()
     else:
-        userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
+        userDevices = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
     
     device_list = []
     for userDevice in userDevices:
