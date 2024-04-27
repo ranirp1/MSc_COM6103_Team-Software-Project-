@@ -12,6 +12,7 @@ import QRCode from "react-qr-code";
 import emptyListImage from "../../assets/empty_device_list.svg";
 import { GrImage } from "react-icons/gr";
 import { createCexSearchUrl } from "../landing/DeviceTypeDialog";
+import DeviceStatusComponent from "./DeviceStatusComponent";
 
 class Device {
   id: number;
@@ -29,7 +30,7 @@ class Device {
   dataRetrievalTimeLeft: string;
   cexLink?: string;
   device_status?: string;
-  estimatedValue?:String
+  estimatedValue?: String
 
   constructor(
     id: number,
@@ -47,7 +48,7 @@ class Device {
     dataRetrievalTimeLeft: string,
     cexLink?: string,
     device_status?: string,
-    estimatedValue?:String
+    estimatedValue?: String
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -189,9 +190,9 @@ const UserDashboard = () => {
 
     if (imageFile) {
       formData.append('image', imageFile);
-  }
-  console.log(formData);
-        
+    }
+    console.log(formData);
+
     try {
       const response = await fetch(`${API_URL}/api/createDevice`, {
         method: "POST",
@@ -200,12 +201,12 @@ const UserDashboard = () => {
 
       if (response.ok) {
         console.log("Creation Successful");
-         window.location.href = "/user";
+        window.location.href = "/user";
       } else {
         console.log("Creation Error");
         // Handle error
       }
-    } 
+    }
     catch (error) {
       console.log("Error:", error);
     }
@@ -213,7 +214,7 @@ const UserDashboard = () => {
     {
       if (dataRetrieval) {
         setShowPopup(false);
-       // openPaymentModel();
+        // openPaymentModel();
         return;
       } else {
         // Handle form submission without showing popup
@@ -264,7 +265,7 @@ const UserDashboard = () => {
       filteredDevices = filteredDevices.filter((device) => device.verified);
     } else if (sortOrder === "non-verified") {
       filteredDevices = filteredDevices.filter((device) => !device.verified);
-    }    
+    }
     return filteredDevices;
   };
 
@@ -381,11 +382,10 @@ const UserDashboard = () => {
               {device.brand} {device.model}
             </h2>
             <span
-              className={`px-3 py-1 text-sm font-semibold inline-block ${
-                device.verified
+              className={`px-3 py-1 text-sm font-semibold inline-block ${device.verified
                   ? "badge badge-success gap-2 flex justify-content: center"
                   : "badge badge-error gap-2 flex justify-content: center"
-              }`}
+                }`}
             >
               {device.verified ? "Verified" : "Not Verified"}
             </span>
@@ -412,16 +412,16 @@ const UserDashboard = () => {
             </div>
             <div className="p-1">
               <span className="text-black">
-              <p>
-                <strong>Device status: </strong> {device.device_status}
-              </p>
+                <p>
+                  <strong>Device status: </strong> {device.device_status}
+                </p>
                 Data Recovery:{" "}
                 {device.classification === "Current" ||
-                device.classification === "Rare"
+                  device.classification === "Rare"
                   ? "Not applicable"
                   : device.dataRecovered
-                  ? "Yes"
-                  : "No"}
+                    ? "Yes"
+                    : "No"}
               </span>
             </div>
             <div className="p-1">
@@ -432,8 +432,8 @@ const UserDashboard = () => {
           </div>
           {renderCexLink()}
           <div className="p-1">
-              <span className="text-black">Estimated Price:</span>
-             {device.estimatedValue}
+            <span className="text-black">Estimated Price:</span>
+            {device.estimatedValue}
           </div>
           <div className="mt-4">
             <div
@@ -448,25 +448,25 @@ const UserDashboard = () => {
                 <QRCode
                   size={256}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={"Brand: "+device.brand +"\nModel: "+device.model +"\nColor: "+device.color +"\nStorage: "+device.storage +"\nClassification: "+device.classification +"\nCondition: "+device.condition +"\nEstimated Price: "+device.estimatedValue}
+                  value={"Brand: " + device.brand + "\nModel: " + device.model + "\nColor: " + device.color + "\nStorage: " + device.storage + "\nClassification: " + device.classification + "\nCondition: " + device.condition + "\nEstimated Price: " + device.estimatedValue}
                   viewBox={`0 0 256 256`}
                   className="w-1/2"
                 />
               )}
             </div>
           </div>
-         {isVerified && isRecycled&&(
-          <div className="mt-2">
-            <a
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
-              onClick={handlePaymentModal}
-            >
-              Proceed for Data Retrieval
-            </a>
-          </div>
-         )}
+          {isVerified && isRecycled && (
+            <div className="mt-2">
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                onClick={handlePaymentModal}
+              >
+                Proceed for Data Retrieval
+              </a>
+            </div>
+          )}
           {/* <div className="dropdown dropdown-right mt-4">
             <div tabIndex={0} role="button" className="btn btn-primary">
               Extend Retrieval
@@ -486,21 +486,20 @@ const UserDashboard = () => {
 
           <div className="mt-4">
             <span className="font-bold">Data Retrieval Status:</span>
-            <ul className="steps mt-4">
-              <li className="step step-primary">Device Registered</li>
-              <li className="step step-primary">Deviced Verified</li>
-              <li className="step">Data Requested</li>
-              <li className="step">Payment Processed</li>
-              <li className="step">link Received</li>
-            </ul>
+            
+
+              {/* Subsequent list items with improved logic */}
+              <DeviceStatusComponent deviceStatus={device.device_status ?? ''} />
+            
           </div>
+
         </div>
       </div>
     );
   };
 
   return (
-      <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex justify-between items-center p-4 shadow bg-primary">
           <img

@@ -110,8 +110,9 @@ class _DATA_RETRIEVED(PyEnum):
 class Device_Status(PyEnum):
     DEV_REGISTERED = 'Device Registered'
     DEV_VERIF = 'Device Verified'
+    PAYMENT_DONE = 'Payment Processed' #Payment done
     DATA_RETRIEVED = _DATA_RETRIEVED
-    URL_READY = 'Url Ready'
+    URL_READY = 'Link Received'
 
     def __str__(self):
         return self.value
@@ -710,8 +711,8 @@ def createDevice():
     qrCodeUrl = request.form.get('qrCodeUrl')
     dateOfRelease = request.form.get('dateofRelease')
     dateOfPurchase = request.form.get('dateofPurchase')
-    print("here")
-    print(data)
+   # print("here")
+    # print(data)
     dataRetieval = data.get('dataRetieval')
     duration = data.get('duration')
     estimatedValue = getEstimatedValue(model, deviceCondition)
@@ -764,7 +765,6 @@ def createDevice():
             imageUrl=filepath,
             qrCodeUrl=qrCodeUrl,
             dateOfCreation=current_date.strftime("%Y-%m-%d"),
-            dataRetrievalID=0,
             estimatedValue=estimatedValue
         )
         try:
