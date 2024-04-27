@@ -365,7 +365,7 @@ def getEstimatedValue(model, condition):
     """
     device = Device.query.filter_by(model=model).first()
     if not device:
-        return jsonify({'message': 'Device not found'}), 404
+        return "NA"
 
     estimated_value = estimateValues.query.filter_by(deviceID=device.deviceID).first()
     if not estimated_value:
