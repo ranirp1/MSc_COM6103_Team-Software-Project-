@@ -14,6 +14,7 @@ import emptyListImage from "../../assets/empty_list.svg";
 import { API_URL } from "../../constants/constant";
 import { redirect } from "react-router-dom";
 import { BiSolidReport } from "react-icons/bi";
+import { AiOutlineUserSwitch } from "react-icons/ai";
 
 class Device {
   id: number;
@@ -29,7 +30,7 @@ class Device {
   classification: string;
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
-  cexLink?: string; 
+  cexLink?: string;
 
   constructor(
     id: number,
@@ -45,7 +46,7 @@ class Device {
     classification: string,
     dataRetrievalRequested: boolean | null,
     dataRetrievalTimeLeft: string,
-    cexLink?: string 
+    cexLink?: string
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -84,6 +85,8 @@ class Device {
 }
 
 const StaffDashboard = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdminAndStaff = urlParams.get("isAdminAndStaff") === "true";
   const [devices, setDevices] = useState<Device[]>([]);
   const [editMode, setEditMode] = useState(false);
 
@@ -125,8 +128,7 @@ const StaffDashboard = () => {
     setSelectedDeviceId(id);
     setIsModalVisible(true);
   };
-  
-  
+
   useEffect(() => {
     // Function to apply sorting
     const sortDevices = () => {
@@ -151,65 +153,63 @@ const StaffDashboard = () => {
     setSortOrder(newSortOrder);
   };
 
-const toggleDeviceVerification = async (deviceId: number) => {
-  // Find the device and its current verification status
-  const deviceIndex = devices.findIndex((d) => d.id === deviceId);
-  if (deviceIndex === -1) {
-    console.error('Device not found');
-    return;
-  }
-
-  const device = devices[deviceIndex];
-  const newVerificationStatus = !device.verified;
-
-  try {
-    // Update the backend first
-    const response = await fetch(`${API_URL}/api/changeDeviceVerification/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        deviceID: deviceId,
-        isVerified: newVerificationStatus,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Backend failed to update device verification status');
+  const toggleDeviceVerification = async (deviceId: number) => {
+    // Find the device and its current verification status
+    const deviceIndex = devices.findIndex((d) => d.id === deviceId);
+    if (deviceIndex === -1) {
+      console.error("Device not found");
+      return;
     }
 
-    // Update the frontend after a successful backend response
-    setDevices(
-      devices.map((d, index) => {
-        if (index === deviceIndex) {
-          return { ...d, verified: newVerificationStatus };
-        }
-        return d;
-      })
-    );
-  } catch (error) {
-    console.error('Error updating verification status:', error);
-    // Revert the frontend update if the backend call fails
-    setDevices(
-      devices.map((d, index) => {
-        if (index === deviceIndex) {
-          // Revert the 'verified' status of the device
-          return { ...d, verified: !newVerificationStatus };
-        }
-        return d;
-      })
-    );
-  }
-};
+    const device = devices[deviceIndex];
+    const newVerificationStatus = !device.verified;
 
+    try {
+      // Update the backend first
+      const response = await fetch(`${API_URL}/api/changeDeviceVerification/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          deviceID: deviceId,
+          isVerified: newVerificationStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Backend failed to update device verification status");
+      }
+
+      // Update the frontend after a successful backend response
+      setDevices(
+        devices.map((d, index) => {
+          if (index === deviceIndex) {
+            return { ...d, verified: newVerificationStatus };
+          }
+          return d;
+        })
+      );
+    } catch (error) {
+      console.error("Error updating verification status:", error);
+      // Revert the frontend update if the backend call fails
+      setDevices(
+        devices.map((d, index) => {
+          if (index === deviceIndex) {
+            // Revert the 'verified' status of the device
+            return { ...d, verified: !newVerificationStatus };
+          }
+          return d;
+        })
+      );
+    }
+  };
 
   // Function to filter devices based on search query and verification status
   const getFilteredDevices = () => {
     return devices.filter(
-      (device) =>
-        device.brand.toLowerCase().includes(searchQuery) 
-        //device.verified === showVerified
+      (device) => device.brand.toLowerCase().includes(searchQuery)
+      //device.verified === showVerified
     );
   };
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -217,19 +217,18 @@ const toggleDeviceVerification = async (deviceId: number) => {
   // Use this function to render your devices
   const filteredDevices = getFilteredDevices();
 
-
   const renderDeviceModal = () => {
     if (!selectedDeviceId || !isModalVisible) return null;
-  
+
     const device = devices.find((d) => d.id === selectedDeviceId);
     if (!device) return null;
-  
+
     // Correctly type the styles object
     const modalBoxStyles: React.CSSProperties = {
-      maxHeight: '98vh',
-      overflowY: 'hidden'   
+      maxHeight: "98vh",
+      overflowY: "hidden",
     };
-  
+
     return (
       <div className="modal modal-open">
         <div className="modal-box relative" style={modalBoxStyles}>
@@ -245,140 +244,169 @@ const toggleDeviceVerification = async (deviceId: number) => {
       </div>
     );
   };
-  
-  
-    const renderDeviceDetails = (device: Device) => {
-      // Function to update device details in state
-      const handleDeviceUpdate = (field: keyof Device, value: string | boolean) => {
-        if (!editMode) return;
-        
-        setDevices((prevDevices) =>
-          prevDevices.map((d) =>
-            d.id === device.id ? { ...d, [field]: value } : d
-          )
-        );
-      };
 
-      const createCexSearchUrl = (manufacturer: string, model: string, storage: string, color: string) => {
-        const baseUrl = "https://uk.webuy.com/search";
-        const queryParts = [manufacturer, model, storage, color].filter(part => part); // Filters out null or empty strings
-        const query = queryParts.join(' '); // Joins the parts into a single string with spaces
-        return `${baseUrl}?stext=${encodeURIComponent(query)}`;
+  const renderDeviceDetails = (device: Device) => {
+    // Function to update device details in state
+    const handleDeviceUpdate = (
+      field: keyof Device,
+      value: string | boolean
+    ) => {
+      if (!editMode) return;
+
+      setDevices((prevDevices) =>
+        prevDevices.map((d) =>
+          d.id === device.id ? { ...d, [field]: value } : d
+        )
+      );
     };
-    
+
+    const createCexSearchUrl = (
+      manufacturer: string,
+      model: string,
+      storage: string,
+      color: string
+    ) => {
+      const baseUrl = "https://uk.webuy.com/search";
+      const queryParts = [manufacturer, model, storage, color].filter(
+        (part) => part
+      ); // Filters out null or empty strings
+      const query = queryParts.join(" "); // Joins the parts into a single string with spaces
+      return `${baseUrl}?stext=${encodeURIComponent(query)}`;
+    };
+
     const renderCexLink = () => {
-        if (device.classification === 'Rare' || device.classification === 'Current') {
-            const cexUrl = createCexSearchUrl(device.brand, device.model, device.storage, device.color);
-            return (
-                <div className="mt-2">
-                    <p className="block mt-4 mb-2 text-lg font-medium text-black">CEX Link:{' '}
-                    <a href={cexUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
-                        Search on CEX
-                    </a>
-                    </p>
-                </div>
-            );
-        }
-        return null;
+      if (
+        device.classification === "Rare" ||
+        device.classification === "Current"
+      ) {
+        const cexUrl = createCexSearchUrl(
+          device.brand,
+          device.model,
+          device.storage,
+          device.color
+        );
+        return (
+          <div className="mt-2">
+            <p className="block mt-4 mb-2 text-lg font-medium text-black">
+              CEX Link:{" "}
+              <a
+                href={cexUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-700"
+              >
+                Search on CEX
+              </a>
+            </p>
+          </div>
+        );
+      }
+      return null;
     };
-    
-      const calculateDataRetrievalTimeLeft = () => {
-        // Return "Not applicable" for "Current" and "Rare" classifications
-        if (
-          device.classification === "Current" ||
-          device.classification === "Rare"
-        ) {
-          return "Not applicable";
-        }
-  
-        if (
-          device.classification === "Recycle" &&
-          device.dataRetrievalRequested
-        ) {
-          const creationDate = new Date(device.createdAt);
-          const endTime = new Date(
-            creationDate.getFullYear(),
-            creationDate.getMonth() + 3,
-            creationDate.getDate()
-          );
-          const currentDate = new Date();
-  
-          if (currentDate < endTime) {
-            const timeDifference = endTime.getTime() - currentDate.getTime();
-            const daysLeft = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-  
-            if (daysLeft > 30) {
-              return `More than 1 month left`;
-            } else if (daysLeft > 7) {
-              return `More than 1 week left`;
-            } else {
-              return `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`;
-            }
-          } else {
-            return "Expired";
-          }
-        }
+
+    const calculateDataRetrievalTimeLeft = () => {
+      // Return "Not applicable" for "Current" and "Rare" classifications
+      if (
+        device.classification === "Current" ||
+        device.classification === "Rare"
+      ) {
         return "Not applicable";
-      };
-    
-      const saveDeviceUpdates = async () => {
-        try {
-            const response = await fetch(`${API_URL}/api/updateDevice`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(device),
-            });
-    
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Failed to update device: ${errorData.message}`);
-            }
-    
-            alert('Device updated successfully!');
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.error('Error saving device updates:', error);
-                alert(`Failed to save device updates: ${error.message}`);
-            } else {
-                // Handle cases where the error is not an instance of Error
-                console.error('An unexpected error occurred:', error);
-                alert('An unexpected error occurred. Please try again.');
-            }
+      }
+
+      if (
+        device.classification === "Recycle" &&
+        device.dataRetrievalRequested
+      ) {
+        const creationDate = new Date(device.createdAt);
+        const endTime = new Date(
+          creationDate.getFullYear(),
+          creationDate.getMonth() + 3,
+          creationDate.getDate()
+        );
+        const currentDate = new Date();
+
+        if (currentDate < endTime) {
+          const timeDifference = endTime.getTime() - currentDate.getTime();
+          const daysLeft = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+
+          if (daysLeft > 30) {
+            return `More than 1 month left`;
+          } else if (daysLeft > 7) {
+            return `More than 1 week left`;
+          } else {
+            return `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`;
+          }
+        } else {
+          return "Expired";
         }
+      }
+      return "Not applicable";
     };
-    
+
+    const saveDeviceUpdates = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/updateDevice`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(device),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Failed to update device: ${errorData.message}`);
+        }
+
+        alert("Device updated successfully!");
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error("Error saving device updates:", error);
+          alert(`Failed to save device updates: ${error.message}`);
+        } else {
+          // Handle cases where the error is not an instance of Error
+          console.error("An unexpected error occurred:", error);
+          alert("An unexpected error occurred. Please try again.");
+        }
+      }
+    };
+
     return (
       <div className="bg-white p-5 rounded-lg shadow-md">
         <h3 className="text-2xl mb-4">
-           {/* Conditional rendering of edit mode toggle button */}
-        <div className="mb-4 top-2">
-          <button onClick={() => setEditMode(!editMode)} className="btn btn-primary">
-            {editMode ? "Disable Edit Mode" : "Enable Edit Mode"}
-          </button>
-        </div>
+          {/* Conditional rendering of edit mode toggle button */}
+          <div className="mb-4 top-2">
+            <button
+              onClick={() => setEditMode(!editMode)}
+              className="btn btn-primary"
+            >
+              {editMode ? "Disable Edit Mode" : "Enable Edit Mode"}
+            </button>
+          </div>
           {editMode ? (
-            
-            <> 
-              <label className="block mb-2 text-lg font-medium text-black">Name</label>
-          <input
-            type="text"
-            value={device.brand}
-            onChange={(e) => handleDeviceUpdate('brand', e.target.value)}
-            className="input input-bordered w-full bg-gray-200 text-black"
-          />
-          <label className="block mt-4 mb-2 text-lg font-medium text-black">Model</label>
-          <input
-            type="text"
-            value={device.model}
-            onChange={(e) => handleDeviceUpdate('model', e.target.value)}
-            className="input input-bordered w-full bg-gray-200 text-black" 
-          />
+            <>
+              <label className="block mb-2 text-lg font-medium text-black">
+                Name
+              </label>
+              <input
+                type="text"
+                value={device.brand}
+                onChange={(e) => handleDeviceUpdate("brand", e.target.value)}
+                className="input input-bordered w-full bg-gray-200 text-black"
+              />
+              <label className="block mt-4 mb-2 text-lg font-medium text-black">
+                Model
+              </label>
+              <input
+                type="text"
+                value={device.model}
+                onChange={(e) => handleDeviceUpdate("model", e.target.value)}
+                className="input input-bordered w-full bg-gray-200 text-black"
+              />
             </>
           ) : (
             `${device.brand} ${device.model}`
           )}
         </h3>
-  
+
         {editMode && (
           <div className="flex flex-col md:flex-row md:items-start">
             <div className="w-full md:w-2/4 lg:w-2/4">
@@ -391,28 +419,40 @@ const toggleDeviceVerification = async (deviceId: number) => {
             <div className="md:ml-4 flex-1">
               <div className="grid grid-cols-2 gap-4 p-1">
                 <div>
-                  <span className="block mt-4 mb-2 text-lg font-medium text-black">Storage</span>
+                  <span className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Storage
+                  </span>
                   <input
                     type="text"
                     value={device.storage}
-                    onChange={(e) => handleDeviceUpdate('storage', e.target.value)}
+                    onChange={(e) =>
+                      handleDeviceUpdate("storage", e.target.value)
+                    }
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
                 <div>
-                  <span className="block mt-4 mb-2 text-lg font-medium text-black">Color</span>
+                  <span className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Color
+                  </span>
                   <input
                     type="text"
                     value={device.color}
-                    onChange={(e) => handleDeviceUpdate('color', e.target.value)}
+                    onChange={(e) =>
+                      handleDeviceUpdate("color", e.target.value)
+                    }
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
                 <div>
-                  <p className="block mt-4 mb-2 text-lg font-medium text-black">Condition</p>
+                  <p className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Condition
+                  </p>
                   <select
                     value={device.condition}
-                    onChange={(e) => handleDeviceUpdate('condition', e.target.value)}
+                    onChange={(e) =>
+                      handleDeviceUpdate("condition", e.target.value)
+                    }
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
                     <option value="New">New</option>
@@ -421,10 +461,14 @@ const toggleDeviceVerification = async (deviceId: number) => {
                   </select>
                 </div>
                 <div>
-                  <p className="block mt-4 mb-2 text-lg font-medium text-black">Classification</p>
+                  <p className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Classification
+                  </p>
                   <select
                     value={device.classification}
-                    onChange={(e) => handleDeviceUpdate('classification', e.target.value)}
+                    onChange={(e) =>
+                      handleDeviceUpdate("classification", e.target.value)
+                    }
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
                     <option value="Rare">Rare</option>
@@ -437,47 +481,59 @@ const toggleDeviceVerification = async (deviceId: number) => {
           </div>
         )}
 
-{/* Specifications and Data Recovery section */}
-<br></br>
-<div className="mt-4">
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <p>
-        <p className="block mt-4 mb-2 text-lg font-medium text-black">Created At</p>
-        <input
-          type="text"
-          value={device.createdAt}
-          onChange={(e) => handleDeviceUpdate('createdAt', e.target.value)}
-          className="mt-1 block w-full input input-bordered bg-gray-200 text-black"
-        />
-      </p>
-      <p>
-        <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}</p>
-      </p>
-    </div>
-    <div>
-      {/* Right Column Content */}
-      <p>
-        <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Recovery</p>
-        <select
-          value={device.dataRecovered ? "Yes" : "No"}
-          onChange={(e) => handleDeviceUpdate('dataRecovered', e.target.value === "Yes")}
-          className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
-        >
-          <option value="Yes">Yes</option>
-          <option value="No">No</option>
-        </select>
-      </p>
-    </div>
-  </div>
-</div>
-{renderCexLink()}
-{editMode && (
-  <button className="btn btn-primary mt-4" onClick={saveDeviceUpdates}>
-    Save Changes
-  </button>
-)}
-
+        {/* Specifications and Data Recovery section */}
+        <br></br>
+        <div className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p>
+                <p className="block mt-4 mb-2 text-lg font-medium text-black">
+                  Created At
+                </p>
+                <input
+                  type="text"
+                  value={device.createdAt}
+                  onChange={(e) =>
+                    handleDeviceUpdate("createdAt", e.target.value)
+                  }
+                  className="mt-1 block w-full input input-bordered bg-gray-200 text-black"
+                />
+              </p>
+              <p>
+                <p className="block mt-4 mb-2 text-lg font-medium text-black">
+                  Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}
+                </p>
+              </p>
+            </div>
+            <div>
+              {/* Right Column Content */}
+              <p>
+                <p className="block mt-4 mb-2 text-lg font-medium text-black">
+                  Data Recovery
+                </p>
+                <select
+                  value={device.dataRecovered ? "Yes" : "No"}
+                  onChange={(e) =>
+                    handleDeviceUpdate(
+                      "dataRecovered",
+                      e.target.value === "Yes"
+                    )
+                  }
+                  className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </p>
+            </div>
+          </div>
+        </div>
+        {renderCexLink()}
+        {editMode && (
+          <button className="btn btn-primary mt-4" onClick={saveDeviceUpdates}>
+            Save Changes
+          </button>
+        )}
       </div>
     );
   };
@@ -537,9 +593,7 @@ const toggleDeviceVerification = async (deviceId: number) => {
 
         {/* Devices Table */}
         <div className="main-content flex-grow px-10 pt-5 ">
-          <h5 className="text-black text-3xl font-medium mb-6">
-            Device List
-          </h5>
+          <h5 className="text-black text-3xl font-medium mb-6">Device List</h5>
           <div
             className="overflow-y-auto"
             style={{
@@ -577,17 +631,22 @@ const toggleDeviceVerification = async (deviceId: number) => {
                     <th className="text-black text-lg font-bold min-w-[250px]">
                       Status
                     </th>
-                    </tr>
+                  </tr>
                 </thead>
                 <tbody>
                   {filteredDevices.length === 0 ? (
                     <tr>
-                    <td colSpan={6} className="text-center">No Devices Found</td>
-                  </tr>
-                  
+                      <td colSpan={6} className="text-center">
+                        No Devices Found
+                      </td>
+                    </tr>
                   ) : (
                     filteredDevices.map((device) => (
-                      <tr key={device.id} onClick={() => toggleDeviceDetails(device.id)} className="cursor-pointer hover:bg-gray-200">
+                      <tr
+                        key={device.id}
+                        onClick={() => toggleDeviceDetails(device.id)}
+                        className="cursor-pointer hover:bg-gray-200"
+                      >
                         <td>
                           <img
                             src={image1}
@@ -603,7 +662,9 @@ const toggleDeviceVerification = async (deviceId: number) => {
                         <td className="text-lg">{device.brand}</td>
                         <td className="text-lg">{device.model}</td>
                         <td className="text-lg">{device.createdAt}</td>
-                        <td className="text-lg">{device.classification || "Not Classified"}</td>
+                        <td className="text-lg">
+                          {device.classification || "Not Classified"}
+                        </td>
                         <td>
                           <div className="flex">
                             <label
@@ -631,14 +692,13 @@ const toggleDeviceVerification = async (deviceId: number) => {
                     ))
                   )}
                 </tbody>
-
               </table>
             )}
           </div>
         </div>
 
         {renderDeviceModal()}
-        
+
         {/* Logout Confirmation Modal */}
         {showLogoutModal && (
           <div className="modal modal-open">
@@ -667,10 +727,23 @@ const toggleDeviceVerification = async (deviceId: number) => {
         )}
       </div>
 
-      <button className="btn fixed bottom-4 right-4 shadow-2xl bg-primary text-white h-20 rounded-full">
-        <BiSolidReport size={40} />
-        <div className="pl-2 text-lg ">Check Reports</div>
-      </button>
+      <div className="fixed bottom-4 right-4 flex flex-col ">
+        {isAdminAndStaff ? (
+          <button
+            className="btn  shadow-2xl btn-ghost text-primary h-20 mb-3 rounded-full"
+            onClick={() =>
+              (window.location.href = "/admin?isAdminAndStaff=true")
+            }
+          >
+            <AiOutlineUserSwitch size={40} />
+            <div className="pl-2 text-lg ">Switch to Admin</div>
+          </button>
+        ) : null}
+        <button className="btn    shadow-2xl bg-primary text-white h-20 rounded-full">
+          <BiSolidReport size={40} />
+          <div className="pl-2 text-lg ">Check Reports</div>
+        </button>
+      </div>
     </div>
   );
 };

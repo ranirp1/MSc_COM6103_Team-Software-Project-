@@ -44,10 +44,19 @@ const LoginPage = ({ fullScreen = true }) => {
         console.log("Login Successful");
         const data = await response.json();
         const user = UserModel.fromJson(data);
+        const isAdminAndStaff = user.isAdmin && user.isStaff;
         if (user.isAdmin) {
-          window.location.href = "/admin";
+          if (isAdminAndStaff) {
+            window.location.href = "/admin?isAdminAndStaff=true";
+          } else {
+            window.location.href = "/admin";
+          }
         } else if (user.isStaff) {
-          window.location.href = "/staff";
+          if (isAdminAndStaff) {
+            window.location.href = "/staff?isAdminAndStaff=true";
+          } else {
+            window.location.href = "/staff";
+          }
         } else {
           window.location.href = `/user?userID=${user.id}`;
         }
