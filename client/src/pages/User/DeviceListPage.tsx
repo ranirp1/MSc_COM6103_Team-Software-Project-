@@ -28,6 +28,7 @@ class Device {
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
   cexLink?: string;
+  device_status?: string;
   estimatedValue?:String
 
   constructor(
@@ -45,6 +46,7 @@ class Device {
     dataRetrievalRequested: boolean | null,
     dataRetrievalTimeLeft: string,
     cexLink?: string,
+    device_status?: string,
     estimatedValue?:String
   ) {
     this.id = id;
@@ -61,6 +63,7 @@ class Device {
     this.dataRetrievalRequested = dataRetrievalRequested;
     this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
     this.cexLink = cexLink;
+    this.device_status = device_status;
     this.estimatedValue = estimatedValue
   }
 
@@ -80,6 +83,7 @@ class Device {
       json.dataRetrievalRequested,
       json.dataRetrievalTimeLeft,
       json.cexLink,
+      json.device_status,
       json.estimatedValue
     );
   }
@@ -408,6 +412,9 @@ const UserDashboard = () => {
             </div>
             <div className="p-1">
               <span className="text-black">
+              <p>
+                <strong>Device status: </strong> {device.device_status}
+              </p>
                 Data Recovery:{" "}
                 {device.classification === "Current" ||
                 device.classification === "Rare"
@@ -493,7 +500,7 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-gray-100">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex justify-between items-center p-4 shadow bg-primary">
           <img
