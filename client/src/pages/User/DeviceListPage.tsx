@@ -459,7 +459,8 @@ const UserDashboard = () => {
               </a>
             </div>
           )}
-          {/* <div className="dropdown dropdown-right mt-4">
+          {device.device_status === "Link Received" &&(
+         <div className="dropdown dropdown-right mt-4">
             <div tabIndex={0} role="button" className="btn btn-primary">
               Extend Retrieval
             </div>
@@ -468,14 +469,14 @@ const UserDashboard = () => {
               className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
             >
               <li>
-                <a>3 months</a>
+                <a onClick={handlePaymentModal}>3 months</a>
               </li>
               <li>
-                <a>6 months</a>
+                <a onClick={handlePaymentModal}>6 months</a>
               </li>
             </ul>
-          </div> */}
-
+          </div> 
+ ) }
           <div className="mt-4">
             <span className="font-bold">Data Retrieval Status:</span>
             

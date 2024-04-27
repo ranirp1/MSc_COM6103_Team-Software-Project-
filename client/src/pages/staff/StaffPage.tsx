@@ -390,11 +390,18 @@ const StaffDashboard = () => {
         {editMode && (
           <div className="flex flex-col md:flex-row md:items-start">
             <div className="w-full md:w-2/4 lg:w-2/4">
-              <img
-                src={image2}
-                alt={`${device.brand} ${device.model}`}
-                className="w-full sm:w-30 md:w-44 lg:w-60 h-auto rounded"
-              />
+                 {device.image ? (
+                            <img
+                              src={device.image.replace("../client/public/", "")}
+                              alt={device.image}
+                              className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
+                            />
+                          ) : (
+                            <div className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90">
+                              <GrImage size={50} color="white" className="w-full"/>
+                            </div>
+                          )}
+                      
             </div>
             <div className="md:ml-4 flex-1">
               <div className="grid grid-cols-2 gap-4 p-1">
