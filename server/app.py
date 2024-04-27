@@ -42,7 +42,7 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = 'com6103team03@gmail.com'  # Your Gmail address
 app.config['MAIL_PASSWORD'] = 'nqfm kpqv dprj zfqd'  # Your Gmail password or app-specific password
-
+sender_email = 'com6103team03@gmail.com' 
 mail = Mail(app)
 
 load_dotenv()
@@ -1171,7 +1171,6 @@ def send_email():
     # Set up the email message
     data = request.json
     receiver_email = data.get('email', "manu1998kj@gmail.com")
-    sender_email = "com6103team03@gmail.com"
 
     # Create the email body
     email_body = """
@@ -1193,18 +1192,18 @@ def send_email():
 
 
 @app.route('/api/send-data-retrieval-link', methods=['POST'])
-def send_email_link(email):
-    email = request.json.get('email', None)
-    if not email:
+def send_email_link():
+    data = request.json
+    receiver_email = data.get('email', "manu1998kj@gmail.com")
+    data_retrieval_link = data.get('urlLink', "https://example.com/data-retrieval")
+    
+    if not receiver_email:
         print("email is blank")
         return {'message': 'You need to send an Email!', 'error': True}, 400
+    
+    if not data_retrieval_link:
+        return {'message': 'You need to send a data retrieval link!', 'error': True}, 400
 
-    # Generate link for data retrieval
-    data_retrieval_link = "https://example.com/data-retrieval"
-
-    # Set up the email message
-    sender_email = "your_email@example.com"
-    receiver_email = email
 
     # Create the email body
     email_body = f"""
