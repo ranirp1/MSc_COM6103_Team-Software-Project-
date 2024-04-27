@@ -757,7 +757,7 @@ const UserDashboard = () => {
 
                     <div className="sm:col-span-4 flex  flex-row items-center">
                       <label
-                        htmlFor="image-upload"
+                        htmlFor="imageInput"
                         className="block font-medium leading-6 text-black mr-3"
                       >
                         Upload Image
