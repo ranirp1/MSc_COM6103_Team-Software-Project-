@@ -796,13 +796,16 @@ def create_customer_device():
         return jsonify({'message': 'User not found'}), 404
 
 
-@app.route('/api/getListOfDevices', methods=['GET'])
+@app.route('/api/getListOfDevices', methods=['POST'])
 @cross_origin()
 def getListOfDevices():
-    # combine the device and UserDevice tables to get the list of devices
-    print('inside get list of devices')
-    userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
-
+    data = request.json
+    userID = data.get('userID')
+    if(userID):
+        userDevice = UserDevice.query.filter_by(userID=userID).join(Device, UserDevice.deviceID == Device.deviceID).all()
+    else:
+        userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
+    
     device_list = []
     for userDevice in userDevice:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
@@ -823,6 +826,7 @@ def getListOfDevices():
             'dataRetrievalTimeLeft': '',
             'user_name':user.first_name + ' ' + user.last_name,
             'user_email':user.email,
+            'user_phone':user.phoneNumber,
         }
 
         device_list.append(device_data)

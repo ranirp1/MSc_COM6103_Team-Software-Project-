@@ -94,7 +94,7 @@ const StaffDashboard = () => {
   const fetchDevices = async () => {
     try {
       const response = await fetch(`${API_URL}/api/getListOfDevices`, {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },

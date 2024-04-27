@@ -105,6 +105,9 @@ const UserDashboard = () => {
     }
   }
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const userID = urlParams.get("userID");
+
   const [devices, setDevices] = useState<Device[]>([]);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -139,10 +142,11 @@ const UserDashboard = () => {
   const fetchDevices = async () => {
     try {
       const response = await fetch(`${API_URL}/api/getListOfDevices`, {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ userID }),
       });
 
       if (response.ok) {
@@ -161,17 +165,20 @@ const UserDashboard = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    if (!userID) {
+      alert("Please login to add device");
+      window.location.href = "/login";
+    }
     const formData = new FormData();
-    formData.append('brand', brand);
-    formData.append('model', model);
-    formData.append('deviceStorage', deviceStorage);
-    formData.append('deviceColor', deviceColor);
-    formData.append('deviceCondition', deviceCondition);
-    formData.append('deviceClassification', deviceClassification);
-    formData.append('dateofPurchase', dateofPurchase);
-    formData.append('dateofRelease', dateofRelease);
-    formData.append('userID', '1'); // userID is hardcoded for now, replace with actual user ID later
+    formData.append("brand", brand);
+    formData.append("model", model);
+    formData.append("deviceStorage", deviceStorage);
+    formData.append("deviceColor", deviceColor);
+    formData.append("deviceCondition", deviceCondition);
+    formData.append("deviceClassification", deviceClassification);
+    formData.append("dateofPurchase", dateofPurchase);
+    formData.append("dateofRelease", dateofRelease);
+    formData.append("userID", userID || "");
 
     const imageInput = (
       e.target as HTMLFormElement
@@ -179,9 +186,9 @@ const UserDashboard = () => {
     const imageFile = imageInput ? imageInput.files?.[0] : null;
 
     if (imageFile) {
-      formData.append('image', imageFile);
-  }
-        
+      formData.append("image", imageFile);
+    }
+
     try {
       const response = await fetch(`${API_URL}/api/createDevice`, {
         method: "POST",
@@ -190,25 +197,13 @@ const UserDashboard = () => {
 
       if (response.ok) {
         console.log("Creation Successful");
-        // window.location.href = "/user";
+        window.location.reload();
       } else {
         console.log("Creation Error");
         // Handle error
       }
     } catch (error) {
       console.log("Error:", error);
-    }
-    // Check if data retrieval is selected as "Yes"
-    {
-      if (dataRetrieval) {
-        openPaymentModel();
-        return;
-      } else {
-        // Handle form submission without showing popup
-        // For now, just log a message
-        console.log("Form submitted without showing popup");
-        navigate("/user");
-      }
     }
   };
 
@@ -334,11 +329,12 @@ const UserDashboard = () => {
       return "Not applicable";
     };
 
-    const isQRCodeVisible = device.classification === 'Rare' || device.classification === 'Current';
+    const isQRCodeVisible =
+      device.classification === "Rare" || device.classification === "Current";
     const isVerified = device.verified;
 
     function handlePaymentModal(): void {
-      setShowPopup(false)
+      setShowPopup(false);
       openPaymentModel();
       return;
     }
@@ -443,19 +439,19 @@ const UserDashboard = () => {
               )}
             </div>
           </div>
-         {isVerified &&(
-          <div className="mt-2">
-            <a
-              //href={""}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
-              onClick={handlePaymentModal}
-            >
-              Proceed for Data Retrieval
-            </a>
-          </div>
-         )}
+          {isVerified && (
+            <div className="mt-2">
+              <a
+                //href={""}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                onClick={handlePaymentModal}
+              >
+                Proceed for Data Retrieval
+              </a>
+            </div>
+          )}
           {/* <div className="dropdown dropdown-right mt-4">
             <div tabIndex={0} role="button" className="btn btn-primary">
               Extend Retrieval
@@ -809,6 +805,7 @@ const UserDashboard = () => {
                 <button
                   className="btn border w-1/2 mr-3"
                   onClick={handleCancel}
+                  type="button"
                 >
                   {" "}
                   Cancel
@@ -816,6 +813,7 @@ const UserDashboard = () => {
                 <button
                   className="btn btn-primary w-1/2"
                   onClick={() => setOpen(false)}
+                  type="submit"
                 >
                   Save
                 </button>
