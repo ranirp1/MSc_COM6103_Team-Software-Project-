@@ -114,6 +114,9 @@ const UserDashboard = () => {
     }
   }
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const userID = urlParams.get("userID");
+
   const [devices, setDevices] = useState<Device[]>([]);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -149,10 +152,11 @@ const UserDashboard = () => {
   const fetchDevices = async () => {
     try {
       const response = await fetch(`${API_URL}/api/getListOfDevices`, {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ userID }),
       });
 
       if (response.ok) {
@@ -171,17 +175,20 @@ const UserDashboard = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    if (!userID) {
+      alert("Please login to add device");
+      window.location.href = "/login";
+    }
     const formData = new FormData();
-    formData.append('brand', brand);
-    formData.append('model', model);
-    formData.append('deviceStorage', deviceStorage);
-    formData.append('deviceColor', deviceColor);
-    formData.append('deviceCondition', deviceCondition);
-    formData.append('deviceClassification', deviceClassification);
-    formData.append('dateofPurchase', dateofPurchase);
-    formData.append('dateofRelease', dateofRelease);
-    formData.append('userID', '1'); // userID is hardcoded for now, replace with actual user ID later
+    formData.append("brand", brand);
+    formData.append("model", model);
+    formData.append("deviceStorage", deviceStorage);
+    formData.append("deviceColor", deviceColor);
+    formData.append("deviceCondition", deviceCondition);
+    formData.append("deviceClassification", deviceClassification);
+    formData.append("dateofPurchase", dateofPurchase);
+    formData.append("dateofRelease", dateofRelease);
+    formData.append("userID", userID || "");
 
     const imageInput = (
       e.target as HTMLFormElement
@@ -201,7 +208,7 @@ const UserDashboard = () => {
 
       if (response.ok) {
         console.log("Creation Successful");
-        window.location.href = "/user";
+        window.location.reload();
       } else {
         console.log("Creation Error");
         // Handle error
@@ -209,19 +216,6 @@ const UserDashboard = () => {
     }
     catch (error) {
       console.log("Error:", error);
-    }
-    //Check if data retrieval is selected as "Yes"
-    {
-      if (dataRetrieval) {
-        setShowPopup(false);
-        // openPaymentModel();
-        return;
-      } else {
-        // Handle form submission without showing popup
-        // For now, just log a message
-        console.log("Form submitted without showing popup");
-        navigate("/user");
-      }
     }
   };
 
@@ -350,12 +344,13 @@ const UserDashboard = () => {
       return "Not applicable";
     };
 
-    const isQRCodeVisible = device.classification === 'Rare' || device.classification === 'Current';
+    const isQRCodeVisible =
+      device.classification === "Rare" || device.classification === "Current";
     const isVerified = device.verified;
     const isRecycled = device.classification === 'Recycle';
 
     function handlePaymentModal(): void {
-      setShowPopup(false)
+      setShowPopup(false);
       openPaymentModel();
       return;
     }
@@ -768,7 +763,7 @@ const UserDashboard = () => {
 
                     <div className="sm:col-span-4 flex  flex-row items-center">
                       <label
-                        htmlFor="image-upload"
+                        htmlFor="imageInput"
                         className="block font-medium leading-6 text-black mr-3"
                       >
                         Upload Image
@@ -824,6 +819,7 @@ const UserDashboard = () => {
                   className="btn btn-primary w-1/2"
                   onClick={() => setOpen(false)}
                   type="submit"
+                  
                 >
                   Save
                 </button>

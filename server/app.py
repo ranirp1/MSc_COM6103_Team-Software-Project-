@@ -509,7 +509,7 @@ def register():
     )
 
     # Generate JWT token for the newly created user
-    token = generate_token(newUser)
+    # token = generate_token(newUser)
 
     # source:
     # https://stackoverflow.com/a/16336401/11449502
@@ -925,21 +925,23 @@ def create_customer_device():
         return jsonify({'message': 'User not found'}), 404
 
 
-@app.route('/api/getListOfDevices', methods=['GET'])
+@app.route('/api/getListOfDevices', methods=['POST'])
 @cross_origin()
 def getListOfDevices():
-    # combine the device and UserDevice tables to get the list of devices
-    print('inside get list of devices')
-    userDevices = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
+    data = request.json
+    userID = data.get('userID')
+    if(userID):
+        userDevice = UserDevice.query.filter_by(userID=userID).join(Device, UserDevice.deviceID == Device.deviceID).all()
+    else:
+        userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
     
-
-
     device_list = []
     for userDevice in userDevices:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
         estimatedValues =  userDevice.estimatedValue
         if not estimatedValues:
             estimatedValues = getEstimatedValue(device.model, userDevice.deviceCondition)
+        user = User.query.filter_by(id=userDevice.userID).first()
         device_data = {
             'id': userDevice.deviceID,
             'brand': device.brand,
@@ -953,6 +955,10 @@ def getListOfDevices():
             'condition': userDevice.deviceCondition,
             'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
+            'dataRetrievalTimeLeft': '',
+            'user_name':user.first_name + ' ' + user.last_name,
+            'user_email':user.email,
+            'user_phone':user.phoneNumber,
             'dataRetrievalTimeLeft': '',
             'device_status': str(userDevice.device_status),
             'estimatedValue': userDevice.estimatedValue

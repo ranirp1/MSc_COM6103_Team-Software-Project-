@@ -49,7 +49,7 @@ const LoginPage = ({ fullScreen = true }) => {
         } else if (user.isStaff) {
           window.location.href = "/staff";
         } else {
-          window.location.href = "/user";
+          window.location.href = `/user?userID=${user.id}`;
         }
       } else {
         setShowToast(2);

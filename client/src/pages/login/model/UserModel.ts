@@ -1,5 +1,5 @@
 export class UserModel {
-  userID: number;
+  id: number;
   userName: string;
   email: string;
   phoneNumber: string;
@@ -16,7 +16,7 @@ export class UserModel {
     isAdmin: boolean,
     isStaff: boolean
   ) {
-    this.userID = userID;
+    this.id = userID;
     this.userName = userName;
     this.email = email;
     this.phoneNumber = phoneNumber;
@@ -27,7 +27,7 @@ export class UserModel {
 
   static fromJson(json: any): UserModel {
     return new UserModel(
-      json.userID,
+      json.id,
       json.userName,
       json.email,
       json.phoneNumber,
