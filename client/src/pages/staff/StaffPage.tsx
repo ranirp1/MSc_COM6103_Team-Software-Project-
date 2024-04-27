@@ -16,6 +16,7 @@ import { redirect } from "react-router-dom";
 import { BiSolidReport } from "react-icons/bi";
 import { GrImage } from "react-icons/gr";
 import { AiOutlineUserSwitch } from "react-icons/ai";
+import DeviceStatusBadge from "./DeviceStatusBadge";
 
 class Device {
   id: number;
@@ -661,25 +662,7 @@ const StaffDashboard = () => {
                         </td>
                         <td>
                           <div className="flex">
-                            <label
-                              htmlFor={`toggle-${device.id}`}
-                              className="relative flex group p-2"
-                              onClick={(e) => e.stopPropagation()} // Prevent modal trigger when toggling verification
-                            >
-                              <span className="text-lg mr-3">
-                                {device.verified ? "Verified" : "Not Verified"}
-                              </span>
-                              <input
-                                type="checkbox"
-                                id={`toggle-${device.id}`}
-                                className="sr-only peer"
-                                checked={device.verified}
-                                onChange={() => {
-                                  toggleDeviceVerification(device.id);
-                                }}
-                              />
-                              <span className="w-12 h-6 flex items-center flex-shrink-0 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-primary after:w-6 after:h-6 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-full"></span>
-                            </label>
+                            <DeviceStatusBadge status={device.device_status??''}/>
                           </div>
                         </td>
                       </tr>
