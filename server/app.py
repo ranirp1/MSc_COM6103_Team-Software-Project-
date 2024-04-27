@@ -804,7 +804,6 @@ def createDevice():
                 imageUrl=filepath,
                 qrCodeUrl=qrCodeUrl,
                 dateOfCreation=current_date.strftime("%Y-%m-%d"),
-                dataRetrievalID=0,
                 estimatedValue=estimatedValue
             )
             db.session.add(newUserDeviceAdded)
