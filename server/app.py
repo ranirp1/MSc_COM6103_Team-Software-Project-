@@ -40,9 +40,8 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = 'your_email@gmail.com'  # Your Gmail address
-app.config['MAIL_PASSWORD'] = 'your_password'  # Your Gmail password or app-specific password
-app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
+app.config['MAIL_USERNAME'] = 'com6103team03@gmail.com'  # Your Gmail address
+app.config['MAIL_PASSWORD'] = 'nqfm kpqv dprj zfqd'  # Your Gmail password or app-specific password
 
 mail = Mail(app)
 
@@ -1168,10 +1167,11 @@ def generate_report():
 
 
 @app.route('/api/send-payment-confirmation-mail', methods=['POST'])
-def send_email(email):
+def send_email():
     # Set up the email message
-    sender_email = "your_email@example.com"
-    receiver_email = email
+    data = request.json
+    receiver_email = data.get('email', "manu1998kj@gmail.com")
+    sender_email = "com6103team03@gmail.com"
 
     # Create the email body
     email_body = """
@@ -1187,9 +1187,9 @@ def send_email(email):
         msg = Message('Payment Confirmation', sender=sender_email, recipients=[receiver_email])
         msg.body = email_body
         mail.send(msg)
-        print("Email sent successfully!")
+        return {'message': 'Email sent successfully!'}, 200
     except Exception as e:
-        print("Failed to send email:", str(e))
+        return {'message': 'Failed to send email.', 'error': str(e)}, 500
 
 
 @app.route('/api/send-data-retrieval-link', methods=['POST'])
