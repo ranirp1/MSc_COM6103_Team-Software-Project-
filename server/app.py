@@ -29,6 +29,9 @@ from os import environ
 SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
 
 from enum import Enum as PyEnum
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -1113,8 +1116,8 @@ def generate_report():
     # Fetch payment transactions and devices input by users within the specified date range
     try:
 
-        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date))
-        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date))
+        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
+        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
 
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
