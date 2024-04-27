@@ -5,6 +5,7 @@ from sqlalchemy.sql import func
 from sqlalchemy import text
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy import Enum
 
 import os
 from dotenv import load_dotenv
@@ -26,6 +27,8 @@ from functools import wraps
 from os import environ
 
 SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
+
+from enum import Enum as PyEnum
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -78,7 +81,6 @@ class User(db.Model):
             'isAdmin': self.isAdmin
         }
 
-
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
@@ -93,8 +95,27 @@ class Device(db.Model):
             'brand': self.brand,
             'model': self.model,
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
-            'isVerified': self.isVerified
+            'isVerified': self.isVerified,
         }
+
+class _DATA_RETRIEVED(PyEnum):
+    SENT = 'Sent for Processing'
+    RECEIVED = 'Received for Processing'
+    RETRIEVED = 'Data Retrieved'
+
+    def __str__(self):
+        return self.value
+
+
+class Device_Status(PyEnum):
+    DEV_REGISTERED = 'Device Registered'
+    DEV_VERIF = 'Device Verified'
+    PAYMENT_DONE = 'Payment Processed' #Payment done
+    DATA_RETRIEVED = _DATA_RETRIEVED
+    URL_READY = 'Link Received'
+
+    def __str__(self):
+        return self.value
 
 
 class UserDevice(db.Model):
@@ -110,8 +131,9 @@ class UserDevice(db.Model):
     imageUrl = db.Column(db.String(255))
     qrCodeUrl = db.Column(db.String(255))
     dateOfCreation = db.Column(db.Date)
-    dataRetrievalID = db.Column(db.Integer, nullable=True)
+    # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
+    device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
 
     # Define foreign key relationships
     user = relationship('User', backref='user_device', foreign_keys=[userID])
@@ -130,18 +152,23 @@ class UserDevice(db.Model):
             'imageUrl': self.imageUrl,
             'qrCodeUrl': self.qrCodeUrl,
             'dateOfCreation': str(self.dateOfCreation) if self.dateOfCreation else None,
-            'dataRetrievalID': self.dataRetrievalID,
-            'estimatedValue': self.estimatedValue
+            # 'dataRetrievalID': self.dataRetrievalID,
+            'estimatedValue': self.estimatedValue,
+            'device_status': str(self.device_status.value)
         }
 
 
 class DataRetrieval(db.Model):
     __tablename__ = 'dataretrieval'
     dataRetrievalID = db.Column(db.Integer, primary_key=True)
+    userDeviceId = db.Column(db.Integer, ForeignKey('user_device.userDeviceID'), nullable=False)
+    userDevice = relationship('UserDevice', backref=db.backref('userDevice'))
     dataUrl = db.Column(db.String(255), nullable=True)
     dateOfCreation = db.Column(db.Date, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+
+    # user_device = relationship('UserDevice', backref='dataretrieval', foreign_keys=[userDeviceId])
 
     def serialize(self):
         return {
@@ -296,31 +323,63 @@ with app.app_context():
     # Commit changes
     db.session.commit()
 
+def updateDeviceStatus(user_device, newStatus):
 
-@app.route('/api/getEstimatedValue', methods=['GET'])
+    user_device.device_status = newStatus
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        raise e
+
+@app.route('/api/updateDeviceStatus', methods=['POST'])
 @cross_origin()
-def getEstimatedValue():
+def updateDeviceStatus_api():
+    data = request.json
+    userDeviceId = data.get("userDeviceId")
+    newStatus = data.get("newStatus")
+    statusEnum = Device_Status[newStatus]
+
+    userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceId).first()
+    if not userDevice:
+        return jsonify({'message': 'user device not found'}), 400
+
+
+    try:
+        userDevice.device_status = statusEnum
+        db.session.commit()
+        return jsonify({'message': 'successfully updated device status'}), 200
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'error updating device status'}), 500
+
+
+
+def getEstimatedValue(model, condition):
     """
     Get the estimated value of a device based on the device model.
     """
-    device_model = request.args.get('model')
-    condition = request.args.get('condition')
-    device = Device.query.filter_by(model=device_model).first()
+    device = Device.query.filter_by(model=model).first()
     if not device:
         return jsonify({'message': 'Device not found'}), 404
 
     estimated_value = estimateValues.query.filter_by(deviceID=device.deviceID).first()
     if not estimated_value:
-        return jsonify({'message': 'Estimated value not found'}), 404
+        return "NA"
 
     if condition == 'new':
-        return jsonify({'estimatedValue': estimated_value.newDeviceEstimatedPrice})
+        return str(estimated_value.newDeviceEstimatedPrice)
     elif condition == 'used':
-        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
+        return str(estimated_value.usedDeviceEstimatedPrice)
     elif condition == 'damaged':
-        return jsonify({'estimatedValue': estimated_value.damagedDeviceEstimatedPrice})
+        return  str(estimated_value.damagedDeviceEstimatedPrice)
     else:
-        return jsonify({'estimatedValue': estimated_value.usedDeviceEstimatedPrice})
+        return str(estimated_value.usedDeviceEstimatedPrice)
 
 
 @app.route("/")
@@ -511,7 +570,7 @@ def updateUserToStaff():
 @app.route('/api/updateUserToAdmin', methods=['POST'])
 @cross_origin()
 def updateUserToAdmin():
-    """
+    """ 
     Update a user's role to admin.
     Args:
         email (str): The email of the user to update.
@@ -652,6 +711,11 @@ def createDevice():
     qrCodeUrl = request.form.get('qrCodeUrl')
     dateOfRelease = request.form.get('dateofRelease')
     dateOfPurchase = request.form.get('dateofPurchase')
+   # print("here")
+    # print(data)
+    dataRetieval = data.get('dataRetieval')
+    duration = data.get('duration')
+    estimatedValue = getEstimatedValue(model, deviceCondition)
 
     imageFile = request.files.get('image')
     filepath = None
@@ -701,8 +765,7 @@ def createDevice():
             imageUrl=filepath,
             qrCodeUrl=qrCodeUrl,
             dateOfCreation=current_date.strftime("%Y-%m-%d"),
-            dataRetrievalID=0,
-            estimatedValue=""
+            estimatedValue=estimatedValue
         )
         try:
             db.session.add(user_device)
@@ -743,16 +806,82 @@ def createDevice():
                 qrCodeUrl=qrCodeUrl,
                 dateOfCreation=current_date.strftime("%Y-%m-%d"),
                 dataRetrievalID=0,
-                estimatedValue=""
+                estimatedValue=estimatedValue
             )
             db.session.add(newUserDeviceAdded)
             db.session.commit()
             return jsonify({'message': 'User Device creation successful'}), 200
         except Exception as e:
+            print("error at create Device")
             print(e)
             db.session.rollback()
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
+
+@app.route('/api/create-data-retrieval', methods=['POST'])
+@cross_origin()
+def createRetrievalData():
+    data = request.json
+    dataRetrieval = data.get('dataRetrieval')
+    duration = 3 # data.get('duration')
+    userDeviceID = data.get('userDeviceID')
+
+    if dataRetrieval:
+        print("retrieving data has been selected")
+        print(f"duation: {duration}")
+        newDataRetrieval = DataRetrieval(
+            userDeviceId = userDeviceID,
+            dataUrl = "https://google.com",
+            dateOfCreation = datetime.now(),
+            duration=3,
+            password="122"
+                     """
+                     userDeviceID
+                     dataUrl
+                     dateOfCreation
+                     duration
+                     password
+                     """
+        )
+
+    try:
+        db.session.add(newDataRetrieval)
+        db.session.commit()
+        return jsonify({'message': 'Data Retrieval creation successful'}), 200
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'Data Retrieval creation error'}), 500
+
+@app.route('/api/update-data-retrieval-url', methods=['POST'])
+@cross_origin()
+def updateRetrievalData():
+    print("here")
+    data = request.json
+
+    userDeviceID = data.get('userDeviceID')
+    url = data.get('dataRetrievalUrl')
+
+    # userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
+
+    # if not userDevice:
+    #     return jsonify({'message': 'User Device not found'}), 400
+
+    dataRetrieval = DataRetrieval.query.filter_by(userDeviceID=userDeviceID).first()
+    if not dataRetrieval:
+        return jsonify({'message': 'DR with that device not found'}), 400
+
+    dataRetrieval.dataUrl = url
+    try:
+        db.session.commit()
+        # TODO
+        # SEND EMAIL HERE
+        return jsonify({'message': 'Url updated'}), 200
+    except Exception as e:
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'Error updating url'}), 500
 
 
 @app.route('/api/customer_device', methods=['POST'])
@@ -807,8 +936,11 @@ def getListOfDevices():
         userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
     
     device_list = []
-    for userDevice in userDevice:
+    for userDevice in userDevices:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
+        estimatedValues =  userDevice.estimatedValue
+        if not estimatedValues:
+            estimatedValues = getEstimatedValue(device.model, userDevice.deviceCondition)
         user = User.query.filter_by(id=userDevice.userID).first()
         device_data = {
             'id': userDevice.deviceID,
@@ -827,6 +959,9 @@ def getListOfDevices():
             'user_name':user.first_name + ' ' + user.last_name,
             'user_email':user.email,
             'user_phone':user.phoneNumber,
+            'dataRetrievalTimeLeft': '',
+            'device_status': str(userDevice.device_status),
+            'estimatedValue': userDevice.estimatedValue
         }
 
         device_list.append(device_data)
@@ -931,12 +1066,21 @@ def update_device():
         return jsonify({'message': 'Device ID is required'}), 400
 
     try:
-        device = Device.query.filter_by(deviceID=device_id).first()
+        device = UserDevice.query.filter_by(deviceID=device_id).first()
         if not device:
             return jsonify({'message': 'Device not found'}), 404
-
-        for field in ['brand', 'model', 'storage', 'color', 'condition', 'classification', 'dateOfRelease',
-                      'isVerified', 'dataRecovered']:
+        
+        if 'storage' in data:
+            setattr(device, 'deviceStorage', data['storage'])
+        if 'color' in data:
+            setattr(device, 'deviceColor', data['color'])
+        if 'condition' in data:
+            setattr(device, 'deviceCondition', data['condition'])
+        if 'classification' in data:
+            setattr(device, 'deviceClassification', data['classification'])
+        
+        for field in ['brand', 'model',  'dateOfRelease',
+                      'isVerified','device_status','estimatedValue']:
             if field in data:
                 setattr(device, field, data[field])
 
@@ -970,6 +1114,7 @@ def generate_report():
 
     # Fetch payment transactions and devices input by users within the specified date range
     try:
+
         payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date))
         user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date))
 

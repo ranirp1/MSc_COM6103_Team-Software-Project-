@@ -14,6 +14,7 @@ import emptyListImage from "../../assets/empty_list.svg";
 import { API_URL } from "../../constants/constant";
 import { redirect } from "react-router-dom";
 import { BiSolidReport } from "react-icons/bi";
+import { GrImage } from "react-icons/gr";
 import { AiOutlineUserSwitch } from "react-icons/ai";
 
 class Device {
@@ -31,6 +32,8 @@ class Device {
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
   cexLink?: string;
+  device_status?: string;
+  estimatedValue?: String;
 
   constructor(
     id: number,
@@ -46,7 +49,9 @@ class Device {
     classification: string,
     dataRetrievalRequested: boolean | null,
     dataRetrievalTimeLeft: string,
-    cexLink?: string
+    cexLink?: string,
+    device_status?: string,
+    estimatedValue?: String
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -62,6 +67,8 @@ class Device {
     this.dataRetrievalRequested = dataRetrievalRequested;
     this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
     this.cexLink = cexLink;
+    this.device_status = device_status;
+    this.estimatedValue = estimatedValue;
   }
 
   static fromJson(json: any): Device {
@@ -79,7 +86,9 @@ class Device {
       json.classification,
       json.dataRetrievalRequested,
       json.dataRetrievalTimeLeft,
-      json.cexLink
+      json.cexLink,
+      json.device_status,
+      json.estimatedValue
     );
   }
 }
@@ -129,6 +138,7 @@ const StaffDashboard = () => {
     setIsModalVisible(true);
   };
 
+
   useEffect(() => {
     // Function to apply sorting
     const sortDevices = () => {
@@ -157,7 +167,7 @@ const StaffDashboard = () => {
     // Find the device and its current verification status
     const deviceIndex = devices.findIndex((d) => d.id === deviceId);
     if (deviceIndex === -1) {
-      console.error("Device not found");
+      console.error('Device not found');
       return;
     }
 
@@ -167,9 +177,9 @@ const StaffDashboard = () => {
     try {
       // Update the backend first
       const response = await fetch(`${API_URL}/api/changeDeviceVerification/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           deviceID: deviceId,
@@ -178,7 +188,7 @@ const StaffDashboard = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Backend failed to update device verification status");
+        throw new Error('Backend failed to update device verification status');
       }
 
       // Update the frontend after a successful backend response
@@ -191,7 +201,7 @@ const StaffDashboard = () => {
         })
       );
     } catch (error) {
-      console.error("Error updating verification status:", error);
+      console.error('Error updating verification status:', error);
       // Revert the frontend update if the backend call fails
       setDevices(
         devices.map((d, index) => {
@@ -205,10 +215,12 @@ const StaffDashboard = () => {
     }
   };
 
+
   // Function to filter devices based on search query and verification status
   const getFilteredDevices = () => {
     return devices.filter(
-      (device) => device.brand.toLowerCase().includes(searchQuery)
+      (device) =>
+        device.brand.toLowerCase().includes(searchQuery)
       //device.verified === showVerified
     );
   };
@@ -225,8 +237,8 @@ const StaffDashboard = () => {
 
     // Correctly type the styles object
     const modalBoxStyles: React.CSSProperties = {
-      maxHeight: "98vh",
-      overflowY: "hidden",
+      maxHeight: '98vh',
+      overflowY: 'auto' //change to scroll
     };
 
     return (
@@ -245,12 +257,10 @@ const StaffDashboard = () => {
     );
   };
 
+
   const renderDeviceDetails = (device: Device) => {
     // Function to update device details in state
-    const handleDeviceUpdate = (
-      field: keyof Device,
-      value: string | boolean
-    ) => {
+    const handleDeviceUpdate = (field: keyof Device, value: string | boolean) => {
       if (!editMode) return;
 
       setDevices((prevDevices) =>
@@ -260,41 +270,20 @@ const StaffDashboard = () => {
       );
     };
 
-    const createCexSearchUrl = (
-      manufacturer: string,
-      model: string,
-      storage: string,
-      color: string
-    ) => {
+    const createCexSearchUrl = (manufacturer: string, model: string, storage: string, color: string) => {
       const baseUrl = "https://uk.webuy.com/search";
-      const queryParts = [manufacturer, model, storage, color].filter(
-        (part) => part
-      ); // Filters out null or empty strings
-      const query = queryParts.join(" "); // Joins the parts into a single string with spaces
+      const queryParts = [manufacturer, model, storage, color].filter(part => part); // Filters out null or empty strings
+      const query = queryParts.join(' '); // Joins the parts into a single string with spaces
       return `${baseUrl}?stext=${encodeURIComponent(query)}`;
     };
 
     const renderCexLink = () => {
-      if (
-        device.classification === "Rare" ||
-        device.classification === "Current"
-      ) {
-        const cexUrl = createCexSearchUrl(
-          device.brand,
-          device.model,
-          device.storage,
-          device.color
-        );
+      if (device.classification === 'Rare' || device.classification === 'Current') {
+        const cexUrl = createCexSearchUrl(device.brand, device.model, device.storage, device.color);
         return (
           <div className="mt-2">
-            <p className="block mt-4 mb-2 text-lg font-medium text-black">
-              CEX Link:{" "}
-              <a
-                href={cexUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:text-blue-700"
-              >
+            <p className="block mt-4 mb-2 text-lg font-medium text-black">CEX Link:{' '}
+              <a href={cexUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
                 Search on CEX
               </a>
             </p>
@@ -346,8 +335,8 @@ const StaffDashboard = () => {
     const saveDeviceUpdates = async () => {
       try {
         const response = await fetch(`${API_URL}/api/updateDevice`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(device),
         });
 
@@ -356,15 +345,15 @@ const StaffDashboard = () => {
           throw new Error(`Failed to update device: ${errorData.message}`);
         }
 
-        alert("Device updated successfully!");
+        alert('Device updated successfully!');
       } catch (error: unknown) {
         if (error instanceof Error) {
-          console.error("Error saving device updates:", error);
+          console.error('Error saving device updates:', error);
           alert(`Failed to save device updates: ${error.message}`);
         } else {
           // Handle cases where the error is not an instance of Error
-          console.error("An unexpected error occurred:", error);
-          alert("An unexpected error occurred. Please try again.");
+          console.error('An unexpected error occurred:', error);
+          alert('An unexpected error occurred. Please try again.');
         }
       }
     };
@@ -374,31 +363,24 @@ const StaffDashboard = () => {
         <h3 className="text-2xl mb-4">
           {/* Conditional rendering of edit mode toggle button */}
           <div className="mb-4 top-2">
-            <button
-              onClick={() => setEditMode(!editMode)}
-              className="btn btn-primary"
-            >
+            <button onClick={() => setEditMode(!editMode)} className="btn btn-primary">
               {editMode ? "Disable Edit Mode" : "Enable Edit Mode"}
             </button>
           </div>
           {editMode ? (
             <>
-              <label className="block mb-2 text-lg font-medium text-black">
-                Name
-              </label>
+              <label className="block mb-2 text-lg font-medium text-black">Name</label>
               <input
                 type="text"
                 value={device.brand}
-                onChange={(e) => handleDeviceUpdate("brand", e.target.value)}
+                onChange={(e) => handleDeviceUpdate('brand', e.target.value)}
                 className="input input-bordered w-full bg-gray-200 text-black"
               />
-              <label className="block mt-4 mb-2 text-lg font-medium text-black">
-                Model
-              </label>
+              <label className="block mt-4 mb-2 text-lg font-medium text-black">Model</label>
               <input
                 type="text"
                 value={device.model}
-                onChange={(e) => handleDeviceUpdate("model", e.target.value)}
+                onChange={(e) => handleDeviceUpdate('model', e.target.value)}
                 className="input input-bordered w-full bg-gray-200 text-black"
               />
             </>
@@ -476,6 +458,29 @@ const StaffDashboard = () => {
                     <option value="Recycle">Recycle</option>
                   </select>
                 </div>
+                <div>
+                  <p className="block mt-4 mb-2 text-lg font-medium text-black">Status</p>
+                  <select
+                    value={device.device_status}
+                    onChange={(e) => handleDeviceUpdate('device_status', e.target.value)}
+                    className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
+                  >
+                    <option value="DEV_REGISTERED">Device Registered</option>
+                    <option value="DEV_VERIF">Device Verified</option>
+                    <option value="PAYMENT_DONE">Payment Processed</option>
+                    <option value="DATA_RETRIEVED">Data Retrieved</option>
+                    <option value="URL_READY">Link Received</option>
+                  </select>
+                </div>
+                <div>
+                  <span className="block mt-4 mb-2 text-lg font-medium text-black">Estimated Price</span>
+                  <input
+                    type="text"
+                    value={device.estimatedValue?.toString() || ""}
+                    onChange={(e) => handleDeviceUpdate('color', e.target.value)}
+                    className="input input-bordered bg-gray-200 text-black w-full"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -487,38 +492,25 @@ const StaffDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p>
-                <p className="block mt-4 mb-2 text-lg font-medium text-black">
-                  Created At
-                </p>
+                <p className="block mt-4 mb-2 text-lg font-medium text-black">Created At</p>
                 <input
                   type="text"
                   value={device.createdAt}
-                  onChange={(e) =>
-                    handleDeviceUpdate("createdAt", e.target.value)
-                  }
+                  onChange={(e) => handleDeviceUpdate('createdAt', e.target.value)}
                   className="mt-1 block w-full input input-bordered bg-gray-200 text-black"
                 />
               </p>
               <p>
-                <p className="block mt-4 mb-2 text-lg font-medium text-black">
-                  Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}
-                </p>
+                <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}</p>
               </p>
             </div>
             <div>
               {/* Right Column Content */}
               <p>
-                <p className="block mt-4 mb-2 text-lg font-medium text-black">
-                  Data Recovery
-                </p>
+                <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Recovery</p>
                 <select
                   value={device.dataRecovered ? "Yes" : "No"}
-                  onChange={(e) =>
-                    handleDeviceUpdate(
-                      "dataRecovered",
-                      e.target.value === "Yes"
-                    )
-                  }
+                  onChange={(e) => handleDeviceUpdate('dataRecovered', e.target.value === "Yes")}
                   className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                 >
                   <option value="Yes">Yes</option>
@@ -534,6 +526,7 @@ const StaffDashboard = () => {
             Save Changes
           </button>
         )}
+
       </div>
     );
   };
@@ -636,10 +629,9 @@ const StaffDashboard = () => {
                 <tbody>
                   {filteredDevices.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center">
-                        No Devices Found
-                      </td>
+                      <td colSpan={6} className="text-center">No Devices Found</td>
                     </tr>
+
                   ) : (
                     filteredDevices.map((device) => (
                       <tr
@@ -648,16 +640,18 @@ const StaffDashboard = () => {
                         className="cursor-pointer hover:bg-gray-200"
                       >
                         <td>
-                          <img
-                            src={image1}
-                            alt={`${device.brand} ${device.model}`}
-                            className="rounded-lg shadow-lg"
-                            style={{
-                              width: "100px",
-                              height: "100px",
-                              objectFit: "cover",
-                            }}
-                          />
+
+                          {device.image ? (
+                            <img
+                              src={device.image.replace("../client/public/", "")}
+                              alt={device.image}
+                              className="h-24 w-16 fel flex-col place-content-center place-items-center items-center bg-primary bg-opacity-90 rounded shadow"
+                            />
+                          ) : (
+                            <div className="h-24 w-16 felx flex-col place-content-center place-items-center items-center bg-primary bg-opacity-90 rounded shadow">
+                              <GrImage size={50} color="white" className="w-full"/>
+                            </div>
+                          )}
                         </td>
                         <td className="text-lg">{device.brand}</td>
                         <td className="text-lg">{device.model}</td>

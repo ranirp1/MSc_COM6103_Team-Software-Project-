@@ -12,6 +12,7 @@ import QRCode from "react-qr-code";
 import emptyListImage from "../../assets/empty_device_list.svg";
 import { GrImage } from "react-icons/gr";
 import { createCexSearchUrl } from "../landing/DeviceTypeDialog";
+import DeviceStatusComponent from "./DeviceStatusComponent";
 
 class Device {
   id: number;
@@ -28,6 +29,8 @@ class Device {
   dataRetrievalRequested?: boolean | null;
   dataRetrievalTimeLeft: string;
   cexLink?: string;
+  device_status?: string;
+  estimatedValue?: String
 
   constructor(
     id: number,
@@ -43,7 +46,9 @@ class Device {
     classification: string,
     dataRetrievalRequested: boolean | null,
     dataRetrievalTimeLeft: string,
-    cexLink?: string
+    cexLink?: string,
+    device_status?: string,
+    estimatedValue?: String
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -59,6 +64,8 @@ class Device {
     this.dataRetrievalRequested = dataRetrievalRequested;
     this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
     this.cexLink = cexLink;
+    this.device_status = device_status;
+    this.estimatedValue = estimatedValue
   }
 
   static fromJson(json: any): Device {
@@ -76,7 +83,9 @@ class Device {
       json.classification,
       json.dataRetrievalRequested,
       json.dataRetrievalTimeLeft,
-      json.cexLink
+      json.cexLink,
+      json.device_status,
+      json.estimatedValue
     );
   }
 }
@@ -124,6 +133,7 @@ const UserDashboard = () => {
   const [dateofRelease, setDateofRelease] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isOnlyVerified, setIsOnlyVerified] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
 
@@ -186,8 +196,9 @@ const UserDashboard = () => {
     const imageFile = imageInput ? imageInput.files?.[0] : null;
 
     if (imageFile) {
-      formData.append("image", imageFile);
+      formData.append('image', imageFile);
     }
+    console.log(formData);
 
     try {
       const response = await fetch(`${API_URL}/api/createDevice`, {
@@ -202,10 +213,12 @@ const UserDashboard = () => {
         console.log("Creation Error");
         // Handle error
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.log("Error:", error);
     }
   };
+
 
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -219,13 +232,16 @@ const UserDashboard = () => {
   const handleCancel = () => {
     window.location.href = "/user";
   };
-
   const handleToggleExpand = () => {
     setExpanded(!expanded);
   };
 
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
+  };
+
+  const handleVerificationChange = (isChecked: boolean) => {
+    setIsOnlyVerified(isChecked);
   };
 
   const filterDevices = (devices: Device[]) => {
@@ -239,12 +255,11 @@ const UserDashboard = () => {
     );
 
     // Apply sort filter
-    if (sortOrder === "ascending") {
-      filteredDevices.sort((a, b) => a.brand.localeCompare(b.brand));
-    } else if (sortOrder === "descending") {
-      filteredDevices.sort((a, b) => b.brand.localeCompare(a.brand));
+    if (sortOrder === "verified") {
+      filteredDevices = filteredDevices.filter((device) => device.verified);
+    } else if (sortOrder === "non-verified") {
+      filteredDevices = filteredDevices.filter((device) => !device.verified);
     }
-
     return filteredDevices;
   };
 
@@ -332,6 +347,7 @@ const UserDashboard = () => {
     const isQRCodeVisible =
       device.classification === "Rare" || device.classification === "Current";
     const isVerified = device.verified;
+    const isRecycled = device.classification === 'Recycle';
 
     function handlePaymentModal(): void {
       setShowPopup(false);
@@ -340,7 +356,7 @@ const UserDashboard = () => {
     }
 
     return (
-      <div className="card w-97 bg-base-100 shadow-xl">
+      <div className="card w-94 bg-base-100 shadow-xl h-74 p-4">
         <figure>
           {device.image ? (
             <img
@@ -361,11 +377,10 @@ const UserDashboard = () => {
               {device.brand} {device.model}
             </h2>
             <span
-              className={`px-3 py-1 text-sm font-semibold inline-block ${
-                device.verified
+              className={`px-3 py-1 text-sm font-semibold inline-block ${device.verified
                   ? "badge badge-success gap-2 flex justify-content: center"
                   : "badge badge-error gap-2 flex justify-content: center"
-              }`}
+                }`}
             >
               {device.verified ? "Verified" : "Not Verified"}
             </span>
@@ -394,11 +409,11 @@ const UserDashboard = () => {
               <span className="text-black">
                 Data Recovery:{" "}
                 {device.classification === "Current" ||
-                device.classification === "Rare"
+                  device.classification === "Rare"
                   ? "Not applicable"
                   : device.dataRecovered
-                  ? "Yes"
-                  : "No"}
+                    ? "Yes"
+                    : "No"}
               </span>
             </div>
             <div className="p-1">
@@ -408,6 +423,10 @@ const UserDashboard = () => {
             </div>
           </div>
           {renderCexLink()}
+          <div className="p-1">
+            <span className="text-black font-bold">Estimated Price: </span>
+            {device.estimatedValue}
+          </div>
           <div className="mt-4">
             <div
               style={{
@@ -421,28 +440,16 @@ const UserDashboard = () => {
                 <QRCode
                   size={256}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={
-                    device.brand +
-                    "\n" +
-                    device.model +
-                    "\n" +
-                    device.color +
-                    "\n" +
-                    device.storage +
-                    "\n" +
-                    device.classification +
-                    "\n" +
-                    device.condition
-                  }
+                  value={"Brand: " + device.brand + "\nModel: " + device.model + "\nColor: " + device.color + "\nStorage: " + device.storage + "\nClassification: " + device.classification + "\nCondition: " + device.condition + "\nEstimated Price: " + device.estimatedValue}
                   viewBox={`0 0 256 256`}
+                  className="w-1/2"
                 />
               )}
             </div>
           </div>
-          {isVerified && (
+          {isVerified && isRecycled && (
             <div className="mt-2">
               <a
-                //href={""}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary"
@@ -471,14 +478,13 @@ const UserDashboard = () => {
 
           <div className="mt-4">
             <span className="font-bold">Data Retrieval Status:</span>
-            <ul className="steps mt-4">
-              <li className="step step-primary">Device Registered</li>
-              <li className="step step-primary">Deviced Verified</li>
-              <li className="step">Data Requested</li>
-              <li className="step">Payment Processed</li>
-              <li className="step">Retrival link Received</li>
-            </ul>
+            
+
+              {/* Subsequent list items with improved logic */}
+              <DeviceStatusComponent deviceStatus={device.device_status ?? ''} />
+            
           </div>
+
         </div>
       </div>
     );
@@ -537,30 +543,30 @@ const UserDashboard = () => {
             </summary>
             <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
               <li>
-                <a onClick={() => handleFilterChange("ascending")}>Ascending</a>
+                <a onClick={() => handleFilterChange("verified")}>Verified</a>
               </li>
               <li>
-                <a onClick={() => handleFilterChange("descending")}>
-                  Descending
+                <a onClick={() => handleFilterChange("non-verified")}>
+                  Non verified
                 </a>
               </li>
             </ul>
           </details>
         </header>
         {/* Main content */}
-        <main className="overflow-x-hidden overflow-y-auto">
+        <main className="overflow-x-hidden overflow-y-auto p-5">
           <div className="mx-auto">
             <h5 className="text-black text-3xl font-medium mb-6"></h5>
             <div className="">
               {filteredDevices.length == 0 ? (
-                <div className="flex flex-col  w-full h-full items-center mt-16">
+                <div className="flex flex-col w-full h-full items-center mt-16">
                   <h3 className="text-3xl font-bold text-center mb-5 ">
                     No Devices Found
                   </h3>
                   <img src={emptyListImage} className="h-80 w-80" />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 gap-4 ">
+                <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-3">
                   {filteredDevices.map((device) => (
                     <div>{renderDeviceDetails(device)}</div>
                   ))}
@@ -804,16 +810,16 @@ const UserDashboard = () => {
               <div className="flex flex-row  justify-between">
                 <button
                   className="btn border w-1/2 mr-3"
-                  onClick={handleCancel}
                   type="button"
+                  onClick={() => handleCancel()}
                 >
-                  {" "}
                   Cancel
                 </button>
                 <button
                   className="btn btn-primary w-1/2"
                   onClick={() => setOpen(false)}
                   type="submit"
+                  
                 >
                   Save
                 </button>
@@ -821,7 +827,7 @@ const UserDashboard = () => {
             </form>
           </div>
         </div>
-        {/* Popup */}
+        {/* Popup
         {showPopup && (
           <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white rounded-lg p-8">
@@ -845,7 +851,7 @@ const UserDashboard = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </dialog>
       {showLogoutModal && (
         <div className="modal modal-open">
