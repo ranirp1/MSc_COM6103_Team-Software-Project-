@@ -15,6 +15,8 @@ import { API_URL } from "../../constants/constant";
 import { redirect } from "react-router-dom";
 import { BiSolidReport } from "react-icons/bi";
 import { GrImage } from "react-icons/gr";
+import { AiOutlineUserSwitch } from "react-icons/ai";
+import DeviceStatusBadge from "./DeviceStatusBadge";
 import StaffFilterComponent from "./StaffFilterComponent";
 import { DeviceStatusConstant } from "../User/DeviceStatusComponent";
 
@@ -95,6 +97,8 @@ class Device {
 }
 
 const StaffDashboard = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdminAndStaff = urlParams.get("isAdminAndStaff") === "true";
   const [devices, setDevices] = useState<Device[]>([]);
   const [editMode, setEditMode] = useState(false);
 
@@ -412,28 +416,40 @@ const StaffDashboard = () => {
             <div className="md:ml-4 flex-1">
               <div className="grid grid-cols-2 gap-4 p-1">
                 <div>
-                  <span className="block mt-4 mb-2 text-lg font-medium text-black">Storage</span>
+                  <span className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Storage
+                  </span>
                   <input
                     type="text"
                     value={device.storage}
-                    onChange={(e) => handleDeviceUpdate('storage', e.target.value)}
+                    onChange={(e) =>
+                      handleDeviceUpdate("storage", e.target.value)
+                    }
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
                 <div>
-                  <span className="block mt-4 mb-2 text-lg font-medium text-black">Color</span>
+                  <span className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Color
+                  </span>
                   <input
                     type="text"
                     value={device.color}
-                    onChange={(e) => handleDeviceUpdate('color', e.target.value)}
+                    onChange={(e) =>
+                      handleDeviceUpdate("color", e.target.value)
+                    }
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
                 <div>
-                  <p className="block mt-4 mb-2 text-lg font-medium text-black">Condition</p>
+                  <p className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Condition
+                  </p>
                   <select
                     value={device.condition}
-                    onChange={(e) => handleDeviceUpdate('condition', e.target.value)}
+                    onChange={(e) =>
+                      handleDeviceUpdate("condition", e.target.value)
+                    }
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
                     <option value="New">New</option>
@@ -442,10 +458,14 @@ const StaffDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <p className="block mt-4 mb-2 text-lg font-medium text-black">Classification</p>
+                  <p className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Classification
+                  </p>
                   <select
                     value={device.classification}
-                    onChange={(e) => handleDeviceUpdate('classification', e.target.value)}
+                    onChange={(e) =>
+                      handleDeviceUpdate("classification", e.target.value)
+                    }
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
                     <option value="Rare">Rare</option>
@@ -564,9 +584,7 @@ const StaffDashboard = () => {
 
         {/* Devices Table */}
         <div className="main-content flex-grow px-10 pt-5 ">
-          <h5 className="text-black text-3xl font-medium mb-6">
-            Device List
-          </h5>
+          <h5 className="text-black text-3xl font-medium mb-6">Device List</h5>
           <div
             className="overflow-y-auto"
             style={{
@@ -614,7 +632,11 @@ const StaffDashboard = () => {
 
                   ) : (
                     filteredDevices.map((device) => (
-                      <tr key={device.id} onClick={() => toggleDeviceDetails(device.id)} className="cursor-pointer hover:bg-gray-200">
+                      <tr
+                        key={device.id}
+                        onClick={() => toggleDeviceDetails(device.id)}
+                        className="cursor-pointer hover:bg-gray-200"
+                      >
                         <td>
 
                           {device.image ? (
@@ -632,35 +654,18 @@ const StaffDashboard = () => {
                         <td className="text-lg">{device.brand}</td>
                         <td className="text-lg">{device.model}</td>
                         <td className="text-lg">{device.createdAt}</td>
-                        <td className="text-lg">{device.classification || "Not Classified"}</td>
+                        <td className="text-lg">
+                          {device.classification || "Not Classified"}
+                        </td>
                         <td>
                           <div className="flex">
-                            <label
-                              htmlFor={`toggle-${device.id}`}
-                              className="relative flex group p-2"
-                              onClick={(e) => e.stopPropagation()} // Prevent modal trigger when toggling verification
-                            >
-                              <span className="text-lg mr-3">
-                                {device.verified ? "Verified" : "Not Verified"}
-                              </span>
-                              <input
-                                type="checkbox"
-                                id={`toggle-${device.id}`}
-                                className="sr-only peer"
-                                checked={device.verified}
-                                onChange={() => {
-                                  toggleDeviceVerification(device.id);
-                                }}
-                              />
-                              <span className="w-12 h-6 flex items-center flex-shrink-0 p-1 bg-gray-300 rounded-full duration-300 ease-in-out peer-checked:bg-primary after:w-6 after:h-6 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-full"></span>
-                            </label>
+                            <DeviceStatusBadge status={device.device_status??''}/>
                           </div>
                         </td>
                       </tr>
                     ))
                   )}
                 </tbody>
-
               </table>
             )}
           </div>
@@ -696,10 +701,23 @@ const StaffDashboard = () => {
         )}
       </div>
 
-      <button className="btn fixed bottom-4 right-4 shadow-2xl bg-primary text-white h-20 rounded-full">
-        <BiSolidReport size={40} />
-        <div className="pl-2 text-lg ">Check Reports</div>
-      </button>
+      <div className="fixed bottom-4 right-4 flex flex-col ">
+        {isAdminAndStaff ? (
+          <button
+            className="btn  shadow-2xl btn-ghost text-primary h-20 mb-3 rounded-full"
+            onClick={() =>
+              (window.location.href = "/admin?isAdminAndStaff=true")
+            }
+          >
+            <AiOutlineUserSwitch size={40} />
+            <div className="pl-2 text-lg ">Switch to Admin</div>
+          </button>
+        ) : null}
+        <button className="btn    shadow-2xl bg-primary text-white h-20 rounded-full">
+          <BiSolidReport size={40} />
+          <div className="pl-2 text-lg ">Check Reports</div>
+        </button>
+      </div>
     </div>
   );
 };

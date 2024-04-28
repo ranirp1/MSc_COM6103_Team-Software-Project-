@@ -29,6 +29,9 @@ from os import environ
 SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
 
 from enum import Enum as PyEnum
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -40,10 +43,9 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = 'your_email@gmail.com'  # Your Gmail address
-app.config['MAIL_PASSWORD'] = 'your_password'  # Your Gmail password or app-specific password
-app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
-
+app.config['MAIL_USERNAME'] = 'com6103team03@gmail.com'  # Your Gmail address
+app.config['MAIL_PASSWORD'] = 'nqfm kpqv dprj zfqd'  # Your Gmail password or app-specific password
+sender_email = 'com6103team03@gmail.com' 
 mail = Mail(app)
 
 load_dotenv()
@@ -366,7 +368,7 @@ def getEstimatedValue(model, condition):
     """
     device = Device.query.filter_by(model=model).first()
     if not device:
-        return jsonify({'message': 'Device not found'}), 404
+        return "NA"
 
     estimated_value = estimateValues.query.filter_by(deviceID=device.deviceID).first()
     if not estimated_value:
@@ -805,7 +807,6 @@ def createDevice():
                 imageUrl=filepath,
                 qrCodeUrl=qrCodeUrl,
                 dateOfCreation=current_date.strftime("%Y-%m-%d"),
-                dataRetrievalID=0,
                 estimatedValue=estimatedValue
             )
             db.session.add(newUserDeviceAdded)
@@ -1078,9 +1079,11 @@ def update_device():
             setattr(device, 'deviceCondition', data['condition'])
         if 'classification' in data:
             setattr(device, 'deviceClassification', data['classification'])
+        if 'device_status' in data:
+            setattr(device, 'device_status', Device_Status(data['device_status']))
         
         for field in ['brand', 'model',  'dateOfRelease',
-                      'isVerified','device_status','estimatedValue']:
+                      'isVerified','estimatedValue']:
             if field in data:
                 setattr(device, field, data[field])
 
@@ -1115,8 +1118,8 @@ def generate_report():
     # Fetch payment transactions and devices input by users within the specified date range
     try:
 
-        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date))
-        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date))
+        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
+        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
 
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
@@ -1168,10 +1171,10 @@ def generate_report():
 
 
 @app.route('/api/send-payment-confirmation-mail', methods=['POST'])
-def send_email(email):
+def send_email():
     # Set up the email message
-    sender_email = "your_email@example.com"
-    receiver_email = email
+    data = request.json
+    receiver_email = data.get('email', "manu1998kj@gmail.com")
 
     # Create the email body
     email_body = """
@@ -1187,24 +1190,24 @@ def send_email(email):
         msg = Message('Payment Confirmation', sender=sender_email, recipients=[receiver_email])
         msg.body = email_body
         mail.send(msg)
-        print("Email sent successfully!")
+        return {'message': 'Email sent successfully!'}, 200
     except Exception as e:
-        print("Failed to send email:", str(e))
+        return {'message': 'Failed to send email.', 'error': str(e)}, 500
 
 
 @app.route('/api/send-data-retrieval-link', methods=['POST'])
-def send_email_link(email):
-    email = request.json.get('email', None)
-    if not email:
+def send_email_link():
+    data = request.json
+    receiver_email = data.get('email', "manu1998kj@gmail.com")
+    data_retrieval_link = data.get('urlLink', "https://example.com/data-retrieval")
+    
+    if not receiver_email:
         print("email is blank")
         return {'message': 'You need to send an Email!', 'error': True}, 400
+    
+    if not data_retrieval_link:
+        return {'message': 'You need to send a data retrieval link!', 'error': True}, 400
 
-    # Generate link for data retrieval
-    data_retrieval_link = "https://example.com/data-retrieval"
-
-    # Set up the email message
-    sender_email = "your_email@example.com"
-    receiver_email = email
 
     # Create the email body
     email_body = f"""

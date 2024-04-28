@@ -777,33 +777,7 @@ const UserDashboard = () => {
                       ></input>
                     </div>
 
-                    <div className="sm:col-span-4 flex items-center">
-                      <span className="font-medium leading-6  mr-4 text-black">
-                        Data Retrieval:
-                      </span>
-                      <div className="flex items-center space-x-4">
-                        <label className="label cursor-pointer">
-                          <input
-                            type="radio"
-                            name="data-retrieval"
-                            className="radio radio-primary mr-2"
-                            checked={dataRetrieval === true}
-                            onChange={() => setDataRetrieval(true)}
-                          />
-                          <span className="label-text text-black">Yes</span>
-                        </label>
-                        <label className="label cursor-pointer">
-                          <input
-                            type="radio"
-                            name="data-retrieval"
-                            className="radio radio-primary mr-2"
-                            checked={dataRetrieval === false}
-                            onChange={() => setDataRetrieval(false)}
-                          />
-                          <span className="label-text text-black">No</span>
-                        </label>
-                      </div>
-                    </div>
+                   
                   </div>
                 </div>
               </div>
