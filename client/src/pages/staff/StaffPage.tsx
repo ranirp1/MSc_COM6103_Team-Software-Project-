@@ -362,7 +362,7 @@ const StaffDashboard = () => {
           )
         );
   
-        alert('Device updated successfully!');
+        window.location.reload();
       } catch (error) {
         if (error instanceof Error) {
           console.error('Error saving device updates:', error);
