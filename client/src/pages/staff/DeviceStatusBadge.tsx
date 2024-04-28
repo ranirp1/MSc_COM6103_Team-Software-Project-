@@ -8,24 +8,24 @@ const DeviceStatusBadge = ({ status }: DeviceStatusBadgeProps) => {
   const deviceStatusIndex = Object.values(DeviceStatusConstant).indexOf(status);
   const badgeColor = () => {
     if (deviceStatusIndex == 0) {
-      return "bg-grey-500";
+      return "badge-primary";
     }
     if (deviceStatusIndex == 1) {
-      return "bg-green-500";
+      return "badge-success";
     }
     if (deviceStatusIndex == 2) {
-      return "bg-blue-500";
+      return "badge-info";
     }
     if (deviceStatusIndex == 3) {
-      return "bg-green-500";
+      return "badge-warning";
     }
     if (deviceStatusIndex == 4) {
-      return "bg-blue-500";
+      return "badge-info";
     }
     return "badge-ghost";
   };
 
-  return <div className={`badge p-5 ${badgeColor()}`}>{status}</div>;
+  return <div className={` p-5 badge ${badgeColor()}`}>{status}</div>;
 };
 
 export default DeviceStatusBadge;

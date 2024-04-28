@@ -19,7 +19,8 @@ import { AiOutlineUserSwitch } from "react-icons/ai";
 import DeviceStatusBadge from "./DeviceStatusBadge";
 import StaffFilterComponent from "./StaffFilterComponent";
 import { DeviceStatusConstant } from "../User/DeviceStatusComponent";
-
+import KeyValueComponent from "../../components/KeyValueComponent";
+import { IoSend } from "react-icons/io5";
 class Device {
   id: number;
   brand: string;
@@ -37,11 +38,10 @@ class Device {
   cexLink?: string;
   device_status?: string;
   estimatedValue?: String;
-  user_email?: string; 
-  dataRetrievalLink?: string; 
-  user_name?: string; 
+  user_email?: string;
+  dataRetrievalLink?: string;
+  user_name?: string;
   user_phone?: string;
-
 
   constructor(
     id: number,
@@ -64,8 +64,6 @@ class Device {
     dataRetrievalLink?: string,
     user_name?: string,
     user_phone?: string
-    
-    
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -83,7 +81,7 @@ class Device {
     this.cexLink = cexLink;
     this.device_status = device_status;
     this.estimatedValue = estimatedValue;
-    this.user_email = user_email; 
+    this.user_email = user_email;
     this.dataRetrievalLink = dataRetrievalLink;
     this.user_name = user_name;
     this.user_phone = user_phone;
@@ -160,8 +158,6 @@ const StaffDashboard = () => {
     setIsModalVisible(true);
   };
 
-
-
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
@@ -170,7 +166,7 @@ const StaffDashboard = () => {
     // Find the device and its current verification status
     const deviceIndex = devices.findIndex((d) => d.id === deviceId);
     if (deviceIndex === -1) {
-      console.error('Device not found');
+      console.error("Device not found");
       return;
     }
 
@@ -180,9 +176,9 @@ const StaffDashboard = () => {
     try {
       // Update the backend first
       const response = await fetch(`${API_URL}/api/changeDeviceVerification/`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           deviceID: deviceId,
@@ -191,12 +187,12 @@ const StaffDashboard = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Backend failed to update device verification status');
+        throw new Error("Backend failed to update device verification status");
       }
 
       window.location.reload();
     } catch (error) {
-      console.error('Error updating verification status:', error);
+      console.error("Error updating verification status:", error);
       // Revert the frontend update if the backend call fails
       setDevices(
         devices.map((d, index) => {
@@ -225,8 +221,7 @@ const StaffDashboard = () => {
     if (Object.values(DeviceStatusConstant).includes(sortOrder)) {
       filteredDevices = devices.filter((device) => {
         return device.device_status === sortOrder;
-      }
-      );
+      });
     }
 
     console.log(filteredDevices);
@@ -241,8 +236,7 @@ const StaffDashboard = () => {
   // Function to filter devices based on search query and verification status
   const getFilteredDevices = () => {
     return devices.filter(
-      (device) =>
-        device.brand.toLowerCase().includes(searchQuery)
+      (device) => device.brand.toLowerCase().includes(searchQuery)
       //device.verified === showVerified
     );
   };
@@ -250,15 +244,15 @@ const StaffDashboard = () => {
 
   const renderDeviceModal = () => {
     if (!selectedDeviceId || !isModalVisible) return null;
-  
-    const device = devices.find(d => d.id === selectedDeviceId);
+
+    const device = devices.find((d) => d.id === selectedDeviceId);
     if (!device) return null;
-  
+
     const modalBoxStyles: React.CSSProperties = {
-      maxHeight: '98vh',
-      overflowY: 'scroll' as 'scroll'
+      maxHeight: "98vh",
+      overflowY: "scroll" as "scroll",
     };
-  
+
     return (
       <div className="modal modal-open">
         <div className="modal-box relative" style={modalBoxStyles}>
@@ -275,32 +269,54 @@ const StaffDashboard = () => {
     );
   };
 
-  
+  const DeviceDetails = ({ device }: { device: Device }) => {
+    const [localDevice, setLocalDevice] = useState<Device>(device);
 
- const DeviceDetails = ({ device }: { device: Device }) => {
-  const [localDevice, setLocalDevice] = useState<Device>(device);
+    const handleInputChange = (
+      field: keyof Device,
+      value: string | boolean
+    ) => {
+      setLocalDevice((prevDevice: Device) => ({
+        ...prevDevice,
+        [field]: value,
+      }));
+    };
 
-  const handleInputChange = (field: keyof Device, value: string | boolean) => {
-    setLocalDevice((prevDevice: Device) => ({
-      ...prevDevice,
-      [field]: value
-    }));
-  };
-
-    const createCexSearchUrl = (manufacturer: string, model: string, storage: string, color: string) => {
+    const createCexSearchUrl = (
+      manufacturer: string,
+      model: string,
+      storage: string,
+      color: string
+    ) => {
       const baseUrl = "https://uk.webuy.com/search";
-      const queryParts = [manufacturer, model, storage, color].filter(part => part); // Filters out null or empty strings
-      const query = queryParts.join(' '); // Joins the parts into a single string with spaces
+      const queryParts = [manufacturer, model, storage, color].filter(
+        (part) => part
+      ); // Filters out null or empty strings
+      const query = queryParts.join(" "); // Joins the parts into a single string with spaces
       return `${baseUrl}?stext=${encodeURIComponent(query)}`;
     };
 
     const renderCexLink = () => {
-      if (device.classification === 'Rare' || device.classification === 'Current') {
-        const cexUrl = createCexSearchUrl(device.brand, device.model, device.storage, device.color);
+      if (
+        device.classification === "Rare" ||
+        device.classification === "Current"
+      ) {
+        const cexUrl = createCexSearchUrl(
+          device.brand,
+          device.model,
+          device.storage,
+          device.color
+        );
         return (
-          <div className="mt-2">
-            <p className="block mt-4 mb-2 text-lg font-medium text-black">CEX Link:{' '}
-              <a href={cexUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+          <div className="">
+            <p className="block  mb-4 text-lg font-medium text-black">
+              CEX Link:{" "}
+              <a
+                href={cexUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-700"
+              >
                 Search on CEX
               </a>
             </p>
@@ -352,31 +368,29 @@ const StaffDashboard = () => {
     const saveDeviceUpdates = async () => {
       try {
         const response = await fetch(`${API_URL}/api/updateDevice`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(localDevice),
         });
-  
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(`Failed to update device: ${errorData.message}`);
         }
-  
+
         // Update global state if save is successful
         setDevices((prevDevices) =>
-          prevDevices.map((d) =>
-            d.id === device.id ? { ...localDevice } : d
-          )
+          prevDevices.map((d) => (d.id === device.id ? { ...localDevice } : d))
         );
-  
+
         window.location.reload();
       } catch (error) {
         if (error instanceof Error) {
-          console.error('Error saving device updates:', error);
+          console.error("Error saving device updates:", error);
           alert(`Failed to save device updates: ${error.message}`);
         } else {
-          console.error('An unexpected error occurred:', error);
-          alert('An unexpected error occurred. Please try again.');
+          console.error("An unexpected error occurred:", error);
+          alert("An unexpected error occurred. Please try again.");
         }
       }
     };
@@ -390,21 +404,24 @@ const StaffDashboard = () => {
         alert("Please enter a data retrieval link.");
         return;
       }
-  
+
       const data = {
         email: localDevice.user_email,
-        urlLink: localDevice.dataRetrievalLink
+        urlLink: localDevice.dataRetrievalLink,
       };
-  
+
       try {
-        const response = await fetch(`${API_URL}/api/send-data-retrieval-link`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        });
-  
+        const response = await fetch(
+          `${API_URL}/api/send-data-retrieval-link`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          }
+        );
+
         const result = await response.json();
         if (response.ok) {
           alert("Email sent successfully!");
@@ -412,58 +429,74 @@ const StaffDashboard = () => {
           throw new Error(result.message);
         }
       } catch (error) {
-        console.error('Failed to send email:', error);
+        console.error("Failed to send email:", error);
       }
     };
-  
-    
-    
+
     return (
-      <div className="bg-white p-5 rounded-lg shadow-md">
+      <div className="bg-white p-5 rounded-lg ">
+        <div className=" flex flex-row place-content-between">
+          {!editMode ? (
+            <div className=" text-3xl font-bold text-primary mb-4">
+              {localDevice.brand} {localDevice.model}
+            </div>
+          ) : (
+            <></>
+          )}
+        </div>
         <h3 className="text-2xl mb-4">
           {/* Conditional rendering of edit mode toggle button */}
           <div className="mb-4 top-2 flex justify-between items-center">
-          {/* Edit Mode Toggle Button on the Left */}
-          <button onClick={() => setEditMode(!editMode)} className="btn btn-primary">
-            {editMode ? "Disable Edit Mode" : "Enable Edit Mode"}
-          </button>
-
             {/* Descriptive Verification Toggle Button on the Right */}
             <div className="flex flex-row items-center font-bold text-primary">
               Verified
-          <input type="checkbox" className={`toggle ml-5 ${localDevice.verified?"bg-primary":""} border-2`} checked={localDevice.verified} onChange={() => toggleDeviceVerification(localDevice.id)}/>
+              <input
+                type="checkbox"
+                className={`toggle ml-5 ${
+                  localDevice.verified ? "bg-primary" : ""
+                } border-2`}
+                checked={localDevice.verified}
+                onChange={() => toggleDeviceVerification(localDevice.id)}
+              />
+            </div>
+
+            {/* Edit Mode Toggle Button on the Left */}
+            <button
+              onClick={() => setEditMode(!editMode)}
+              className="btn btn-primary"
+            >
+              {editMode ? "Disable Edit Mode" : "Enable Edit Mode"}
+            </button>
           </div>
-        </div>
           {editMode ? (
             <>
-               <label className="block mb-2 text-lg font-medium text-black">Name</label>
-                <input
-                  type="text"
-                  value={localDevice.brand}
-                  onChange={(e) => handleInputChange('brand', e.target.value)}
-                  className="input input-bordered w-full bg-gray-200 text-black"
-                />
-              <label className="block mt-4 mb-2 text-lg font-medium text-black">Model</label>
+              <label className="block mb-2 text-lg font-medium text-black">
+                Name
+              </label>
+              <input
+                type="text"
+                value={localDevice.brand}
+                onChange={(e) => handleInputChange("brand", e.target.value)}
+                className="input input-bordered w-full bg-gray-200 text-black"
+              />
+              <label className="block mt-4 mb-2 text-lg font-medium text-black">
+                Model
+              </label>
               <input
                 type="text"
                 value={localDevice.model}
-                onChange={(e) => handleInputChange('model', e.target.value)}
+                onChange={(e) => handleInputChange("model", e.target.value)}
                 className="input input-bordered w-full bg-gray-200 text-black"
               />
-          </>
+            </>
           ) : (
-            <>
-            <div>{localDevice.brand} {localDevice.model}</div>
-            <div className="text-lg font-medium text-black mt-2">User Full Name: {localDevice.user_name}</div>
-            <div className="text-lg font-medium text-black">User Email: {localDevice.user_email}</div>
-            <div className="text-lg font-medium text-black">User Phone: {localDevice.user_phone}</div>
-          </>
+            <></>
           )}
         </h3>
 
         {editMode && (
-          <div className="flex flex-col md:flex-row md:items-start">
-            <div className="w-full md:w-2/4 lg:w-2/4">
+          <div className="flex flex-col md:flex-row items-center place-content-center">
+            <div className="w-full md:w-2/4 lg:w-2/4 flex items-center">
               {device.image ? (
                 <img
                   src={device.image.replace("../client/public/", "")}
@@ -475,7 +508,6 @@ const StaffDashboard = () => {
                   <GrImage size={50} color="white" className="w-full" />
                 </div>
               )}
-
             </div>
             <div className="md:ml-4 flex-1">
               <div className="grid grid-cols-2 gap-4 p-1">
@@ -499,9 +531,7 @@ const StaffDashboard = () => {
                   <input
                     type="text"
                     value={localDevice.color}
-                    onChange={(e) =>
-                      handleInputChange("color", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("color", e.target.value)}
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
@@ -538,10 +568,14 @@ const StaffDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <p className="block mt-4 mb-2 text-lg font-medium text-black">Status</p>
+                  <p className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Status
+                  </p>
                   <select
                     value={localDevice.device_status}
-                    onChange={(e) => handleInputChange('device_status', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("device_status", e.target.value)
+                    }
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
                     <option value="DEV_REGISTERED">Device Registered</option>
@@ -552,11 +586,13 @@ const StaffDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <span className="block mt-4 mb-2 text-lg font-medium text-black">Estimated Price</span>
+                  <span className="block mt-4 mb-2 text-lg font-medium text-black">
+                    Estimated Price
+                  </span>
                   <input
                     type="text"
                     value={localDevice.estimatedValue?.toString() || ""}
-                    onChange={(e) => handleInputChange('color', e.target.value)}
+                    onChange={(e) => handleInputChange("color", e.target.value)}
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
@@ -565,52 +601,94 @@ const StaffDashboard = () => {
           </div>
         )}
 
-      {/* Data Recovery section visible in both edit and non-edit mode */}
-      <div className="mt-4">
+        {/* Data Recovery section visible in both edit and non-edit mode */}
+        <div className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="block mt-4 mb-2 text-lg font-medium text-black">Created At</p>
+              <KeyValueComponent
+                data="Created At :"
+                value={localDevice.createdAt}
+              />
               {editMode ? (
                 <input
                   type="text"
                   value={localDevice.createdAt}
-                  onChange={(e) => handleInputChange('createdAt', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("createdAt", e.target.value)
+                  }
                   className="mt-1 block w-full input input-bordered bg-gray-200 text-black"
                 />
               ) : (
-                <p>{localDevice.createdAt}</p>
+                <></>
               )}
-              <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}</p>
+              <p className="block mt-4 mb-2 text-lg font-medium text-black">
+                Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}
+              </p>
             </div>
             <div>
               <br></br>
-              <div style={{ display: 'flex', alignItems: 'center', marginTop: '1rem' }}>
-                <label className="text-lg font-medium text-black" style={{ marginRight: '1rem' }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginTop: "1rem",
+                }}
+              >
+                <label
+                  className="text-lg font-medium text-black"
+                  style={{ marginRight: "1rem" }}
+                >
                   Data Retrieval Link:
                 </label>
                 <input
                   type="text"
-                  value={localDevice.dataRetrievalLink || ''}
-                  onChange={(e) => handleInputChange('dataRetrievalLink', e.target.value)}
+                  value={localDevice.dataRetrievalLink || ""}
+                  onChange={(e) =>
+                    handleInputChange("dataRetrievalLink", e.target.value)
+                  }
                   className="input input-bordered bg-gray-200 text-black"
                   placeholder="Enter data retrieval link"
-                  style={{ flexGrow: 1, marginRight: '1rem' }}
+                  style={{ flexGrow: 1, marginRight: "1rem" }}
                 />
-                <button className="btn btn-primary" onClick={sendEmailWithDataLink}>
-                  Send Data Link
+                <button
+                  className="btn btn-primary text-white"
+                  onClick={sendEmailWithDataLink}
+                >
+                  <IoSend />
                 </button>
               </div>
             </div>
           </div>
         </div>
-
+        {renderCexLink()}
         {editMode && (
-          <button className="btn btn-primary mt-4" onClick={saveDeviceUpdates}>
+          <button
+            className="btn btn-primary  w-full mb-10"
+            onClick={saveDeviceUpdates}
+          >
             Save Changes
           </button>
         )}
 
-        {renderCexLink()}
+        <div className="text-bold text-primary text-lg font-bold pt-5 border-t-2">
+          User Contact Information
+        </div>
+        <div className=" flex flex-col p-5 w-full bg-primary bg-opacity-15 rounded-lg card shadow-xl">
+          <div className="flex flex-row w-full place-content-between ">
+            <KeyValueComponent
+              data="User Full Name :"
+              value={localDevice.user_name}
+            />
+            <KeyValueComponent
+              data="User Email :"
+              value={localDevice.user_email}
+            />
+            <KeyValueComponent
+              data="User Phone Number :"
+              value={localDevice.user_phone}
+            />
+          </div>
+        </div>
       </div>
     );
   };
@@ -696,9 +774,10 @@ const StaffDashboard = () => {
                 <tbody>
                   {filteredDevices.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center">No Devices Found</td>
+                      <td colSpan={6} className="text-center">
+                        No Devices Found
+                      </td>
                     </tr>
-
                   ) : (
                     filteredDevices.map((device) => (
                       <tr
@@ -707,16 +786,22 @@ const StaffDashboard = () => {
                         className="cursor-pointer hover:bg-gray-200"
                       >
                         <td>
-
                           {device.image ? (
                             <img
-                              src={device.image.replace("../client/public/", "")}
+                              src={device.image.replace(
+                                "../client/public/",
+                                ""
+                              )}
                               alt={device.image}
                               className="h-24 w-16 fel flex-col place-content-center place-items-center items-center bg-primary bg-opacity-90 rounded shadow"
                             />
                           ) : (
                             <div className="h-24 w-16 felx flex-col place-content-center place-items-center items-center bg-primary bg-opacity-90 rounded shadow">
-                              <GrImage size={50} color="white" className="w-full" />
+                              <GrImage
+                                size={50}
+                                color="white"
+                                className="w-full"
+                              />
                             </div>
                           )}
                         </td>
@@ -728,7 +813,9 @@ const StaffDashboard = () => {
                         </td>
                         <td>
                           <div className="flex">
-                            <DeviceStatusBadge status={device.device_status??''}/>
+                            <DeviceStatusBadge
+                              status={device.device_status ?? ""}
+                            />
                           </div>
                         </td>
                       </tr>
