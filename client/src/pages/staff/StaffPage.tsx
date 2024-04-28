@@ -35,6 +35,7 @@ class Device {
   cexLink?: string;
   device_status?: string;
   estimatedValue?: String;
+  user_email?: string; 
 
   constructor(
     id: number,
@@ -52,7 +53,8 @@ class Device {
     dataRetrievalTimeLeft: string,
     cexLink?: string,
     device_status?: string,
-    estimatedValue?: String
+    estimatedValue?: String,
+    user_email?: string
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -70,6 +72,7 @@ class Device {
     this.cexLink = cexLink;
     this.device_status = device_status;
     this.estimatedValue = estimatedValue;
+    this.user_email = user_email; 
   }
 
   static fromJson(json: any): Device {
@@ -89,7 +92,8 @@ class Device {
       json.dataRetrievalTimeLeft,
       json.cexLink,
       json.device_status,
-      json.estimatedValue
+      json.estimatedValue,
+      json.user_email 
     );
   }
 }
@@ -232,20 +236,19 @@ const StaffDashboard = () => {
 
   const renderDeviceModal = () => {
     if (!selectedDeviceId || !isModalVisible) return null;
-
-    const device = devices.find((d) => d.id === selectedDeviceId);
+  
+    const device = devices.find(d => d.id === selectedDeviceId);
     if (!device) return null;
-
-    // Correctly type the styles object
+  
     const modalBoxStyles: React.CSSProperties = {
       maxHeight: '98vh',
-      overflowY: 'auto' //change to scroll
+      overflowY: 'scroll' as 'scroll'
     };
-
+  
     return (
       <div className="modal modal-open">
         <div className="modal-box relative" style={modalBoxStyles}>
-          {renderDeviceDetails(device)}
+          <DeviceDetails device={device} />
           <button
             className="btn btn-sm btn-circle absolute right-2 top-2"
             onClick={() => setIsModalVisible(false)}
@@ -258,18 +261,17 @@ const StaffDashboard = () => {
     );
   };
 
+  
 
-  const renderDeviceDetails = (device: Device) => {
-    // Function to update device details in state
-    const handleDeviceUpdate = (field: keyof Device, value: string | boolean) => {
-      if (!editMode) return;
+ const DeviceDetails = ({ device }: { device: Device }) => {
+  const [localDevice, setLocalDevice] = useState<Device>(device);
 
-      setDevices((prevDevices) =>
-        prevDevices.map((d) =>
-          d.id === device.id ? { ...d, [field]: value } : d
-        )
-      );
-    };
+  const handleInputChange = (field: keyof Device, value: string | boolean) => {
+    setLocalDevice((prevDevice: Device) => ({
+      ...prevDevice,
+      [field]: value
+    }));
+  };
 
     const createCexSearchUrl = (manufacturer: string, model: string, storage: string, color: string) => {
       const baseUrl = "https://uk.webuy.com/search";
@@ -338,53 +340,108 @@ const StaffDashboard = () => {
         const response = await fetch(`${API_URL}/api/updateDevice`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(device),
+          body: JSON.stringify(localDevice),
         });
-
+  
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(`Failed to update device: ${errorData.message}`);
         }
-
+  
+        // Update global state if save is successful
+        setDevices((prevDevices) =>
+          prevDevices.map((d) =>
+            d.id === device.id ? { ...localDevice } : d
+          )
+        );
+  
         alert('Device updated successfully!');
-      } catch (error: unknown) {
+      } catch (error) {
         if (error instanceof Error) {
           console.error('Error saving device updates:', error);
           alert(`Failed to save device updates: ${error.message}`);
         } else {
-          // Handle cases where the error is not an instance of Error
           console.error('An unexpected error occurred:', error);
           alert('An unexpected error occurred. Please try again.');
         }
       }
     };
 
+    const sendEmailWithDataLink = async () => {
+      if (!localDevice.user_email) {
+        alert("Please enter an email address.");
+        return;
+      }
+    
+      const data = {
+        email: localDevice.user_email,
+        urlLink: "https://example.com/data-retrieval"  // This should be dynamically generated or fetched if needed
+      };
+    
+      try {
+        const response = await fetch(`${API_URL}/api/send-data-retrieval-link`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+    
+        const result = await response.json();
+        if (response.ok) {
+          alert("Email sent successfully!");
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (error) {
+        console.error('Failed to send email:', error);
+      }
+    };
+    
     return (
       <div className="bg-white p-5 rounded-lg shadow-md">
         <h3 className="text-2xl mb-4">
           {/* Conditional rendering of edit mode toggle button */}
-          <div className="mb-4 top-2">
-            <button onClick={() => setEditMode(!editMode)} className="btn btn-primary">
-              {editMode ? "Disable Edit Mode" : "Enable Edit Mode"}
+          <div className="mb-4 top-2 flex justify-between items-center">
+          {/* Edit Mode Toggle Button on the Left */}
+          <button onClick={() => setEditMode(!editMode)} className="btn btn-primary">
+            {editMode ? "Disable Edit Mode" : "Enable Edit Mode"}
+          </button>
+
+            {/* Descriptive Verification Toggle Button on the Right */}
+          {localDevice.verified ? (
+            <button
+              onClick={() => toggleDeviceVerification(localDevice.id)}
+              className="btn btn-success" // Red indicating a negative action
+            >
+              Verified, Click to Unverify
             </button>
-          </div>
+          ) : (
+            <button
+              onClick={() => toggleDeviceVerification(localDevice.id)}
+              className="btn btn-error" // Green indicating a positive action
+            >
+              Unverified, Click to Verify
+            </button>
+          )}
+        </div>
           {editMode ? (
             <>
-              <label className="block mb-2 text-lg font-medium text-black">Name</label>
-              <input
-                type="text"
-                value={device.brand}
-                onChange={(e) => handleDeviceUpdate('brand', e.target.value)}
-                className="input input-bordered w-full bg-gray-200 text-black"
-              />
+               <label className="block mb-2 text-lg font-medium text-black">Name</label>
+                <input
+                  type="text"
+                  value={localDevice.brand}
+                  onChange={(e) => handleInputChange('brand', e.target.value)}
+                  className="input input-bordered w-full bg-gray-200 text-black"
+                />
               <label className="block mt-4 mb-2 text-lg font-medium text-black">Model</label>
               <input
                 type="text"
-                value={device.model}
-                onChange={(e) => handleDeviceUpdate('model', e.target.value)}
+                value={localDevice.model}
+                onChange={(e) => handleInputChange('model', e.target.value)}
                 className="input input-bordered w-full bg-gray-200 text-black"
               />
-            </>
+          </>
           ) : (
             `${device.brand} ${device.model}`
           )}
@@ -407,9 +464,9 @@ const StaffDashboard = () => {
                   </span>
                   <input
                     type="text"
-                    value={device.storage}
+                    value={localDevice.storage}
                     onChange={(e) =>
-                      handleDeviceUpdate("storage", e.target.value)
+                      handleInputChange("storage", e.target.value)
                     }
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
@@ -420,9 +477,9 @@ const StaffDashboard = () => {
                   </span>
                   <input
                     type="text"
-                    value={device.color}
+                    value={localDevice.color}
                     onChange={(e) =>
-                      handleDeviceUpdate("color", e.target.value)
+                      handleInputChange("color", e.target.value)
                     }
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
@@ -432,9 +489,9 @@ const StaffDashboard = () => {
                     Condition
                   </p>
                   <select
-                    value={device.condition}
+                    value={localDevice.condition}
                     onChange={(e) =>
-                      handleDeviceUpdate("condition", e.target.value)
+                      handleInputChange("condition", e.target.value)
                     }
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
@@ -448,9 +505,9 @@ const StaffDashboard = () => {
                     Classification
                   </p>
                   <select
-                    value={device.classification}
+                    value={localDevice.classification}
                     onChange={(e) =>
-                      handleDeviceUpdate("classification", e.target.value)
+                      handleInputChange("classification", e.target.value)
                     }
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
@@ -462,8 +519,8 @@ const StaffDashboard = () => {
                 <div>
                   <p className="block mt-4 mb-2 text-lg font-medium text-black">Status</p>
                   <select
-                    value={device.device_status}
-                    onChange={(e) => handleDeviceUpdate('device_status', e.target.value)}
+                    value={localDevice.device_status}
+                    onChange={(e) => handleInputChange('device_status', e.target.value)}
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
                     <option value="DEV_REGISTERED">Device Registered</option>
@@ -477,8 +534,8 @@ const StaffDashboard = () => {
                   <span className="block mt-4 mb-2 text-lg font-medium text-black">Estimated Price</span>
                   <input
                     type="text"
-                    value={device.estimatedValue?.toString() || ""}
-                    onChange={(e) => handleDeviceUpdate('color', e.target.value)}
+                    value={localDevice.estimatedValue?.toString() || ""}
+                    onChange={(e) => handleInputChange('color', e.target.value)}
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
@@ -496,8 +553,8 @@ const StaffDashboard = () => {
                 <p className="block mt-4 mb-2 text-lg font-medium text-black">Created At</p>
                 <input
                   type="text"
-                  value={device.createdAt}
-                  onChange={(e) => handleDeviceUpdate('createdAt', e.target.value)}
+                  value={localDevice.createdAt}
+                  onChange={(e) => handleInputChange('createdAt', e.target.value)}
                   className="mt-1 block w-full input input-bordered bg-gray-200 text-black"
                 />
               </p>
@@ -510,14 +567,31 @@ const StaffDashboard = () => {
               <p>
                 <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Recovery</p>
                 <select
-                  value={device.dataRecovered ? "Yes" : "No"}
-                  onChange={(e) => handleDeviceUpdate('dataRecovered', e.target.value === "Yes")}
+                  value={localDevice.dataRecovered ? "Yes" : "No"}
+                  onChange={(e) => handleInputChange('dataRecovered', e.target.value === "Yes")}
                   className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                 >
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
               </p>
+
+              <div style={{ display: 'flex', alignItems: 'center', marginTop: '1rem' }}>
+                <label className="text-lg font-medium text-black" style={{ marginRight: '1rem' }}>
+                  Data Retrivel Link Email:
+                </label>
+                <input
+                  type="email"
+                  value={localDevice.user_email || ''}
+                  onChange={(e) => handleInputChange('user_email', e.target.value)}
+                  className="input input-bordered bg-gray-200 text-black"
+                  placeholder="Enter your email"
+                  style={{ flexGrow: 1, marginRight: '1rem' }}
+                />
+                <button className="btn btn-primary" onClick={sendEmailWithDataLink}>
+                  Send Data Link
+                </button>
+              </div>
             </div>
           </div>
         </div>
