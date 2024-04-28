@@ -17,6 +17,8 @@ import { BiSolidReport } from "react-icons/bi";
 import { GrImage } from "react-icons/gr";
 import { AiOutlineUserSwitch } from "react-icons/ai";
 import DeviceStatusBadge from "./DeviceStatusBadge";
+import StaffFilterComponent from "./StaffFilterComponent";
+import { DeviceStatusConstant } from "../User/DeviceStatusComponent";
 
 class Device {
   id: number;
@@ -159,28 +161,9 @@ const StaffDashboard = () => {
   };
 
 
-  useEffect(() => {
-    // Function to apply sorting
-    const sortDevices = () => {
-      let sortedDevices = [...devices];
-      if (sortOrder === "ascending") {
-        sortedDevices.sort((a, b) => a.brand.localeCompare(b.brand));
-      } else if (sortOrder === "descending") {
-        sortedDevices.sort((a, b) => b.brand.localeCompare(a.brand));
-      }
-      return sortedDevices;
-    };
-
-    // Update the devices state with the sorted list
-    setDevices(sortDevices());
-  }, [sortOrder]); // This useEffect depends on sortOrder
 
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
-  };
-
-  const handleFilterChange = (newSortOrder: string) => {
-    setSortOrder(newSortOrder);
   };
 
   const toggleDeviceVerification = async (deviceId: number) => {
@@ -211,15 +194,7 @@ const StaffDashboard = () => {
         throw new Error('Backend failed to update device verification status');
       }
 
-      // Update the frontend after a successful backend response
-      setDevices(
-        devices.map((d, index) => {
-          if (index === deviceIndex) {
-            return { ...d, verified: newVerificationStatus };
-          }
-          return d;
-        })
-      );
+      window.location.reload();
     } catch (error) {
       console.error('Error updating verification status:', error);
       // Revert the frontend update if the backend call fails
@@ -235,7 +210,34 @@ const StaffDashboard = () => {
     }
   };
 
+  //filter device based on verification status
+  const filterDevices = (devices: Device[]) => {
+    console.log(devices);
+    // Apply search filter
+    let filteredDevices = devices.filter(
+      (device) =>
+        device.brand.toLowerCase().includes(searchQuery) ||
+        device.model.includes(searchQuery) ||
+        device.createdAt.toLowerCase().includes(searchQuery) ||
+        device.classification.includes(searchQuery)
+    );
+    // Apply sort filter
+    if (Object.values(DeviceStatusConstant).includes(sortOrder)) {
+      filteredDevices = devices.filter((device) => {
+        return device.device_status === sortOrder;
+      }
+      );
+    }
 
+    console.log(filteredDevices);
+    return filteredDevices;
+  };
+
+  const filteredDevices = filterDevices(devices);
+
+  const handleFilterChange = (newSortOrder: string) => {
+    setSortOrder(newSortOrder);
+  };
   // Function to filter devices based on search query and verification status
   const getFilteredDevices = () => {
     return devices.filter(
@@ -245,9 +247,6 @@ const StaffDashboard = () => {
     );
   };
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  // Use this function to render your devices
-  const filteredDevices = getFilteredDevices();
 
   const renderDeviceModal = () => {
     if (!selectedDeviceId || !isModalVisible) return null;
@@ -370,7 +369,7 @@ const StaffDashboard = () => {
           )
         );
   
-        alert('Device updated successfully!');
+        window.location.reload();
       } catch (error) {
         if (error instanceof Error) {
           console.error('Error saving device updates:', error);
@@ -430,21 +429,10 @@ const StaffDashboard = () => {
           </button>
 
             {/* Descriptive Verification Toggle Button on the Right */}
-          {localDevice.verified ? (
-            <button
-              onClick={() => toggleDeviceVerification(localDevice.id)}
-              className="btn btn-success" // Red indicating a negative action
-            >
-              Verified, Click to Unverify
-            </button>
-          ) : (
-            <button
-              onClick={() => toggleDeviceVerification(localDevice.id)}
-              className="btn btn-error" // Green indicating a positive action
-            >
-              Unverified, Click to Verify
-            </button>
-          )}
+            <div className="flex flex-row items-center font-bold text-primary">
+              Verified
+          <input type="checkbox" className={`toggle ml-5 ${localDevice.verified?"bg-primary":""} border-2`} checked={localDevice.verified} onChange={() => toggleDeviceVerification(localDevice.id)}/>
+          </div>
         </div>
           {editMode ? (
             <>
@@ -476,11 +464,18 @@ const StaffDashboard = () => {
         {editMode && (
           <div className="flex flex-col md:flex-row md:items-start">
             <div className="w-full md:w-2/4 lg:w-2/4">
-              <img
-                src={image2}
-                alt={`${device.brand} ${device.model}`}
-                className="w-full sm:w-30 md:w-44 lg:w-60 h-auto rounded"
-              />
+              {device.image ? (
+                <img
+                  src={device.image.replace("../client/public/", "")}
+                  alt={device.image}
+                  className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
+                />
+              ) : (
+                <div className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90">
+                  <GrImage size={50} color="white" className="w-full" />
+                </div>
+              )}
+
             </div>
             <div className="md:ml-4 flex-1">
               <div className="grid grid-cols-2 gap-4 p-1">
@@ -653,24 +648,7 @@ const StaffDashboard = () => {
               onChange={handleSearchChange}
             />
           </form>
-          <details className="dropdown dropdown-end ml-4">
-            <summary
-              tabIndex={0}
-              className="btn btn-ghost cursor-pointer border-2 border-primary"
-            >
-              <RiFilter3Line className="text-lg" /> Filter
-            </summary>
-            <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-              <li>
-                <a onClick={() => handleFilterChange("ascending")}>Ascending</a>
-              </li>
-              <li>
-                <a onClick={() => handleFilterChange("descending")}>
-                  Descending
-                </a>
-              </li>
-            </ul>
-          </details>
+          <StaffFilterComponent onFilterChange={handleFilterChange} />
         </header>
 
         {/* Devices Table */}
@@ -738,7 +716,7 @@ const StaffDashboard = () => {
                             />
                           ) : (
                             <div className="h-24 w-16 felx flex-col place-content-center place-items-center items-center bg-primary bg-opacity-90 rounded shadow">
-                              <GrImage size={50} color="white" className="w-full"/>
+                              <GrImage size={50} color="white" className="w-full" />
                             </div>
                           )}
                         </td>

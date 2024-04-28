@@ -6,23 +6,25 @@ interface DeviceStatusBadgeProps {
 
 const DeviceStatusBadge = ({ status }: DeviceStatusBadgeProps) => {
   const deviceStatusIndex = Object.values(DeviceStatusConstant).indexOf(status);
-  console.log('deviceStatusIndex',deviceStatusIndex);
   const badgeColor = () => {
     if (deviceStatusIndex == 0) {
-      return "badge-ghost";
+      return "bg-grey-500";
     }
     if (deviceStatusIndex == 1) {
-      return "badge-primary";
+      return "bg-green-500";
     }
     if (deviceStatusIndex == 2) {
-      return "badge-secondary";
+      return "bg-blue-500";
     }
     if (deviceStatusIndex == 3) {
-      return "badge-accent";
+      return "bg-green-500";
+    }
+    if (deviceStatusIndex == 4) {
+      return "bg-blue-500";
     }
     return "badge-ghost";
   };
-  console.log('badgeColor',badgeColor);
+
   return <div className={`badge p-5 ${badgeColor()}`}>{status}</div>;
 };
 

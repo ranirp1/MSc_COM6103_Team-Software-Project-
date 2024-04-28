@@ -378,8 +378,8 @@ const UserDashboard = () => {
             </h2>
             <span
               className={`px-3 py-1 text-sm font-semibold inline-block ${device.verified
-                  ? "badge badge-success gap-2 flex justify-content: center"
-                  : "badge badge-error gap-2 flex justify-content: center"
+                ? "badge badge-success gap-2 flex justify-content: center"
+                : "badge badge-error gap-2 flex justify-content: center"
                 }`}
             >
               {device.verified ? "Verified" : "Not Verified"}
@@ -459,30 +459,31 @@ const UserDashboard = () => {
               </a>
             </div>
           )}
-          {/* <div className="dropdown dropdown-right mt-4">
-            <div tabIndex={0} role="button" className="btn btn-primary">
-              Extend Retrieval
+          {device.device_status === "Link Received" && (
+            <div className="dropdown dropdown-right mt-4">
+              <div tabIndex={0} role="button" className="btn btn-primary">
+                Extend Retrieval
+              </div>
+              <ul
+                tabIndex={0}
+                className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+              >
+                <li>
+                  <a onClick={handlePaymentModal}>3 months</a>
+                </li>
+                <li>
+                  <a onClick={handlePaymentModal}>6 months</a>
+                </li>
+              </ul>
             </div>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-            >
-              <li>
-                <a>3 months</a>
-              </li>
-              <li>
-                <a>6 months</a>
-              </li>
-            </ul>
-          </div> */}
-
+          )}
           <div className="mt-4">
             <span className="font-bold">Data Retrieval Status:</span>
-            
 
-              {/* Subsequent list items with improved logic */}
-              <DeviceStatusComponent deviceStatus={device.device_status ?? ''} />
-            
+
+            {/* Subsequent list items with improved logic */}
+            <DeviceStatusComponent deviceStatus={device.device_status ?? ''} />
+
           </div>
 
         </div>
@@ -539,7 +540,7 @@ const UserDashboard = () => {
               tabIndex={0}
               className="btn btn-ghost cursor-pointer border-2 border-primary"
             >
-              <RiFilter3Line className="text-lg" /> Filter
+            <RiFilter3Line className="text-lg" /> Filter
             </summary>
             <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
               <li>
@@ -793,7 +794,7 @@ const UserDashboard = () => {
                   className="btn btn-primary w-1/2"
                   onClick={() => setOpen(false)}
                   type="submit"
-                  
+
                 >
                   Save
                 </button>
