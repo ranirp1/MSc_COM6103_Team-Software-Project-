@@ -996,15 +996,14 @@ def update_device_visibility():
 
     # Input Validation
     email = data.get('email')
-    device_id = data.get('device_id')
+    device_id = data.get('deviceID')
     is_visible = data.get('is_visible')
 
     if not email or not device_id or is_visible is None:
         return jsonify({'error': 'Invalid request data'}), 400
 
     # Check if the staff user is authenticated
-    staff_user = User.query.filter_by(email='staff@example.com',
-                                      isStaff=True).first()  # Adjust the email as per your staff user
+    staff_user = User.query.filter_by(email='rani@gmail.com', isStaff=True).first()
 
     if not staff_user:
         return jsonify({'message': 'Unauthorized access'}), 403
@@ -1012,7 +1011,7 @@ def update_device_visibility():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        user_device = UserDevice.query.filter_by(user_id=user.id, device_id=device_id).first()
+        user_device = UserDevice.query.filter_by(user=user, deviceID=device_id).first()
 
         if user_device:
             # Update the device visibility
