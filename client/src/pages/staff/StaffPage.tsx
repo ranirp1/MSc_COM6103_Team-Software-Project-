@@ -36,6 +36,10 @@ class Device {
   device_status?: string;
   estimatedValue?: String;
   user_email?: string; 
+  dataRetrievalLink?: string; 
+  user_name?: string; 
+  user_phone?: string;
+
 
   constructor(
     id: number,
@@ -54,7 +58,12 @@ class Device {
     cexLink?: string,
     device_status?: string,
     estimatedValue?: String,
-    user_email?: string
+    user_email?: string,
+    dataRetrievalLink?: string,
+    user_name?: string,
+    user_phone?: string
+    
+    
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -73,6 +82,9 @@ class Device {
     this.device_status = device_status;
     this.estimatedValue = estimatedValue;
     this.user_email = user_email; 
+    this.dataRetrievalLink = dataRetrievalLink;
+    this.user_name = user_name;
+    this.user_phone = user_phone;
   }
 
   static fromJson(json: any): Device {
@@ -93,7 +105,10 @@ class Device {
       json.cexLink,
       json.device_status,
       json.estimatedValue,
-      json.user_email 
+      json.user_email,
+      json.dataRetrievalLink,
+      json.user_name,
+      json.user_phone
     );
   }
 }
@@ -369,15 +384,19 @@ const StaffDashboard = () => {
 
     const sendEmailWithDataLink = async () => {
       if (!localDevice.user_email) {
-        alert("Please enter an email address.");
+        alert("Email address is not available.");
         return;
       }
-    
+      if (!localDevice.dataRetrievalLink) {
+        alert("Please enter a data retrieval link.");
+        return;
+      }
+  
       const data = {
         email: localDevice.user_email,
-        urlLink: "https://example.com/data-retrieval"  // This should be dynamically generated or fetched if needed
+        urlLink: localDevice.dataRetrievalLink
       };
-    
+  
       try {
         const response = await fetch(`${API_URL}/api/send-data-retrieval-link`, {
           method: 'POST',
@@ -386,7 +405,7 @@ const StaffDashboard = () => {
           },
           body: JSON.stringify(data)
         });
-    
+  
         const result = await response.json();
         if (response.ok) {
           alert("Email sent successfully!");
@@ -397,6 +416,8 @@ const StaffDashboard = () => {
         console.error('Failed to send email:', error);
       }
     };
+  
+    
     
     return (
       <div className="bg-white p-5 rounded-lg shadow-md">
@@ -443,7 +464,12 @@ const StaffDashboard = () => {
               />
           </>
           ) : (
-            `${device.brand} ${device.model}`
+            <>
+            <div>{localDevice.brand} {localDevice.model}</div>
+            <div className="text-lg font-medium text-black mt-2">User Full Name: {localDevice.user_name}</div>
+            <div className="text-lg font-medium text-black">User Email: {localDevice.user_email}</div>
+            <div className="text-lg font-medium text-black">User Phone: {localDevice.user_phone}</div>
+          </>
           )}
         </h3>
 
@@ -544,48 +570,35 @@ const StaffDashboard = () => {
           </div>
         )}
 
-        {/* Specifications and Data Recovery section */}
-        <br></br>
-        <div className="mt-4">
+      {/* Data Recovery section visible in both edit and non-edit mode */}
+      <div className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p>
-                <p className="block mt-4 mb-2 text-lg font-medium text-black">Created At</p>
+              <p className="block mt-4 mb-2 text-lg font-medium text-black">Created At</p>
+              {editMode ? (
                 <input
                   type="text"
                   value={localDevice.createdAt}
                   onChange={(e) => handleInputChange('createdAt', e.target.value)}
                   className="mt-1 block w-full input input-bordered bg-gray-200 text-black"
                 />
-              </p>
-              <p>
-                <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}</p>
-              </p>
+              ) : (
+                <p>{localDevice.createdAt}</p>
+              )}
+              <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}</p>
             </div>
             <div>
-              {/* Right Column Content */}
-              <p>
-                <p className="block mt-4 mb-2 text-lg font-medium text-black">Data Recovery</p>
-                <select
-                  value={localDevice.dataRecovered ? "Yes" : "No"}
-                  onChange={(e) => handleInputChange('dataRecovered', e.target.value === "Yes")}
-                  className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
-                >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </p>
-
+              <br></br>
               <div style={{ display: 'flex', alignItems: 'center', marginTop: '1rem' }}>
                 <label className="text-lg font-medium text-black" style={{ marginRight: '1rem' }}>
-                  Data Retrivel Link Email:
+                  Data Retrieval Link:
                 </label>
                 <input
-                  type="email"
-                  value={localDevice.user_email || ''}
-                  onChange={(e) => handleInputChange('user_email', e.target.value)}
+                  type="text"
+                  value={localDevice.dataRetrievalLink || ''}
+                  onChange={(e) => handleInputChange('dataRetrievalLink', e.target.value)}
                   className="input input-bordered bg-gray-200 text-black"
-                  placeholder="Enter your email"
+                  placeholder="Enter data retrieval link"
                   style={{ flexGrow: 1, marginRight: '1rem' }}
                 />
                 <button className="btn btn-primary" onClick={sendEmailWithDataLink}>
@@ -595,13 +608,14 @@ const StaffDashboard = () => {
             </div>
           </div>
         </div>
-        {renderCexLink()}
+
         {editMode && (
           <button className="btn btn-primary mt-4" onClick={saveDeviceUpdates}>
             Save Changes
           </button>
         )}
 
+        {renderCexLink()}
       </div>
     );
   };
