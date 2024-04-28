@@ -613,25 +613,55 @@ def pay():
 @app.route('/api/deleteUser', methods=['POST'])
 @cross_origin()
 def deleteUser():
-    """
-    Delete a user from the database.
-    Args:
-        email (str): The email of the user to delete.
-    Returns:
-        A JSON response with a success message if the user is successfully deleted.
-        A JSON response with an error message if the user is not found in the database.
-    """
-    # TODO : Add a check to see if the user calling this api is an admin before deleting
     data = request.json
     email = data.get('email')
     user = User.query.filter_by(email=email).first()
     if not user:
         return jsonify({'message': 'User not found'}), 404
+    
+    # Check for dependencies
+    dependent_devices = UserDevice.query.filter_by(userID=user.id).count()
+    if dependent_devices > 0:
+        return jsonify({'message': 'Cannot delete user with active devices. Please reassign or remove devices first.'}), 400
+    
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User deleted'}), 200
 
 
+@app.route('/api/deleteUserAndAllData', methods=['POST'])
+def deleteUserAndAllData():
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    try:
+        # Delete Data Retrieval entries
+        DataRetrieval.query.join(UserDevice, UserDevice.userDeviceID == DataRetrieval.userDeviceId) \
+            .filter(UserDevice.userID == user.id).delete(synchronize_session='fetch')
+
+        # Delete Payment entries
+        PaymentTable.query.filter_by(userID=user.id).delete(synchronize_session='fetch')
+
+        # Delete UserDevice entries, related device estimates, and devices
+        user_devices = UserDevice.query.filter_by(userID=user.id).all()
+        for user_device in user_devices:
+            estimateValues.query.filter_by(deviceID=user_device.deviceID).delete(synchronize_session='fetch')
+            Device.query.filter_by(deviceID=user_device.deviceID).delete(synchronize_session='fetch')
+            db.session.delete(user_device)
+
+        # Finally, delete the user
+        db.session.delete(user)
+        db.session.commit()
+
+        return jsonify({'message': 'User and all related data deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Failed to delete user and related data', 'error': str(e)}), 500
+    
 @app.route('/api/downgradeToUser', methods=['POST'])
 @cross_origin()
 def updateUserToEndUser():

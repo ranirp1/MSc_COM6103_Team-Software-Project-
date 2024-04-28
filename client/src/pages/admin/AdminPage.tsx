@@ -166,7 +166,36 @@ const AdminDashboard = () => {
       }
     }
   );
-
+  
+  const handleDeleteUser = async (email: string): Promise<void> => {
+    if (!email) {
+      alert("Invalid email address.");
+      return;
+    }
+    try {
+      const response = await fetch(`${API_URL}/api/deleteUser`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      });
+  
+      if (response.ok) {
+        alert("User deleted successfully!");
+        // Filter out the deleted user from the local state to update the UI
+        setUsers(users.filter(user => user.email !== email));
+      } else {
+        const result = await response.json();
+        alert(`Failed to delete user: ${result.message}`);
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("Error deleting user.");
+    }
+  };
+  
+  
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const showList = (listType: "employees" | "endUsers" | "admins") => {
@@ -308,6 +337,9 @@ const AdminDashboard = () => {
                         Phone
                       </th>
                       <th className="text-black text-lg font-bold min-w-[200px]">
+                        Delete
+                      </th>
+                      <th className="text-black text-lg font-bold min-w-[200px]">
                         Role
                       </th>
                     </tr>
@@ -318,6 +350,14 @@ const AdminDashboard = () => {
                         <td>{user.name}</td>
                         <td>{user.email}</td>
                         <td>{user.phone}</td>
+                        <td>
+                          <button
+                            className="btn btn-error mr-2"
+                            onClick={() => handleDeleteUser(user.email)}
+                          >
+                            Delete User
+                          </button>
+                        </td>
                         <td>
                           {user.role === "endUser" && (
                             <button
