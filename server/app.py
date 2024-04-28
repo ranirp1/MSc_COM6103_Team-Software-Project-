@@ -668,7 +668,7 @@ def move_device_classification():
         return jsonify({'error': 'Invalid request data'}), 400
 
     # Check if the staff user is authenticated
-    staff_user = User.query.filter_by(email='staff@example.com').first()  # Adjust the email as per your staff user
+    staff_user = User.query.filter_by(email='rani@gmail.com').first()  # Adjust the email as per your staff user
 
     if not staff_user or not staff_user.isStaff:
         return jsonify({'message': 'Unauthorized access'}), 403
@@ -678,7 +678,7 @@ def move_device_classification():
 
     if user:
         # Retrieve the user's device for classification update
-        user_device = UserDevice.query.filter_by(user_id=user.id).first()
+        user_device = UserDevice.query.filter_by(userID=user.id).first()
 
         if user_device:
             # Update the device classification
