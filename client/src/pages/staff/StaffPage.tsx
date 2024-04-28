@@ -179,15 +179,7 @@ const StaffDashboard = () => {
         throw new Error('Backend failed to update device verification status');
       }
 
-      // Update the frontend after a successful backend response
-      setDevices(
-        devices.map((d, index) => {
-          if (index === deviceIndex) {
-            return { ...d, verified: newVerificationStatus };
-          }
-          return d;
-        })
-      );
+      window.location.reload();
     } catch (error) {
       console.error('Error updating verification status:', error);
       // Revert the frontend update if the backend call fails
@@ -416,21 +408,10 @@ const StaffDashboard = () => {
           </button>
 
             {/* Descriptive Verification Toggle Button on the Right */}
-          {localDevice.verified ? (
-            <button
-              onClick={() => toggleDeviceVerification(localDevice.id)}
-              className="btn btn-success" // Red indicating a negative action
-            >
-              Verified, Click to Unverify
-            </button>
-          ) : (
-            <button
-              onClick={() => toggleDeviceVerification(localDevice.id)}
-              className="btn btn-error" // Green indicating a positive action
-            >
-              Unverified, Click to Verify
-            </button>
-          )}
+            <div className="flex flex-row items-center font-bold text-primary">
+              Verified
+          <input type="checkbox" className={`toggle ml-5 ${localDevice.verified?"bg-primary":""} border-2`} checked={localDevice.verified} onChange={() => toggleDeviceVerification(localDevice.id)}/>
+          </div>
         </div>
           {editMode ? (
             <>

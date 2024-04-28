@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy import Enum
-
+from flask import Blueprint
 import os
 from dotenv import load_dotenv
 import stripe
@@ -47,6 +47,16 @@ app.config['MAIL_USERNAME'] = 'com6103team03@gmail.com'  # Your Gmail address
 app.config['MAIL_PASSWORD'] = 'nqfm kpqv dprj zfqd'  # Your Gmail password or app-specific password
 sender_email = 'com6103team03@gmail.com' 
 mail = Mail(app)
+
+blueprint = Blueprint('blueprint', __name__)
+# put this sippet ahead of all your bluprints
+# blueprint can also be app~~
+@blueprint.after_request 
+def after_request(response):
+    header = response.headers
+    header['Access-Control-Allow-Origin'] = '*'
+    # Other headers can be added here if needed
+    return response
 
 load_dotenv()
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
@@ -993,6 +1003,9 @@ def changeDeviceVerification():
     deviceID = data.get('deviceID')
     isVerified = data.get('isVerified')
     device = Device.query.filter_by(deviceID=deviceID).first()
+    userDevices = UserDevice.query.filter_by(deviceID=deviceID).all()
+    for userDevice in userDevices:
+        userDevice.device_status = Device_Status.DEV_VERIF if isVerified else Device_Status.DEV_REGISTERED
     if not device:
         return jsonify({'message': 'Device not found'}), 404
     device.isVerified = isVerified
