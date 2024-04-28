@@ -1076,9 +1076,11 @@ def update_device():
             setattr(device, 'deviceCondition', data['condition'])
         if 'classification' in data:
             setattr(device, 'deviceClassification', data['classification'])
+        if 'device_status' in data:
+            setattr(device, 'device_status', Device_Status(data['device_status']))
         
         for field in ['brand', 'model',  'dateOfRelease',
-                      'isVerified','device_status','estimatedValue']:
+                      'isVerified','estimatedValue']:
             if field in data:
                 setattr(device, field, data[field])
 
