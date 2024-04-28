@@ -1,4 +1,4 @@
-const DeviceStatusConstant = {
+ export const DeviceStatusConstant = {
     DeviceRegistered: 'Device Registered',
     DeviceVerified: 'Device Verified',
     PaymentProcessed: 'Payment Processed',
