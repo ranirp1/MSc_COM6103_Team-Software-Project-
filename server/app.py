@@ -29,9 +29,6 @@ from os import environ
 SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
 
 from enum import Enum as PyEnum
-from reportlab.graphics.shapes import Drawing
-from reportlab.graphics.charts.barcharts import VerticalBarChart
-
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -368,7 +365,7 @@ def getEstimatedValue(model, condition):
     """
     device = Device.query.filter_by(model=model).first()
     if not device:
-        return "NA"
+        return jsonify({'message': 'Device not found'}), 404
 
     estimated_value = estimateValues.query.filter_by(deviceID=device.deviceID).first()
     if not estimated_value:
@@ -613,55 +610,25 @@ def pay():
 @app.route('/api/deleteUser', methods=['POST'])
 @cross_origin()
 def deleteUser():
+    """
+    Delete a user from the database.
+    Args:
+        email (str): The email of the user to delete.
+    Returns:
+        A JSON response with a success message if the user is successfully deleted.
+        A JSON response with an error message if the user is not found in the database.
+    """
+    # TODO : Add a check to see if the user calling this api is an admin before deleting
     data = request.json
     email = data.get('email')
     user = User.query.filter_by(email=email).first()
     if not user:
         return jsonify({'message': 'User not found'}), 404
-    
-    # Check for dependencies
-    dependent_devices = UserDevice.query.filter_by(userID=user.id).count()
-    if dependent_devices > 0:
-        return jsonify({'message': 'Cannot delete user with active devices. Please reassign or remove devices first.'}), 400
-    
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User deleted'}), 200
 
 
-@app.route('/api/deleteUserAndAllData', methods=['POST'])
-def deleteUserAndAllData():
-    data = request.json
-    email = data.get('email')
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        return jsonify({'message': 'User not found'}), 404
-
-    try:
-        # Delete Data Retrieval entries
-        DataRetrieval.query.join(UserDevice, UserDevice.userDeviceID == DataRetrieval.userDeviceId) \
-            .filter(UserDevice.userID == user.id).delete(synchronize_session='fetch')
-
-        # Delete Payment entries
-        PaymentTable.query.filter_by(userID=user.id).delete(synchronize_session='fetch')
-
-        # Delete UserDevice entries, related device estimates, and devices
-        user_devices = UserDevice.query.filter_by(userID=user.id).all()
-        for user_device in user_devices:
-            estimateValues.query.filter_by(deviceID=user_device.deviceID).delete(synchronize_session='fetch')
-            Device.query.filter_by(deviceID=user_device.deviceID).delete(synchronize_session='fetch')
-            db.session.delete(user_device)
-
-        # Finally, delete the user
-        db.session.delete(user)
-        db.session.commit()
-
-        return jsonify({'message': 'User and all related data deleted successfully'}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'message': 'Failed to delete user and related data', 'error': str(e)}), 500
-    
 @app.route('/api/downgradeToUser', methods=['POST'])
 @cross_origin()
 def updateUserToEndUser():
@@ -698,7 +665,7 @@ def move_device_classification():
         return jsonify({'error': 'Invalid request data'}), 400
 
     # Check if the staff user is authenticated
-    staff_user = User.query.filter_by(email='rani@gmail.com').first()  # Adjust the email as per your staff user
+    staff_user = User.query.filter_by(email='staff@example.com').first()  # Adjust the email as per your staff user
 
     if not staff_user or not staff_user.isStaff:
         return jsonify({'message': 'Unauthorized access'}), 403
@@ -708,7 +675,7 @@ def move_device_classification():
 
     if user:
         # Retrieve the user's device for classification update
-        user_device = UserDevice.query.filter_by(userID=user.id).first()
+        user_device = UserDevice.query.filter_by(user_id=user.id).first()
 
         if user_device:
             # Update the device classification
@@ -837,6 +804,7 @@ def createDevice():
                 imageUrl=filepath,
                 qrCodeUrl=qrCodeUrl,
                 dateOfCreation=current_date.strftime("%Y-%m-%d"),
+                dataRetrievalID=0,
                 estimatedValue=estimatedValue
             )
             db.session.add(newUserDeviceAdded)
@@ -884,7 +852,6 @@ def createRetrievalData():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'Data Retrieval creation error'}), 500
-
 
 @app.route('/api/update-data-retrieval-url', methods=['POST'])
 @cross_origin()
@@ -937,40 +904,24 @@ def create_customer_device():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        # Fetch the device based on the model
-        model = device_info.get('model')
-        device = Device.query.filter_by(model=model).first()
+        # Assuming you have a one-to-many relationship between User and UserDeviceTable
+        customer_device = UserDevice(
+            user_id=user.id,
+            device_type=device_info.get('device_type'),
+            brand=device_info.get('brand'),
+            model=device_info.get('model'),
+        )
 
-        if device:
-            # Assuming you have a one-to-many relationship between User and UserDeviceTable
-            customer_device = UserDevice(
-                userID=user.id,
-                deviceID=device.deviceID,
-                deviceClassification=device_info.get('device_classification'),
-                dateOfPurchase=device_info.get('date_of_purchase'),
-                deviceColor=device_info.get('device_color'),
-                deviceStorage=device_info.get('device_storage'),
-                deviceCondition=device_info.get('device_condition'),
-                imageUrl=device_info.get('image_url'),
-                qrCodeUrl=device_info.get('qr_code_url'),
-                dateOfCreation=datetime.now(),
-                estimatedValue=device_info.get('estimated_value'),
-                device_status=Device_Status.DEV_REGISTERED
-            )
+        # Input validation: Check if essential device information is present
+        if not customer_device.device_type or not customer_device.brand or not customer_device.model:
+            return jsonify({'error': 'Incomplete device information'}), 400
 
-            # Input validation: Check if essential device information is present
-            if not customer_device.deviceClassification:
-                return jsonify({'error': 'Incomplete device information'}), 400
+        db.session.add(customer_device)
+        db.session.commit()
 
-            db.session.add(customer_device)
-            db.session.commit()
-
-            return jsonify({'message': 'Device information saved successfully'}), 200
-        else:
-            return jsonify({'error': 'Device not found'}), 404
+        return jsonify({'message': 'Device information saved successfully'}), 200
     else:
         return jsonify({'message': 'User not found'}), 404
-
 
 
 @app.route('/api/getListOfDevices', methods=['POST'])
@@ -1043,14 +994,15 @@ def update_device_visibility():
 
     # Input Validation
     email = data.get('email')
-    device_id = data.get('deviceID')
+    device_id = data.get('device_id')
     is_visible = data.get('is_visible')
 
     if not email or not device_id or is_visible is None:
         return jsonify({'error': 'Invalid request data'}), 400
 
     # Check if the staff user is authenticated
-    staff_user = User.query.filter_by(email='rani@gmail.com', isStaff=True).first()
+    staff_user = User.query.filter_by(email='staff@example.com',
+                                      isStaff=True).first()  # Adjust the email as per your staff user
 
     if not staff_user:
         return jsonify({'message': 'Unauthorized access'}), 403
@@ -1058,7 +1010,7 @@ def update_device_visibility():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        user_device = UserDevice.query.filter_by(user=user, deviceID=device_id).first()
+        user_device = UserDevice.query.filter_by(user_id=user.id, device_id=device_id).first()
 
         if user_device:
             # Update the device visibility
@@ -1125,11 +1077,9 @@ def update_device():
             setattr(device, 'deviceCondition', data['condition'])
         if 'classification' in data:
             setattr(device, 'deviceClassification', data['classification'])
-        if 'device_status' in data:
-            setattr(device, 'device_status', Device_Status(data['device_status']))
         
         for field in ['brand', 'model',  'dateOfRelease',
-                      'isVerified','estimatedValue']:
+                      'isVerified','device_status','estimatedValue']:
             if field in data:
                 setattr(device, field, data[field])
 
@@ -1164,8 +1114,8 @@ def generate_report():
     # Fetch payment transactions and devices input by users within the specified date range
     try:
 
-        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
-        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
+        payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date))
+        user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date))
 
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
