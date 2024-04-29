@@ -905,7 +905,7 @@ const UserDashboard = () => {
                 Yes
               </button>
               <button
-                className="btn btn-ghost w-1/2"
+                className="btn btn-ghost w-1/2  border-primary border-2"
                 onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
               >
                 No

@@ -857,7 +857,7 @@ const StaffDashboard = () => {
                   Yes
                 </button>
                 <button
-                  className="btn btn-ghost w-1/2"
+                  className="btn btn-ghost w-1/2  border-primary border-2"
                   onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
                 >
                   No
@@ -871,13 +871,15 @@ const StaffDashboard = () => {
       <div className="fixed bottom-4 right-4 flex flex-col ">
         {isAdminAndStaff ? (
           <button
-            className="btn  shadow-2xl btn-ghost text-primary h-20 mb-3 rounded-full"
+            className="btn  shadow-2xl btn-ghost text-primary h-20 mb-3 rounded-full border-primary border-2"
             onClick={() =>
               (window.location.href = "/admin?isAdminAndStaff=true")
             }
           >
             <AiOutlineUserSwitch size={40} />
-            <div className="pl-2 text-lg ">Switch to Admin</div>
+            <div className="pl-2 text-lg  ">
+              Switch to Admin
+            </div>
           </button>
         ) : null}
         <button className="btn    shadow-2xl bg-primary text-white h-20 rounded-full">

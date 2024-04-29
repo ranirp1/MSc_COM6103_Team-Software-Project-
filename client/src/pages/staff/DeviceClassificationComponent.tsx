@@ -23,7 +23,7 @@ const DeviceClassificationComponent = ({
   return (
     <div className="flex flex-row">
       <div
-        className={`${getBackGround()} h-5 w-5 rounded-full mr-3 border-2 border-primary p-1 shadow-2xl`}
+        className={`${getBackGround()} h-5 w-5 rounded-full mr-3 border-2 border-primary  shadow-2xl`}
       ></div>
       <h2>{deviceClassification}</h2>
     </div>

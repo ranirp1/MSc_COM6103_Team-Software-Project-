@@ -114,9 +114,9 @@ const DeviceTypeDialog = ({
         </div>
         {getDescription()}
         <div className="flex flex-1 place-content-center flex-col my-4">
-          <div className="flex flex-row ">
+          <div className="flex flex-row gap-2">
             <button
-              className="btn btn-primary w-1/2 "
+              className="btn btn-primary flex-1 "
               onClick={() => {
                 window.location.href = `/login?deviceData=${JSON.stringify(
                   request
@@ -126,7 +126,7 @@ const DeviceTypeDialog = ({
               Login
             </button>
             <button
-              className="btn btn-ghost bg-white w-1/2 "
+              className="btn btn-ghost bg-white flex-1 border-2 border-primary "
               onClick={() => {
                 window.location.href = `/register?deviceData=${JSON.stringify(
                   request
