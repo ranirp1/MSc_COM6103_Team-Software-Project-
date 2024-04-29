@@ -663,13 +663,13 @@ const StaffDashboard = () => {
         {renderCexLink()}
         {editMode && (
           <button
-            className="btn btn-primary  w-full mb-10"
+            className="btn btn-primary  w-full "
             onClick={saveDeviceUpdates}
           >
             Save Changes
           </button>
         )}
-
+        <div className=" h-4"></div>
         <div className="text-bold text-primary text-lg font-bold pt-5 border-t-2">
           User Contact Information
         </div>
