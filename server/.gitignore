@@ -10,3 +10,4 @@ dist/
 .venv/
 .projectenv/
 .projectenv2/
+report.pdf

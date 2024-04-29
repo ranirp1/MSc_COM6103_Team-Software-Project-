@@ -7,6 +7,9 @@ const CreateAccount = ({ fullScreen = true }) => {
   // Adapted from LoginPage.tsx
   // not entirely sure what this toast thing is, but I've used it as best I could...
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const deviceData = urlParams.get("deviceData");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [first_name, setFirstName] = useState("");
@@ -39,6 +42,9 @@ const CreateAccount = ({ fullScreen = true }) => {
       if (response.ok) {
         setShowToast(1);
         console.log("Registration Successful");
+        if (deviceData) {
+          window.location.href = `/login?register=success&deviceData=${deviceData}`;
+        }
         window.location.href = "/login?register=success";
       } else {
         setShowToast(2);
@@ -142,7 +148,7 @@ const CreateAccount = ({ fullScreen = true }) => {
             </label>
 
             <div className="text-right mb-5">
-              <a href="/login" className="text-sm text-primary link">
+              <a href="/login?" className="text-sm text-primary link">
                 Already have an account? Sign in here
               </a>
             </div>

@@ -118,7 +118,9 @@ const DeviceTypeDialog = ({
             <button
               className="btn btn-primary w-1/2 "
               onClick={() => {
-                window.location.href = "/login";
+                window.location.href = `/login?deviceData=${JSON.stringify(
+                  request
+                )}`;
               }}
             >
               Login
@@ -126,7 +128,9 @@ const DeviceTypeDialog = ({
             <button
               className="btn btn-ghost bg-white w-1/2 "
               onClick={() => {
-                window.location.href = "/register";
+                window.location.href = `/register?deviceData=${JSON.stringify(
+                  request
+                )}`;
               }}
             >
               Register

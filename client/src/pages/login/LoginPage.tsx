@@ -11,6 +11,7 @@ const LoginPage = ({ fullScreen = true }) => {
   // read the query parameter from the URL
   const urlParams = new URLSearchParams(window.location.search);
   const registerSuccess = urlParams.get("register");
+  const deviceData = urlParams.get("deviceData");
 
   React.useEffect(() => {
     if (registerSuccess === "success") {
@@ -44,12 +45,25 @@ const LoginPage = ({ fullScreen = true }) => {
         console.log("Login Successful");
         const data = await response.json();
         const user = UserModel.fromJson(data);
+        const isAdminAndStaff = user.isAdmin && user.isStaff;
         if (user.isAdmin) {
-          window.location.href = "/admin";
+          if (isAdminAndStaff) {
+            window.location.href = "/admin?isAdminAndStaff=true";
+          } else {
+            window.location.href = "/admin";
+          }
         } else if (user.isStaff) {
-          window.location.href = "/staff";
+          if (isAdminAndStaff) {
+            window.location.href = "/staff?isAdminAndStaff=true";
+          } else {
+            window.location.href = "/staff";
+          }
         } else {
-          window.location.href = "/user";
+          if (deviceData) {
+            window.location.href = `/user?userID=${user.id}&deviceData=${deviceData}`;
+          } else {
+            window.location.href = `/user?userID=${user.id}`;
+          }
         }
       } else {
         setShowToast(2);

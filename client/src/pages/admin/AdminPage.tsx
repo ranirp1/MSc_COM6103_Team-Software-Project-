@@ -10,6 +10,7 @@ import {
 import { API_URL } from "../../constants/constant";
 import { useNavigate } from "react-router-dom";
 import emptyListImage from "../../assets/empty_list.svg";
+import { AiOutlineUserSwitch } from "react-icons/ai";
 
 type UserType = "employee" | "endUser" | "admin";
 
@@ -22,6 +23,8 @@ interface User {
 }
 
 const AdminDashboard = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdminAndStaff = urlParams.get("isAdminAndStaff") === "true";
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBy, setFilterBy] = useState("name");
@@ -164,6 +167,34 @@ const AdminDashboard = () => {
     }
   );
 
+  const handleDeleteUser = async (email: string): Promise<void> => {
+    if (!email) {
+      alert("Invalid email address.");
+      return;
+    }
+    try {
+      const response = await fetch(`${API_URL}/api/deleteUser`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      });
+  
+      if (response.ok) {
+        alert("User deleted successfully!");
+        // Filter out the deleted user from the local state to update the UI
+        setUsers(users.filter(user => user.email !== email));
+      } else {
+        const result = await response.json();
+        alert(`Failed to delete user: ${result.message}`);
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("Error deleting user.");
+    }
+  };
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const showList = (listType: "employees" | "endUsers" | "admins") => {
@@ -280,13 +311,12 @@ const AdminDashboard = () => {
         <main className="overflow-x-hidden overflow-y-auto mx-5">
           <div className="px-6 py-8">
             <h5 className="text-black text-3xl font-medium mb-6">
-              { getUserType()}
+              {getUserType()}
             </h5>
             {filteredAndSortedUsers.length == 0 ? (
               <div className="flex flex-col  w-full h-full items-center mt-16">
                 <h3 className="text-4xl font-bold text-center mb-5 ">
-                  No{" "}
-                  {getUserType()}
+                  No {getUserType()}
                   Found
                 </h3>
                 <img src={emptyListImage} className="h-80 w-80" />
@@ -306,46 +336,60 @@ const AdminDashboard = () => {
                         Phone
                       </th>
                       <th className="text-black text-lg font-bold min-w-[200px]">
+                        Delete
+                      </th>
+                      <th className="text-black text-lg font-bold min-w-[200px]">
                         Role
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-  {filteredAndSortedUsers.map((user) => (
-    <tr key={user.id}>
-      <td>{user.name}</td>
-      <td>{user.email}</td>
-      <td>{user.phone}</td>
-      <td>
-        {user.role === "endUser" && (
-          <button
-            className="btn btn-primary"
-            onClick={() => handleRoleChange(user.id, "employee")}
-          >
-            Upgrade to Employee
-          </button>
-        )}
-        {user.role === "employee" && (
-          <button
-            className="btn btn-success"
-            onClick={() => handleRoleChange(user.id, "admin")}
-          >
-            Promote to Admin
-          </button>
-        )}
-        {user.role === "admin" && (
-          <button
-            className="btn btn-warning"
-            onClick={() => handleRoleChange(user.id, "employee")}
-          >
-            Downgrade to Employee
-          </button>
-        )}
-      </td>
-    </tr>
-  ))}
-</tbody>
-
+                    {filteredAndSortedUsers.map((user) => (
+                      <tr key={user.id}>
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>{user.phone}</td>
+                        <td>
+                          <button
+                            className="btn btn-error mr-2"
+                            onClick={() => handleDeleteUser(user.email)}
+                          >
+                            Delete User
+                          </button>
+                        </td>
+                        <td>
+                          {user.role === "endUser" && (
+                            <button
+                              className="btn btn-primary"
+                              onClick={() =>
+                                handleRoleChange(user.id, "employee")
+                              }
+                            >
+                              Upgrade to Employee
+                            </button>
+                          )}
+                          {user.role === "employee" && (
+                            <button
+                              className="btn btn-success"
+                              onClick={() => handleRoleChange(user.id, "admin")}
+                            >
+                              Promote to Admin
+                            </button>
+                          )}
+                          {user.role === "admin" && (
+                            <button
+                              className="btn btn-warning"
+                              onClick={() =>
+                                handleRoleChange(user.id, "employee")
+                              }
+                            >
+                              Downgrade to Employee
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
               </div>
             )}
@@ -379,6 +423,19 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+      <div className="fixed bottom-4 right-4 flex flex-col ">
+        {isAdminAndStaff ? (
+          <button
+            className="btn  shadow-2xl btn-ghost text-primary h-20 mb-3 rounded-full"
+            onClick={() =>
+              (window.location.href = "/staff?isAdminAndStaff=true")
+            }
+          >
+            <AiOutlineUserSwitch size={40} />
+            <div className="pl-2 text-lg ">Switch to Staff</div>
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 };
