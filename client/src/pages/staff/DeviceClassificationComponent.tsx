@@ -10,19 +10,21 @@ const DeviceClassificationComponent = ({
   function getBackGround() {
     switch (deviceClassification) {
       case DeviceClassification.Current:
-        return "bg-yellow-400";
+        return "bg-amber-300";
       case DeviceClassification.Rare:
-        return "bg-blue-400";
+        return "bg-indigo-500";
       case DeviceClassification.Recycle:
-        return "bg-green-400";
+        return "bg-emerald-400";
       default:
-        return "bg-red-400";
+        return "bg-rose-400";
     }
   }
 
   return (
     <div className="flex flex-row">
-      <div className={`${getBackGround()} h-5 w-5 rounded-full mr-3 shadow-2xl`}></div>
+      <div
+        className={`${getBackGround()} h-5 w-5 rounded-full mr-3 border-2 border-primary p-1 shadow-2xl`}
+      ></div>
       <h2>{deviceClassification}</h2>
     </div>
   );
