@@ -11,6 +11,7 @@ import { API_URL } from "../../constants/constant";
 import { useNavigate } from "react-router-dom";
 import emptyListImage from "../../assets/empty_list.svg";
 import { AiOutlineUserSwitch } from "react-icons/ai";
+import { MdOutlineDelete } from "react-icons/md";
 
 type UserType = "employee" | "endUser" | "admin";
 
@@ -174,17 +175,17 @@ const AdminDashboard = () => {
     }
     try {
       const response = await fetch(`${API_URL}/api/deleteUser`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
       });
-  
+
       if (response.ok) {
         alert("User deleted successfully!");
         // Filter out the deleted user from the local state to update the UI
-        setUsers(users.filter(user => user.email !== email));
+        setUsers(users.filter((user) => user.email !== email));
       } else {
         const result = await response.json();
         alert(`Failed to delete user: ${result.message}`);
@@ -335,28 +336,19 @@ const AdminDashboard = () => {
                       <th className="text-black text-lg font-bold min-w-[200px]">
                         Phone
                       </th>
-                      <th className="text-black text-lg font-bold min-w-[200px]">
-                        Delete
-                      </th>
+
                       <th className="text-black text-lg font-bold min-w-[200px]">
                         Role
                       </th>
+                      <th className="text-black text-lg font-bold "></th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredAndSortedUsers.map((user) => (
-                      <tr key={user.id}>
+                      <tr key={user.id} className="text-lg">
                         <td>{user.name}</td>
                         <td>{user.email}</td>
                         <td>{user.phone}</td>
-                        <td>
-                          <button
-                            className="btn btn-error mr-2"
-                            onClick={() => handleDeleteUser(user.email)}
-                          >
-                            Delete User
-                          </button>
-                        </td>
                         <td>
                           {user.role === "endUser" && (
                             <button
@@ -386,6 +378,11 @@ const AdminDashboard = () => {
                               Downgrade to Employee
                             </button>
                           )}
+                        </td>
+                        <td>
+                          <button className="btn btn-circle bg-red-700 text-white ">
+                            <MdOutlineDelete size={35}/>
+                          </button>
                         </td>
                       </tr>
                     ))}
