@@ -7,12 +7,6 @@ export const DeviceStatusConstant = {
   DataWiped: "Data Wiped"
 };
 
-const DeviceStatusConstant1 = {
-  DeviceRegistered: "Device Registered",
-  DeviceVerified: "Device Verified",
-  DataWiped: "Data Wiped"
-}
-
 enum DeviceStatusIndex {
   DeviceRegistered,
   DeviceVerified,
