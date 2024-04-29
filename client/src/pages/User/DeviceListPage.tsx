@@ -155,24 +155,25 @@ const UserDashboard = () => {
   const [selectedValues, setSelectedValues] = useState([]); // Array to store selected values
   const [showInputs, setShowInputs] = useState(false); // Flag to control input display
 
-  if (deviceData) {
-    const modal = document.getElementById(
-      "my_modal_5"
-    ) as HTMLDialogElement | null;
-    if (modal) {
-      modal.showModal();
+  useEffect(() => {
+    if (deviceData) {
+      const modal = document.getElementById(
+        "my_modal_5"
+      ) as HTMLDialogElement | null;
+      if (modal) {
+        modal.showModal();
+      }
+      const data = JSON.parse(deviceData);
+      setBrand(data.brand);
+      setModel(data.model);
+      setDeviceStorage(data.storage);
+      setDeviceColor(data.color);
+      setDeviceCondition(data.condition);
+      setDeviceClassification(data.classification);
+      setDateofPurchase(data.dateofPurchase);
+      setDateofRelease(data.dateofRelease);
     }
-    var data = JSON.parse(deviceData);
-    setBrand(data.brand);
-    setModel(data.model);
-    setDeviceStorage(data.storage);
-    setDeviceColor(data.color);
-    setDeviceCondition(data.condition);
-    setDeviceClassification(data.classification);
-    setDateofPurchase(data.dateofPurchase);
-    setDateofRelease(data.dateofRelease);
-    setDataRetreivalOpted(data.data_retrieval_opted);
-  }
+  });
 
   useEffect(() => {
     fetchDevices();
@@ -689,6 +690,7 @@ const UserDashboard = () => {
                         <input
                           onChange={(e) => setModel(e.target.value)}
                           type="text"
+                          value={model}
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
                       </div>
@@ -705,6 +707,7 @@ const UserDashboard = () => {
                         <input
                           onChange={(e) => setDateofPurchase(e.target.value)}
                           type="date"
+                          value={dateofPurchase}
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
                       </div>
@@ -721,6 +724,7 @@ const UserDashboard = () => {
                         <select
                           id="classification"
                           name="classification"
+                          value={deviceClassification}
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
                           onChange={(e) => {
                             setDeviceClassification(e.target.value);
@@ -745,6 +749,7 @@ const UserDashboard = () => {
                         <input
                           onChange={(e) => setDateofRelease(e.target.value)}
                           type="date"
+                          value={dateofRelease}
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
                       </div>
@@ -761,6 +766,7 @@ const UserDashboard = () => {
                         <input
                           onChange={(e) => setDeviceColor(e.target.value)}
                           type="text"
+                          value={deviceColor}
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
                       </div>
@@ -777,6 +783,7 @@ const UserDashboard = () => {
                         <input
                           onChange={(e) => setDeviceStorage(e.target.value)}
                           type="text"
+                          value={deviceStorage}
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
                       </div>
@@ -942,7 +949,7 @@ const UserDashboard = () => {
                 Yes
               </button>
               <button
-                className="btn btn-ghost w-1/2"
+                className="btn btn-ghost w-1/2  border-primary border-2"
                 onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
               >
                 No

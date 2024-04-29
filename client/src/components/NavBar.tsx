@@ -6,10 +6,10 @@ import CreateAccount from "../pages/registration/RegistrationPage";
 const NavBar = () => {
   return (
     <div className="mt-10 w-1/2">
-      <div className="flex-none gap-2 w-full">
+      <div className="flex flex-row  w-full gap-1">
         {/* Open the modal using document.getElementById('ID').showModal() method */}
         <button
-          className="btn btn-accent w-1/2 r-2"
+          className="btn btn-accent flex-1 r-2  border-primary border-2 "
           onClick={() => {
             const modal = document.getElementById(
               "my_modal_1"
@@ -47,7 +47,7 @@ const NavBar = () => {
         </dialog>
 
         <button
-          className="btn btn-primary w-1/2"
+          className="btn btn-primary flex-1 "
           onClick={() => {
             const modal = document.getElementById(
               "my_modal_2"

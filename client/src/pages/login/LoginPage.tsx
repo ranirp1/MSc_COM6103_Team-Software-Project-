@@ -60,9 +60,10 @@ const LoginPage = ({ fullScreen = true }) => {
           }
         } else {
           if (deviceData) {
-            window.location.href = `/login?userID=${user.id}&deviceData=${deviceData}`;
+            window.location.href = `/user?userID=${user.id}&deviceData=${deviceData}`;
+          } else {
+            window.location.href = `/user?userID=${user.id}`;
           }
-          window.location.href = `/user?userID=${user.id}`;
         }
       } else {
         setShowToast(2);
