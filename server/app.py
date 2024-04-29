@@ -18,6 +18,10 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image
 from werkzeug.utils import secure_filename
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.units import mm
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.barcharts import VerticalBarChart
 from collections import defaultdict
 
 from enum import Enum as PyEnum
@@ -31,6 +35,8 @@ import matplotlib
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.backends.backend_pdf as pdf
+import io
 
 # pip install python-jose to work with JWT tokens
 from jose import JWTError, jwt
@@ -55,9 +61,7 @@ sender_email = 'com6103team03@gmail.com'
 mail = Mail(app)
 
 blueprint = Blueprint('blueprint', __name__)
-
-
-# put this sippet ahead of all your bluprints
+# put this snippet ahead of all your bluprints
 # blueprint can also be app~~
 @blueprint.after_request
 def after_request(response):
@@ -1225,27 +1229,31 @@ def generate_report():
         user_ids = list(user_payments.keys())
         payment_counts = list(user_payments.values())
 
-        plt.figure(figsize=(10, 6))
-        plt.bar(user_ids, payment_counts, color='skyblue')
-        plt.xlabel('User ID')
-        plt.ylabel('Number of Payments')
-        plt.title('Number of Payments by User')
-        plt.xticks(rotation=45, ha='right')
-        plt.tight_layout()
+        if not user_ids or not payment_counts:
+            message_text = "No payment data found for this date range and user."
+            message = Paragraph(message_text, heading_style)
+            elements.append(message)
+        else:
+            elements.append(Spacer(3, 80))
 
-        # Save the bar graph as an image
-        bar_graph_filename = 'bar_graph.png'
-        plt.savefig(bar_graph_filename)
+            # Handle case where there's data
+            chart = VerticalBarChart()
+            chart.data = [payment_counts]
+            chart.categoryAxis.categoryNames = [str(user_id) for user_id in user_ids]
+            chart.width = 500
+            chart.height = 200
+            chart.x = 50
+            chart.y = 50
+            chart.valueAxis.valueMin = 0
+            chart.valueAxis.valueMax = max(payment_counts) + 1
+            chart.valueAxis.valueStep = 1
+            chart.barSpacing = 5
 
-        # Close the plot to free memory
-        plt.close()
 
-        # Insert the image into the PDF report
-        img = Image(bar_graph_filename, width=400, height=200)
-        img.hAlign = 'CENTER'
-        img.vAlign = 'MIDDLE'
-        img.keepWithNext = True
-        elements.append(img)
+            drawing = Drawing(400, 200)
+            drawing.add(chart)
+
+            elements.append(drawing)
 
         # Build PDF document
         doc.build(elements)
