@@ -21,6 +21,8 @@ import StaffFilterComponent from "./StaffFilterComponent";
 import { DeviceStatusConstant } from "../User/DeviceStatusComponent";
 import KeyValueComponent from "../../components/KeyValueComponent";
 import { IoSend } from "react-icons/io5";
+import { DeviceClassification } from "../landing/CheckNow";
+import DeviceClassificationComponent from "./DeviceClassificationComponent";
 class Device {
   id: number;
   brand: string;
@@ -42,6 +44,7 @@ class Device {
   dataRetrievalLink?: string;
   user_name?: string;
   user_phone?: string;
+  userDeviceId?: number;
 
   constructor(
     id: number,
@@ -63,7 +66,8 @@ class Device {
     user_email?: string,
     dataRetrievalLink?: string,
     user_name?: string,
-    user_phone?: string
+    user_phone?: string,
+    userDeviceId?: number
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -85,6 +89,7 @@ class Device {
     this.dataRetrievalLink = dataRetrievalLink;
     this.user_name = user_name;
     this.user_phone = user_phone;
+    this.userDeviceId = userDeviceId;
   }
 
   static fromJson(json: any): Device {
@@ -108,7 +113,8 @@ class Device {
       json.user_email,
       json.dataRetrievalLink,
       json.user_name,
-      json.user_phone
+      json.user_phone,
+      json.userDeviceId
     );
   }
 }
@@ -578,11 +584,11 @@ const StaffDashboard = () => {
                     }
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
-                    <option value="DEV_REGISTERED">Device Registered</option>
-                    <option value="DEV_VERIF">Device Verified</option>
-                    <option value="PAYMENT_DONE">Payment Processed</option>
-                    <option value="DATA_RETRIEVED">Data Retrieved</option>
-                    <option value="URL_READY">Link Received</option>
+                    <option value="Device Registered">Device Registered</option>
+                    <option value="Device Verified">Device Verified</option>
+                    <option value="Payment Processed">Payment Processed</option>
+                    <option value="Data Retrieved">Data Retrieved</option>
+                    <option value="Link Received">Link Received</option>
                   </select>
                 </div>
                 <div>
@@ -764,10 +770,10 @@ const StaffDashboard = () => {
                       Created At
                     </th>
                     <th className="text-black text-lg font-bold min-w-[250px]">
-                      Classification
+                      Status
                     </th>
                     <th className="text-black text-lg font-bold min-w-[250px]">
-                      Status
+                      Classification
                     </th>
                   </tr>
                 </thead>
@@ -793,7 +799,7 @@ const StaffDashboard = () => {
                                 ""
                               )}
                               alt={device.image}
-                              className="h-24 w-16 fel flex-col place-content-center place-items-center items-center bg-primary bg-opacity-90 rounded shadow"
+                              className="object-contain h-24 w-16 fel flex-col place-content-center place-items-center items-center bg-white  rounded shadow"
                             />
                           ) : (
                             <div className="h-24 w-16 felx flex-col place-content-center place-items-center items-center bg-primary bg-opacity-90 rounded shadow">
@@ -808,15 +814,19 @@ const StaffDashboard = () => {
                         <td className="text-lg">{device.brand}</td>
                         <td className="text-lg">{device.model}</td>
                         <td className="text-lg">{device.createdAt}</td>
-                        <td className="text-lg">
-                          {device.classification || "Not Classified"}
-                        </td>
                         <td>
                           <div className="flex">
                             <DeviceStatusBadge
                               status={device.device_status ?? ""}
                             />
                           </div>
+                        </td>
+                        <td>
+                          <DeviceClassificationComponent
+                            deviceClassification={
+                              device.classification || "Not Classified"
+                            }
+                          />
                         </td>
                       </tr>
                     ))
