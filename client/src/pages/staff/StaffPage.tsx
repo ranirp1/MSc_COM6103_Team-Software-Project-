@@ -592,6 +592,7 @@ const StaffDashboard = () => {
                     <option value="Payment Processed">Payment Processed</option>
                     <option value="Data Retrieved">Data Retrieved</option>
                     <option value="Link Received">Link Received</option>
+                    <option value="Data Wiped">Data Wiped</option>
                   </select>
                 </div>
                 <div>
