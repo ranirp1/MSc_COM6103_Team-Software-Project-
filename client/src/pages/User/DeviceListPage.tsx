@@ -3,7 +3,6 @@ import CardPaymentModel from "../../components/CardPaymentModel";
 
 import EWasteHubImage from "../../assets/EWasteHub.jpg";
 import { RiFilter3Line, RiLogoutBoxRLine } from "react-icons/ri";
-import image1 from "../../assets/image1.jpg";
 import React, { useState, ChangeEvent, useEffect } from "react";
 import "../../style.css";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -249,15 +248,6 @@ const UserDashboard = () => {
     }
   };
 
-  const handleDataRetrievalChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    console.log("e.target.checked", e.target.checked);
-    if (e.target.checked && e.target.value === "Yes") {
-      setDataRetrieval(e.target.checked && e.target.value === "Yes");
-    }
-  };
-
   const handleCancel = () => {
     window.location.href = "/user";
   };
@@ -339,7 +329,7 @@ const UserDashboard = () => {
 
       if (
         device.classification === "Recycle" &&
-        device.dataRetrievalRequested
+        device.data_retrieval_opted === "Yes" && device.device_status == "Payment Processed"
       ) {
         const creationDate = new Date(device.createdAt);
         const endTime = new Date(
@@ -367,11 +357,10 @@ const UserDashboard = () => {
       return "Not applicable";
     };
 
-    const isDeviceRareOrCurrent =
-      device.classification === "Rare" || device.classification === "Current";
+    const isDeviceRareOrCurrent = device.classification === "Rare" || device.classification === "Current";
     const isVerified = device.verified;
     const isRecycled = device.classification === "Recycle";
-   //const isPayable = device.data_retrieval_opted;
+    
 
     function handlePaymentModal(): void {
       setShowPopup(false);
@@ -428,10 +417,6 @@ const UserDashboard = () => {
                   <KeyValueComponent
                     data="Classification :"
                     value={device.classification}
-                  />
-                  <KeyValueComponent
-                    data="Retrieval :"
-                    value={device.data_retrieval_opted}
                   />
                   <KeyValueComponent
                     data="Created At :"
@@ -504,7 +489,7 @@ const UserDashboard = () => {
                     </button>
                   </div>
                 )}
-                  {device.data_retrieval_opted === "Yes" && device.device_status === "Payment Processed" &&(
+                  {device.data_retrieval_opted === "Yes" && device.device_status === "Payment Processed" && isRecycled &&(
                     <div className="dropdown dropdown-right ">
                       <div
                         tabIndex={0}
@@ -550,10 +535,10 @@ const UserDashboard = () => {
           } p-3 text-lg text-black rounded-b-xl flex w-full place-content-center`}
         >
           {isDeviceRareOrCurrent
-            ? "Data Wipping will be done by 3rd party"
+            ? "Data Wiping will be done by 3rd party"
             : device.device_status == DeviceStatusConstant.LinkReceived
-            ? "Data Wipped"
-            : "Data Wipping Pending"}
+            ? "Data Wiped"
+            : "Data Wiping Pending"}
         </div>
       </div>
     );

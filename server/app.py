@@ -117,6 +117,7 @@ class Device_Status(PyEnum):
     PAYMENT_DONE = 'Payment Processed' #Payment done
     DATA_RETRIEVED = 'Data Retrieved'
     URL_READY = 'Link Received'
+    DATA_WIPED = 'Data Wiped'
 
     def __str__(self):
         return self.value
