@@ -15,11 +15,22 @@ from flask_cors import CORS, cross_origin
 from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image
 from werkzeug.utils import secure_filename
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from collections import defaultdict
+
+from enum import Enum as PyEnum
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from collections import defaultdict
 
 from flask_mail import Mail
 from flask_mail import Message
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 # pip install python-jose to work with JWT tokens
 from jose import JWTError, jwt
@@ -1138,8 +1149,9 @@ def generate_report():
     data = request.json
     start_date = data.get('start_date')
     end_date = data.get('end_date')
+    user_id = data.get('userID')
 
-    # Convert start_date and end_date strings to datetime 
+    # Convert start_date and end_date strings to datetime
     # Validate date format
 
     try:
@@ -1153,7 +1165,6 @@ def generate_report():
 
         payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
         user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
-
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
@@ -1162,6 +1173,20 @@ def generate_report():
         pdf_filename = 'report.pdf'
         doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
         elements = []
+
+        # Define a style for the heading
+        heading_style = ParagraphStyle(
+            name='Heading1',
+            fontSize=16,
+            textColor='black',
+            alignment=1,  # Center alignment
+            spaceAfter=12  # Space after the heading
+        )
+
+        # Add a heading to the PDF report
+        heading_text = "User Report"
+        heading = Paragraph(heading_text, heading_style)
+        elements.append(heading)
 
         # Add payments data to PDF
         payments_data = [['Payment ID', 'Data Retrieval ID', 'User ID', 'Date']]
@@ -1177,7 +1202,7 @@ def generate_report():
                                             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                                             ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
         elements.append(payments_table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(3, 12))
 
         # Add user devices data to PDF
         devices_data = [['User Device ID', 'User ID', 'Device ID', 'Date of Creation']]
@@ -1193,6 +1218,38 @@ def generate_report():
                                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                                            ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
         elements.append(devices_table)
+        elements.append(Spacer(3, 12))
+
+        # Aggregate payments data by user ID
+        user_payments = defaultdict(int)
+        for payment in payments:
+            user_payments[payment.userID] += 1
+
+        # Extract user IDs and payment counts
+        user_ids = list(user_payments.keys())
+        payment_counts = list(user_payments.values())
+
+        plt.figure(figsize=(10, 6))
+        plt.bar(user_ids, payment_counts, color='white')
+        plt.xlabel('User ID')
+        plt.ylabel('Number of Payments')
+        plt.title('Number of Payments by User')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+
+        # Save the bar graph as an image
+        bar_graph_filename = 'bar_graph.png'
+        plt.savefig(bar_graph_filename)
+
+        # Close the plot to free memory
+        plt.close()
+
+        # Insert the image into the PDF report
+        img = Image(bar_graph_filename, width=400, height=200)
+        img.hAlign = 'CENTER'
+        img.vAlign = 'MIDDLE'
+        img.keepWithNext = True
+        elements.append(img)
 
         # Build PDF document
         doc.build(elements)
@@ -1240,7 +1297,6 @@ def send_email_link():
     
     if not data_retrieval_link:
         return {'message': 'You need to send a data retrieval link!', 'error': True}, 400
-
 
     # Create the email body
     email_body = f"""
