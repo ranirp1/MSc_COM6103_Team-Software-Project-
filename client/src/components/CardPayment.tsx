@@ -79,6 +79,16 @@ function CardPayment({
         // execution. Set up a webhook or plugin to listen for the
         // payment_intent.succeeded event that handles any business critical
         // post-payment actions.
+        try {
+          const result = await axios.post(`${API_URL}/api/add-payment`, {
+            dataRetrievalID:1, // hardcoded
+            userID:1,
+          });
+        } catch (error) {
+          console.log(error);
+          setPaymentStatus(PaymentStatus.FAILURE);
+          return;
+        }
         setPaymentStatus(PaymentStatus.SUCCESS);
       }
     }
@@ -150,7 +160,7 @@ function CardPayment({
             className="btn btn-primary w-full my-1"
             onClick={() => setPaymentStatus(PaymentStatus.NOT_INITATED)}
           >
-            Procced
+            Proceed
           </button>
         </div>
       ) : status === PaymentStatus.NOT_INITATED ? (
