@@ -414,6 +414,7 @@ const StaffDashboard = () => {
       const data = {
         email: localDevice.user_email,
         urlLink: localDevice.dataRetrievalLink,
+        userDeviceId: localDevice.userDeviceId,
       };
 
       try {
