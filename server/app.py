@@ -885,10 +885,12 @@ def updateRetrievalData():
     dataRetrieval.dataUrl = url
     try:
         db.session.commit()
-        # TODO
-        # SEND EMAIL HERE
+        response, code = send_email_link(url=url)
+        if code == 400:
+            raise Exception("Error sending email")
         return jsonify({'message': 'Url updated'}), 200
     except Exception as e:
+        print(e)
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'Error updating url'}), 500
@@ -1191,14 +1193,14 @@ def send_email(email):
 
 
 @app.route('/api/send-data-retrieval-link', methods=['POST'])
-def send_email_link(email):
-    email = request.json.get('email', None)
+def send_email_link(email, url="https://example.com/data-retrieval"):
+    email = request.json.get('email', email)
     if not email:
         print("email is blank")
         return {'message': 'You need to send an Email!', 'error': True}, 400
 
     # Generate link for data retrieval
-    data_retrieval_link = "https://example.com/data-retrieval"
+    data_retrieval_link = url
 
     # Set up the email message
     sender_email = "your_email@example.com"
