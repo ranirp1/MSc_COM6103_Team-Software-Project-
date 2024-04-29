@@ -522,12 +522,18 @@ const UserDashboard = () => {
         </div>
         <div
           className={` ${
-            isDeviceRareOrCurrent ? "bg-yellow-100" : "bg-green-200"
+            isDeviceRareOrCurrent
+              ? "bg-yellow-100"
+              : device.device_status == DeviceStatusConstant.LinkReceived
+              ? "bg-green-200"
+              : "bg-yellow-100"
           } p-3 text-lg text-black rounded-b-xl flex w-full place-content-center`}
         >
           {isDeviceRareOrCurrent
             ? "Data Wipping will be done by 3rd party"
-            : "Data Wipped"}
+            : device.device_status == DeviceStatusConstant.LinkReceived
+            ? "Data Wipped"
+            : "Data Wipping "}
         </div>
       </div>
     );
