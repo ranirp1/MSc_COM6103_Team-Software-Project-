@@ -847,6 +847,9 @@ def createRetrievalData():
                      password
                      """
         )
+        userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
+        if userDevice:
+            userDevice.device_status = Device_Status.DATA_RETRIEVED
 
     try:
         db.session.add(newDataRetrieval)
@@ -867,14 +870,17 @@ def updateRetrievalData():
     userDeviceID = data.get('userDeviceID')
     url = data.get('dataRetrievalUrl')
 
-    # userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
 
     # if not userDevice:
     #     return jsonify({'message': 'User Device not found'}), 400
 
-    dataRetrieval = DataRetrieval.query.filter_by(userDeviceID=userDeviceID).first()
+    dataRetrieval = DataRetrieval.query.filter_by(userDeviceId=userDeviceID).first()
+    userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
     if not dataRetrieval:
         return jsonify({'message': 'DR with that device not found'}), 400
+
+    if userDevice:
+        userDevice.device_status = Device_Status.URL_READY
 
     dataRetrieval.dataUrl = url
     try:
@@ -970,6 +976,15 @@ def changeDeviceVerification():
     if not device:
         return jsonify({'message': 'Device not found'}), 404
     device.isVerified = isVerified
+    userDevice = UserDevice.query.filter_by(deviceID=deviceID).first()
+    if userDevice:
+        userDevice.device_status = Device_Status.DEV_VERIF
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            db.session.flush()
+            print(f"Could not update device status device {deviceID}")
     db.session.commit()
     return jsonify({'message': 'Device verification status updated'}), 200
 
