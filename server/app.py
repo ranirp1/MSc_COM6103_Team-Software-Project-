@@ -20,7 +20,7 @@ from werkzeug.utils import secure_filename
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.units import mm
-from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.shapes import Drawing, String
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from collections import defaultdict
 
@@ -1250,8 +1250,15 @@ def generate_report():
             chart.barSpacing = 5
             chart.barWidth = 3
 
-            drawing = Drawing(400, 200)
+            # Add the chart name below x-axis label
+            chart_name = "Payment Data Chart"
+
+            drawing = Drawing(400, 300)
             drawing.add(chart)
+
+            # Add labels manually
+            drawing.add(String(200, 10, 'User IDs', fontSize=12))
+            drawing.add(String(0, 180, 'Payment Counts', fontSize=12, angle=-90, textAnchor="middle"))
 
             elements.append(drawing)
 
