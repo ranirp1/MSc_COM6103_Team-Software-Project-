@@ -45,6 +45,10 @@ from os import environ
 
 SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
 
+from enum import Enum as PyEnum
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
@@ -61,7 +65,9 @@ sender_email = 'com6103team03@gmail.com'
 mail = Mail(app)
 
 blueprint = Blueprint('blueprint', __name__)
-# put this snippet ahead of all your bluprints
+
+
+# put this sippet ahead of all your bluprints
 # blueprint can also be app~~
 @blueprint.after_request
 def after_request(response):
@@ -125,20 +131,11 @@ class Device(db.Model):
         }
 
 
-class _DATA_RETRIEVED(PyEnum):
-    SENT = 'Sent for Processing'
-    RECEIVED = 'Received for Processing'
-    RETRIEVED = 'Data Retrieved'
-
-    def __str__(self):
-        return self.value
-
-
 class Device_Status(PyEnum):
     DEV_REGISTERED = 'Device Registered'
     DEV_VERIF = 'Device Verified'
     PAYMENT_DONE = 'Payment Processed'  # Payment done
-    DATA_RETRIEVED = _DATA_RETRIEVED
+    DATA_RETRIEVED = 'Data Retrieved'
     URL_READY = 'Link Received'
 
     def __str__(self):
@@ -161,6 +158,7 @@ class UserDevice(db.Model):
     # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
     device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
+    # data_retrieval_opted = db.Column(db.Boolean, default=False)
 
     # Define foreign key relationships
     user = relationship('User', backref='user_device', foreign_keys=[userID])
@@ -352,7 +350,6 @@ with app.app_context():
 
 
 def updateDeviceStatus(user_device, newStatus):
-
     user_device.device_status = newStatus
 
     try:
@@ -1005,7 +1002,8 @@ def getListOfDevices():
             'user_phone': user.phoneNumber,
             'dataRetrievalTimeLeft': '',
             'device_status': str(userDevice.device_status),
-            'estimatedValue': userDevice.estimatedValue
+            'estimatedValue': userDevice.estimatedValue,
+            'userDeviceID': userDevice.userDeviceID,
         }
 
         device_list.append(device_data)
@@ -1107,30 +1105,40 @@ def update_device():
     if not data:
         return jsonify({'message': 'No data provided'}), 400
 
+    userDeviceId = data.get('userDeviceID')
     device_id = data.get('id')
     if not device_id:
         return jsonify({'message': 'Device ID is required'}), 400
 
     try:
-        device = UserDevice.query.filter_by(deviceID=device_id).first()
+        # updating Device table
+        device = Device.query.filter_by(deviceID=device_id).first()
         if not device:
+            return jsonify({'message': 'Device not found'}), 404
+        for field in ['brand', 'model', "dateOfRelease"]:
+            if field in data:
+                setattr(device, field, data[field])
+        db.session.commit()
+
+        # updating UserDevice table, get all device which matches deviceId and userDeviceId
+        userDevices = UserDevice.query.filter_by(deviceID=device_id, userDeviceID=userDeviceId).first()
+        if not userDevices:
             return jsonify({'message': 'Device not found'}), 404
 
         if 'storage' in data:
-            setattr(device, 'deviceStorage', data['storage'])
+            setattr(userDevices, 'deviceStorage', data['storage'])
         if 'color' in data:
-            setattr(device, 'deviceColor', data['color'])
+            setattr(userDevices, 'deviceColor', data['color'])
         if 'condition' in data:
-            setattr(device, 'deviceCondition', data['condition'])
+            setattr(userDevices, 'deviceCondition', data['condition'])
         if 'classification' in data:
-            setattr(device, 'deviceClassification', data['classification'])
+            setattr(userDevices, 'deviceClassification', data['classification'])
         if 'device_status' in data:
-            setattr(device, 'device_status', Device_Status(data['device_status']))
+            setattr(userDevices, 'device_status', Device_Status(data['device_status']).name)
 
-        for field in ['brand', 'model', 'dateOfRelease',
-                      'isVerified', 'estimatedValue']:
+        for field in ['isVerified', 'estimatedValue']:
             if field in data:
-                setattr(device, field, data[field])
+                setattr(userDevices, field, data[field])
 
         db.session.commit()
         return jsonify({'message': 'Device updated successfully'}), 200
