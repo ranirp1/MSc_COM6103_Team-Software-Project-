@@ -146,6 +146,7 @@ class UserDevice(db.Model):
     # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
     device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
+    data_retrieval_opted = db.Column(db.Boolean, default=False)
 
     # Define foreign key relationships
     user = relationship('User', backref='user_device', foreign_keys=[userID])

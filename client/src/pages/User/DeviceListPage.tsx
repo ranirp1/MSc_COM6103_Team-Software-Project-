@@ -533,7 +533,7 @@ const UserDashboard = () => {
             ? "Data Wipping will be done by 3rd party"
             : device.device_status == DeviceStatusConstant.LinkReceived
             ? "Data Wipped"
-            : "Data Wipping "}
+            : "Data Wipping Pending"}
         </div>
       </div>
     );
