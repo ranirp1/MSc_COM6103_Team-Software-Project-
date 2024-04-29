@@ -1240,7 +1240,7 @@ def generate_report():
             chart = VerticalBarChart()
             chart.data = [payment_counts]
             chart.categoryAxis.categoryNames = [str(user_id) for user_id in user_ids]
-            chart.width = 500
+            chart.width = 400
             chart.height = 200
             chart.x = 50
             chart.y = 50
@@ -1248,7 +1248,7 @@ def generate_report():
             chart.valueAxis.valueMax = max(payment_counts) + 1
             chart.valueAxis.valueStep = 1
             chart.barSpacing = 5
-
+            chart.barWidth = 3
 
             drawing = Drawing(400, 200)
             drawing.add(chart)
