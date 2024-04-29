@@ -11,6 +11,7 @@ const LoginPage = ({ fullScreen = true }) => {
   // read the query parameter from the URL
   const urlParams = new URLSearchParams(window.location.search);
   const registerSuccess = urlParams.get("register");
+  const deviceData = urlParams.get("deviceData");
 
   React.useEffect(() => {
     if (registerSuccess === "success") {
@@ -58,6 +59,9 @@ const LoginPage = ({ fullScreen = true }) => {
             window.location.href = "/staff";
           }
         } else {
+          if (deviceData) {
+            window.location.href = `/login?userID=${user.id}&deviceData=${deviceData}`;
+          }
           window.location.href = `/user?userID=${user.id}`;
         }
       } else {

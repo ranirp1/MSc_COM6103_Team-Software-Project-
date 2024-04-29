@@ -12,7 +12,11 @@ import QRCode from "react-qr-code";
 import emptyListImage from "../../assets/empty_device_list.svg";
 import { GrImage } from "react-icons/gr";
 import { createCexSearchUrl } from "../landing/DeviceTypeDialog";
-import DeviceStatusComponent from "./DeviceStatusComponent";
+import DeviceStatusComponent, {
+  DeviceStatusConstant,
+} from "./DeviceStatusComponent";
+import { BsCartFill } from "react-icons/bs";
+import KeyValueComponent from "../../components/KeyValueComponent";
 
 class Device {
   id: number;
@@ -30,7 +34,7 @@ class Device {
   dataRetrievalTimeLeft: string;
   cexLink?: string;
   device_status?: string;
-  estimatedValue?: String
+  estimatedValue?: String;
 
   constructor(
     id: number,
@@ -65,7 +69,7 @@ class Device {
     this.dataRetrievalTimeLeft = dataRetrievalTimeLeft;
     this.cexLink = cexLink;
     this.device_status = device_status;
-    this.estimatedValue = estimatedValue
+    this.estimatedValue = estimatedValue;
   }
 
   static fromJson(json: any): Device {
@@ -116,6 +120,7 @@ const UserDashboard = () => {
 
   const urlParams = new URLSearchParams(window.location.search);
   const userID = urlParams.get("userID");
+  const deviceData = urlParams.get("deviceData");
 
   const [devices, setDevices] = useState<Device[]>([]);
 
@@ -144,6 +149,24 @@ const UserDashboard = () => {
 
   const [selectedValues, setSelectedValues] = useState([]); // Array to store selected values
   const [showInputs, setShowInputs] = useState(false); // Flag to control input display
+
+  if (deviceData) {
+    const modal = document.getElementById(
+      "my_modal_5"
+    ) as HTMLDialogElement | null;
+    if (modal) {
+      modal.showModal();
+    }
+    var data = JSON.parse(deviceData);
+    setBrand(data.brand);
+    setModel(data.model);
+    setDeviceStorage(data.storage);
+    setDeviceColor(data.color);
+    setDeviceCondition(data.condition);
+    setDeviceClassification(data.classification);
+    setDateofPurchase(data.dateofPurchase);
+    setDateofRelease(data.dateofRelease);
+  }
 
   useEffect(() => {
     fetchDevices();
@@ -196,7 +219,7 @@ const UserDashboard = () => {
     const imageFile = imageInput ? imageInput.files?.[0] : null;
 
     if (imageFile) {
-      formData.append('image', imageFile);
+      formData.append("image", imageFile);
     }
     console.log(formData);
 
@@ -213,12 +236,10 @@ const UserDashboard = () => {
         console.log("Creation Error");
         // Handle error
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.log("Error:", error);
     }
   };
-
 
   const handleDataRetrievalChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -279,31 +300,25 @@ const UserDashboard = () => {
 
   const renderDeviceDetails = (device: Device) => {
     const renderCexLink = () => {
-      if (
-        device.classification === "Rare" ||
-        device.classification === "Current"
-      ) {
-        const cexUrl = createCexSearchUrl(
-          device.brand,
-          device.model,
-          device.storage,
-          device.color
-        );
-        return (
-          <div className="mt-2">
-            <strong>CEX Link:</strong>{" "}
-            <a
-              href={cexUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:text-blue-700"
-            >
-              Search on CEX
-            </a>
-          </div>
-        );
-      }
-      return null;
+      const cexUrl = createCexSearchUrl(
+        device.brand,
+        device.model,
+        device.storage,
+        device.color
+      );
+      return (
+        <div className="flex flex-row items-center  text-lg">
+          <strong className="font-medium text-black">CEX Link :</strong>{" "}
+          <a
+            href={cexUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn border m-0 btn-link"
+          >
+            Search on CEX
+          </a>
+        </div>
+      );
     };
     const calculateDataRetrievalTimeLeft = () => {
       // Return "Not applicable" for "Current" and "Rare" classifications
@@ -344,10 +359,10 @@ const UserDashboard = () => {
       return "Not applicable";
     };
 
-    const isQRCodeVisible =
+    const isDeviceRareOrCurrent =
       device.classification === "Rare" || device.classification === "Current";
     const isVerified = device.verified;
-    const isRecycled = device.classification === 'Recycle';
+    const isRecycled = device.classification === "Recycle";
 
     function handlePaymentModal(): void {
       setShowPopup(false);
@@ -356,136 +371,163 @@ const UserDashboard = () => {
     }
 
     return (
-      <div className="card w-94 bg-base-100 shadow-xl h-74 p-4">
-        <figure>
-          {device.image ? (
-            <img
-              src={device.image.replace("../client/public/", "")}
-              alt={device.image}
-              className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
-            />
-          ) : (
-            <div className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90">
-              <GrImage size={100} color="White" />
-            </div>
-          )}
-        </figure>
-        {/* Rest of the code */}
-        <div className="card-body">
-          <div className="flex flex-row justify-between">
-            <h2 className="card-title">
-              {device.brand} {device.model}
-            </h2>
-            <span
-              className={`px-3 py-1 text-sm font-semibold inline-block ${device.verified
-                ? "badge badge-success gap-2 flex justify-content: center"
-                : "badge badge-error gap-2 flex justify-content: center"
+      <div className="card w-94 bg-base-100 shadow-xl h-74">
+        <div className=" p-4">
+          <figure>
+            {device.image ? (
+              <img
+                src={device.image.replace("../client/public/", "")}
+                alt={device.image}
+                className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
+              />
+            ) : (
+              <div className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90">
+                <GrImage size={100} color="White" />
+              </div>
+            )}
+          </figure>
+          {/* Rest of the code */}
+          <div className="card-body gap-0">
+            <div className="flex flex-row justify-between my-2">
+              <h2 className="card-title text-primary font-bold text-2xl">
+                {device.brand} {device.model}
+              </h2>
+              <span
+                className={`px-3  py-1 text-sm font-semibold inline-block ${
+                  device.verified
+                    ? "badge badge-success gap-2 flex justify-content: center"
+                    : "badge badge-error gap-2 flex justify-content: center"
                 }`}
-            >
-              {device.verified ? "Verified" : "Not Verified"}
-            </span>
-          </div>
-          <div>
-            <div className="mb-2">
-              <span className="font-bold">Specifications</span>
+              >
+                {device.verified ? "Verified" : "Not Verified"}
+              </span>
             </div>
-            <div className="p-1">
-              <span className="text-black">Storage:</span> {device.storage}
-            </div>
-            <div className="p-1">
-              <span className="text-black">Color:</span> {device.color}
-            </div>
-            <div className="p-1">
-              <span className="text-black">Condition:</span> {device.condition}
-            </div>
-            <div className="p-1">
-              <span className="text-black">Classification:</span>{" "}
-              {device.classification}
-            </div>
-            <div className="p-1">
-              <span className="text-black">Created At:</span> {device.createdAt}
-            </div>
-            <div className="p-1">
+            <div className="border-y-2 py-4 my-2">
+              <div className="mb-2">
+                <span className="font-bold text-primary text-xl">
+                  Specifications
+                </span>
+              </div>
+              <div className="opacity-70 text-opacity-80">
+                <KeyValueComponent data="Storage :" value={device.storage} />
+                <KeyValueComponent data="Color : " value={device.color} />
+                <KeyValueComponent
+                  data="Condition :"
+                  value={device.condition}
+                />
+                <KeyValueComponent
+                  data="Classification :"
+                  value={device.classification}
+                />
+                <KeyValueComponent
+                  data="Created At :"
+                  value={device.createdAt}
+                />
+                <KeyValueComponent
+                  data="Data Retrieval Time Left :"
+                  value={calculateDataRetrievalTimeLeft()}
+                />
+              </div>
+              {/* <div className="p-1">
               <span className="text-black">
                 Data Recovery:{" "}
                 {device.classification === "Current" ||
-                  device.classification === "Rare"
+                device.classification === "Rare"
                   ? "Not applicable"
                   : device.dataRecovered
-                    ? "Yes"
-                    : "No"}
+                  ? "Yes"
+                  : "No"}
               </span>
+            </div> */}
             </div>
-            <div className="p-1">
-              <span className="text-black">
-                Data Retrieval Time Left: {calculateDataRetrievalTimeLeft()}
-              </span>
-            </div>
-          </div>
-          {renderCexLink()}
-          <div className="p-1">
-            <span className="text-black font-bold">Estimated Price: </span>
-            {device.estimatedValue}
-          </div>
-          <div className="mt-4">
-            <div
-              style={{
-                height: "auto",
-                margin: "0 auto",
-                maxWidth: 64,
-                width: "100%",
-              }}
-            >
-              {isQRCodeVisible && (
-                <QRCode
-                  size={256}
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={"Brand: " + device.brand + "\nModel: " + device.model + "\nColor: " + device.color + "\nStorage: " + device.storage + "\nClassification: " + device.classification + "\nCondition: " + device.condition + "\nEstimated Price: " + device.estimatedValue}
-                  viewBox={`0 0 256 256`}
-                  className="w-1/2"
+            {isDeviceRareOrCurrent && (
+              <div className="flex flex-col">
+                <KeyValueComponent
+                  data="Estimated Price : "
+                  value={
+                    device.estimatedValue && device.estimatedValue !== "NA"
+                      ? device.estimatedValue.toString()
+                      : "Still calculating"
+                  }
                 />
+                {renderCexLink()}
+                <div className="w-full items-center flex place-content-center">
+                  <div className="shadow-xl w-52 h-52 flex place-content-center items-center border">
+                    {
+                      <QRCode
+                        size={150}
+                        value={
+                          "Brand: " +
+                          device.brand +
+                          "\nModel: " +
+                          device.model +
+                          "\nColor: " +
+                          device.color +
+                          "\nStorage: " +
+                          device.storage +
+                          "\nClassification: " +
+                          device.classification +
+                          "\nCondition: " +
+                          device.condition +
+                          "\nEstimated Price: " +
+                          device.estimatedValue
+                        }
+                        className=""
+                      />
+                    }
+                  </div>
+                </div>
+              </div>
+            )}
+            <div>
+              {isRecycled && isVerified && (
+                <div className="flex flex-row">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handlePaymentModal}
+                  >
+                    Proceed for Data Retrieval
+                  </button>
+
+                  <div className="dropdown dropdown-right ">
+                    <div tabIndex={0} role="button" className="btn btn-primary">
+                      Extend Retrieval
+                    </div>
+                    <ul
+                      tabIndex={0}
+                      className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+                    >
+                      <li>
+                        <a onClick={handlePaymentModal}>3 months</a>
+                      </li>
+                      <li>
+                        <a onClick={handlePaymentModal}>6 months</a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               )}
             </div>
-          </div>
-          {isVerified && isRecycled && (
-            <div className="mt-2">
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary"
-                onClick={handlePaymentModal}
-              >
-                Proceed for Data Retrieval
-              </a>
+            <div className="mt-4">
+              <span className="font-bold text-primary text-xl">
+                Data Status :
+              </span>
+              {/* Subsequent list items with improved logic */}
+              <DeviceStatusComponent
+                deviceStatus={device.device_status ?? ""}
+                isDeviceRareOrCurrent={isDeviceRareOrCurrent}
+              />
             </div>
-          )}
-          {device.device_status === "Link Received" && (
-            <div className="dropdown dropdown-right mt-4">
-              <div tabIndex={0} role="button" className="btn btn-primary">
-                Extend Retrieval
-              </div>
-              <ul
-                tabIndex={0}
-                className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-              >
-                <li>
-                  <a onClick={handlePaymentModal}>3 months</a>
-                </li>
-                <li>
-                  <a onClick={handlePaymentModal}>6 months</a>
-                </li>
-              </ul>
-            </div>
-          )}
-          <div className="mt-4">
-            <span className="font-bold">Data Retrieval Status:</span>
-
-
-            {/* Subsequent list items with improved logic */}
-            <DeviceStatusComponent deviceStatus={device.device_status ?? ''} />
-
           </div>
-
+        </div>
+        <div
+          className={` ${
+            isDeviceRareOrCurrent ? "bg-yellow-100" : "bg-green-200"
+          } p-3 text-lg text-black rounded-b-xl flex w-full place-content-center`}
+        >
+          {isDeviceRareOrCurrent
+            ? "Data Wipping will be done by 3rd party"
+            : "Data Wipped"}
         </div>
       </div>
     );
@@ -515,7 +557,8 @@ const UserDashboard = () => {
               }
             }}
           >
-            <RiLogoutBoxRLine className="text-lg mr-2" /> Add Device
+            <BsCartFill className="text-lg mr-2 text-primary" size={30} /> Place
+            Order
           </button>
 
           <button
@@ -540,7 +583,7 @@ const UserDashboard = () => {
               tabIndex={0}
               className="btn btn-ghost cursor-pointer border-2 border-primary"
             >
-            <RiFilter3Line className="text-lg" /> Filter
+              <RiFilter3Line className="text-lg" /> Filter
             </summary>
             <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
               <li>
@@ -603,6 +646,7 @@ const UserDashboard = () => {
                         <input
                           onChange={(e) => setBrand(e.target.value)}
                           type="text"
+                          value={brand}
                           className="input input-bordered w-full rounded-md border-0 py-1.5  shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         />
                       </div>
@@ -776,8 +820,6 @@ const UserDashboard = () => {
                         className="file-input w-full max-w-xs file-input-primary"
                       ></input>
                     </div>
-
-                   
                   </div>
                 </div>
               </div>
@@ -794,7 +836,6 @@ const UserDashboard = () => {
                   className="btn btn-primary w-1/2"
                   onClick={() => setOpen(false)}
                   type="submit"
-
                 >
                   Save
                 </button>
