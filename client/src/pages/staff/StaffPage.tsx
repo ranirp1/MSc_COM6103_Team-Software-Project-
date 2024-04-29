@@ -889,7 +889,7 @@ const StaffDashboard = () => {
         <dialog id="my_modal_1" className="modal">
           <ReportDialog/>
         </dialog>
-      </>
+        </>
   );
 };
 export default StaffDashboard;
