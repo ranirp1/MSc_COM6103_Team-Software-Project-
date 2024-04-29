@@ -3,23 +3,78 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import func
 from sqlalchemy import text
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy import Enum
+from flask import Blueprint
+import os
+from dotenv import load_dotenv
+import stripe
+from datetime import datetime
 from flask_cors import CORS, cross_origin
 from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
-from flask import jsonify
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image
+from werkzeug.utils import secure_filename
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from collections import defaultdict
 
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship
-from flask import request
-from io import BytesIO
-from models import PaymentTable, UserDevice
+from enum import Enum as PyEnum
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from collections import defaultdict
+from flask_mail import Mail
+from flask_mail import Message
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+# pip install python-jose to work with JWT tokens
+from jose import JWTError, jwt
+from functools import wraps
+from os import environ
+
+SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
+CORS(app)
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'com6103team03@gmail.com'  # Your Gmail address
+app.config['MAIL_PASSWORD'] = 'nqfm kpqv dprj zfqd'  # Your Gmail password or app-specific password
+sender_email = 'com6103team03@gmail.com'
+mail = Mail(app)
+
+blueprint = Blueprint('blueprint', __name__)
+
+
+# put this sippet ahead of all your bluprints
+# blueprint can also be app~~
+@blueprint.after_request
+def after_request(response):
+    header = response.headers
+    header['Access-Control-Allow-Origin'] = '*'
+    # Other headers can be added here if needed
+    return response
+
+
+load_dotenv()
+app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
+
+UPLOAD_FOLDER = '../client/public/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+STRIPE_PUBLIC_KEY = "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN"
+
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 CORS(app, origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
 
@@ -50,26 +105,39 @@ class User(db.Model):
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
-    deviceType = db.Column(db.String(120), nullable=True)
     brand = db.Column(db.String(120), nullable=True)
-    model = db.Column(db.String(120), nullable=True)
+    model = db.Column(db.String(120), nullable=True, unique=True)
     dateOfRelease = db.Column(db.Date, nullable=True)
     isVerified = db.Column(db.Boolean, default=False)
 
     def serialize(self):
         return {
             'deviceID': self.deviceID,
-            'deviceType': self.deviceType,
             'brand': self.brand,
             'model': self.model,
             'dateOfRelease': str(self.dateOfRelease) if self.dateOfRelease else None,
-            'isVerified': self.isVerified
+            'isVerified': self.isVerified,
         }
 
 
-# Create the tables when Flask starts up
-with app.app_context():
-    db.create_all()
+class _DATA_RETRIEVED(PyEnum):
+    SENT = 'Sent for Processing'
+    RECEIVED = 'Received for Processing'
+    RETRIEVED = 'Data Retrieved'
+
+    def __str__(self):
+        return self.value
+
+
+class Device_Status(PyEnum):
+    DEV_REGISTERED = 'Device Registered'
+    DEV_VERIF = 'Device Verified'
+    PAYMENT_DONE = 'Payment Processed'  #Payment done
+    DATA_RETRIEVED = _DATA_RETRIEVED
+    URL_READY = 'Link Received'
+
+    def __str__(self):
+        return self.value
 
 
 class UserDevice(db.Model):
@@ -85,8 +153,9 @@ class UserDevice(db.Model):
     imageUrl = db.Column(db.String(255))
     qrCodeUrl = db.Column(db.String(255))
     dateOfCreation = db.Column(db.Date)
-    dataRetrievalID = db.Column(db.Integer, nullable=True)
+    # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
+    device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
 
     # Define foreign key relationships
     user = relationship('User', backref='user_device', foreign_keys=[userID])
@@ -105,18 +174,23 @@ class UserDevice(db.Model):
             'imageUrl': self.imageUrl,
             'qrCodeUrl': self.qrCodeUrl,
             'dateOfCreation': str(self.dateOfCreation) if self.dateOfCreation else None,
-            'dataRetrievalID': self.dataRetrievalID,
-            'estimatedValue': self.estimatedValue
+            # 'dataRetrievalID': self.dataRetrievalID,
+            'estimatedValue': self.estimatedValue,
+            'device_status': str(self.device_status.value)
         }
 
 
 class DataRetrieval(db.Model):
     __tablename__ = 'dataretrieval'
     dataRetrievalID = db.Column(db.Integer, primary_key=True)
+    userDeviceId = db.Column(db.Integer, ForeignKey('user_device.userDeviceID'), nullable=False)
+    userDevice = relationship('UserDevice', backref=db.backref('userDevice'))
     dataUrl = db.Column(db.String(255), nullable=True)
     dateOfCreation = db.Column(db.Date, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+
+    # user_device = relationship('UserDevice', backref='dataretrieval', foreign_keys=[userDeviceId])
 
     def serialize(self):
         return {
@@ -133,13 +207,200 @@ class PaymentTable(db.Model):
     paymentID = db.Column(db.Integer, primary_key=True)
     dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
     userID = db.Column(db.Integer, nullable=False)
+    date = db.Column(db.Date, nullable=False)
 
     def serialize(self):
         return {
             'paymentID': self.paymentID,
             'dataRetrievalID': self.dataRetrievalID,
-            'userID': self.userID
+            'userID': self.userID,
+            'date': self.date
         }
+
+
+class estimateValues(db.Model):
+    __tablename__ = 'estimatedvalues'
+    estimatedValueID = db.Column(db.Integer, primary_key=True)
+    deviceID = db.Column(db.Integer, ForeignKey('device.deviceID'), nullable=False)
+    newDeviceEstimatedPrice = db.Column(db.Integer)
+    usedDeviceEstimatedPrice = db.Column(db.Integer)
+    damagedDeviceEstimatedPrice = db.Column(db.Integer)
+    device = relationship('Device', backref='estimatedvalues', foreign_keys=[deviceID])
+
+
+@classmethod
+def add_estimatedprices_initial_values(cls):
+    # Add initial values here
+    initial_values = [
+        cls(deviceID=1, newDeviceEstimatedPrice=1000, usedDeviceEstimatedPrice=500, damagedDeviceEstimatedPrice=100),
+        cls(deviceID=2, newDeviceEstimatedPrice=1200, usedDeviceEstimatedPrice=600, damagedDeviceEstimatedPrice=150),
+        cls(deviceID=3, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400),
+        # S23 ultra
+        cls(deviceID=4, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900, damagedDeviceEstimatedPrice=600),
+        # S24 ultra
+        cls(deviceID=5, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665, damagedDeviceEstimatedPrice=400),
+        # iPhone 15
+        cls(deviceID=6, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700, damagedDeviceEstimatedPrice=450),
+        # iPhone 15 Pro
+        cls(deviceID=7, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449, damagedDeviceEstimatedPrice=200),
+        # iPhone 13
+        cls(deviceID=8, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649, damagedDeviceEstimatedPrice=300),
+        # iPhone 13 Pro Max
+        cls(deviceID=9, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300),
+        # iPhone 14
+        cls(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699, damagedDeviceEstimatedPrice=400),
+        # iPhone 14 Pro Max
+        cls(deviceID=11, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349, damagedDeviceEstimatedPrice=150),
+        # iPhone 12
+        cls(deviceID=12, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549, damagedDeviceEstimatedPrice=300),
+        # iPhone 12 Pro Max
+        cls(deviceID=13, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50),
+        # OnePlus Nord
+        cls(deviceID=14, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199, damagedDeviceEstimatedPrice=100),
+        # Google Pixel
+        cls(deviceID=15, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249, damagedDeviceEstimatedPrice=100),
+        # iPhone 11
+        cls(deviceID=16, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149, damagedDeviceEstimatedPrice=50),
+        # iPhone XR
+    ]
+
+    # Add the instances to the session and commit
+    for value in initial_values:
+        db.session.add(value)
+    db.session.commit()
+
+
+# Create the tables when Flask starts up
+with app.app_context():
+    # Create tables
+    db.create_all()
+
+    # Dictionary to map model names to device data including release dates
+    device_data = {
+        "Samsung S23 Ultra": {"brand": "Samsung", "model": "S23 Ultra", "dateOfRelease": "2023-02-17"},
+        "Samsung S24 Ultra": {"brand": "Samsung", "model": "S24 Ultra", "dateOfRelease": "2024-02-01"},
+        "iPhone 15": {"brand": "Apple", "model": "iPhone 15", "dateOfRelease": "2023-09-01"},
+        "iPhone 15 Pro": {"brand": "Apple", "model": "iPhone 15 Pro", "dateOfRelease": "2023-09-01"},
+        "iPhone 13": {"brand": "Apple", "model": "iPhone 13", "dateOfRelease": "2021-09-24"},
+        "iPhone 13 Pro Max": {"brand": "Apple", "model": "iPhone 13 Pro Max", "dateOfRelease": "2021-09-24"},
+        "iPhone 14": {"brand": "Apple", "model": "iPhone 14", "dateOfRelease": "2022-09-16"},
+        "iPhone 14 Pro Max": {"brand": "Apple", "model": "iPhone 14 Pro Max", "dateOfRelease": "2022-09-16"},
+        "iPhone 12": {"brand": "Apple", "model": "iPhone 12", "dateOfRelease": "2020-10-23"},
+        "iPhone 12 Pro Max": {"brand": "Apple", "model": "iPhone 12 Pro Max", "dateOfRelease": "2020-11-13"},
+        "OnePlus Nord": {"brand": "OnePlus", "model": "OnePlus Nord", "dateOfRelease": "2020-07-21"},
+        "Google Pixel": {"brand": "Google", "model": "Google Pixel", "dateOfRelease": "2016-10-04"},
+        "iPhone 11": {"brand": "Apple", "model": "iPhone 11", "dateOfRelease": "2019-09-20"},
+        "iPhone XR": {"brand": "Apple", "model": "iPhone XR", "dateOfRelease": "2018-10-26"}
+    }
+
+    # Add devices with data including release dates if they don't already exist
+    for device_name, data in device_data.items():
+        existing_device = Device.query.filter_by(model=data["model"]).first()
+        if not existing_device:
+            device = Device(
+                brand=data["brand"],
+                model=data["model"],
+                dateOfRelease=datetime.strptime(data["dateOfRelease"], "%Y-%m-%d").date(),
+                isVerified=True
+            )
+            db.session.add(device)
+
+    # Add initial values only if they don't already exist
+    estimateprices_initial_values = [
+        estimateValues(deviceID=1, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=665,
+                       damagedDeviceEstimatedPrice=400),  # S23 ultra
+        estimateValues(deviceID=2, newDeviceEstimatedPrice=1100, usedDeviceEstimatedPrice=900,
+                       damagedDeviceEstimatedPrice=600),  # S24 ultra
+        estimateValues(deviceID=3, newDeviceEstimatedPrice=800, usedDeviceEstimatedPrice=665,
+                       damagedDeviceEstimatedPrice=400),  # iPhone 15
+        estimateValues(deviceID=4, newDeviceEstimatedPrice=900, usedDeviceEstimatedPrice=700,
+                       damagedDeviceEstimatedPrice=450),  # iPhone 15 Pro
+        estimateValues(deviceID=5, newDeviceEstimatedPrice=779, usedDeviceEstimatedPrice=449,
+                       damagedDeviceEstimatedPrice=200),  # iPhone 13
+        estimateValues(deviceID=6, newDeviceEstimatedPrice=1049, usedDeviceEstimatedPrice=649,
+                       damagedDeviceEstimatedPrice=300),  # iPhone 13 Pro Max
+        estimateValues(deviceID=7, newDeviceEstimatedPrice=849, usedDeviceEstimatedPrice=549,
+                       damagedDeviceEstimatedPrice=300),  # iPhone 14
+        estimateValues(deviceID=8, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=699,
+                       damagedDeviceEstimatedPrice=400),  # iPhone 14 Pro Max
+        estimateValues(deviceID=9, newDeviceEstimatedPrice=679, usedDeviceEstimatedPrice=349,
+                       damagedDeviceEstimatedPrice=150),  # iPhone 12
+        estimateValues(deviceID=10, newDeviceEstimatedPrice=1099, usedDeviceEstimatedPrice=549,
+                       damagedDeviceEstimatedPrice=300),  # iPhone 12 Pro Max
+        estimateValues(deviceID=11, newDeviceEstimatedPrice=299, usedDeviceEstimatedPrice=149,
+                       damagedDeviceEstimatedPrice=50),  # OnePlus Nord
+        estimateValues(deviceID=12, newDeviceEstimatedPrice=399, usedDeviceEstimatedPrice=199,
+                       damagedDeviceEstimatedPrice=100),  # Google Pixel
+        estimateValues(deviceID=13, newDeviceEstimatedPrice=489, usedDeviceEstimatedPrice=249,
+                       damagedDeviceEstimatedPrice=100),  # iPhone 11
+        estimateValues(deviceID=14, newDeviceEstimatedPrice=389, usedDeviceEstimatedPrice=149,
+                       damagedDeviceEstimatedPrice=50),  # iPhone XR
+    ]
+
+    # Add the instances to the session and commit only if they don't already exist
+    for value in estimateprices_initial_values:
+        existing_value = estimateValues.query.filter_by(deviceID=value.deviceID).first()
+        if not existing_value:
+            db.session.add(value)
+    # Commit changes
+    db.session.commit()
+
+
+def updateDeviceStatus(user_device, newStatus):
+    user_device.device_status = newStatus
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        raise e
+
+
+@app.route('/api/updateDeviceStatus', methods=['POST'])
+@cross_origin()
+def updateDeviceStatus_api():
+    data = request.json
+    userDeviceId = data.get("userDeviceId")
+    newStatus = data.get("newStatus")
+    statusEnum = Device_Status[newStatus]
+
+    userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceId).first()
+    if not userDevice:
+        return jsonify({'message': 'user device not found'}), 400
+
+    try:
+        userDevice.device_status = statusEnum
+        db.session.commit()
+        return jsonify({'message': 'successfully updated device status'}), 200
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'error updating device status'}), 500
+
+
+def getEstimatedValue(model, condition):
+    """
+    Get the estimated value of a device based on the device model.
+    """
+    device = Device.query.filter_by(model=model).first()
+    if not device:
+        return "NA"
+
+    estimated_value = estimateValues.query.filter_by(deviceID=device.deviceID).first()
+    if not estimated_value:
+        return "NA"
+
+    if condition == 'new':
+        return str(estimated_value.newDeviceEstimatedPrice)
+    elif condition == 'used':
+        return str(estimated_value.usedDeviceEstimatedPrice)
+    elif condition == 'damaged':
+        return str(estimated_value.damagedDeviceEstimatedPrice)
+    else:
+        return str(estimated_value.usedDeviceEstimatedPrice)
 
 
 @app.route("/")
@@ -150,6 +411,70 @@ def check_sql_connection():
         return 'Connection to MySQL is successful!'
     except Exception as e:
         return f'Error: {str(e)}'
+
+
+# Function to generate JWT token for a user
+def generate_token(user):
+    payload = {
+        'user_id': user.id,  # Use existing user.id
+        'exp': datetime.utcnow() + timedelta(minutes=60)  # Token expires in 60 minutes
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+
+# Function to Verify JWT token
+def verify_token(token):
+    try:
+        token = token.split()[1]  # Assuming 'Bearer token' format
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['user_id']
+    except jwt.exceptions.DecodeError:
+        return None  # Token is malformed
+    except jwt.exceptions.ExpiredSignatureError:
+        return None  # Token has expired
+
+
+def verify_jwt(inner_func):
+    @wraps(inner_func)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization', None)
+        if not token:
+            return jsonify({'error': 'Missing authorization token'}), 401
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'error': 'Invalid or expired token'}), 401
+        # Add user_id to request object for further use
+        request.user_id = user_id
+        return inner_func(*args, **kwargs)
+
+    return decorated_function
+
+
+@app.route('/api/protected_endpoint')
+@verify_jwt
+def protected_endpoint():
+    """
+    Protected endpoint accessible only with a valid JWT token.
+
+    Returns:
+        A JSON response with user information or an error message.
+    """
+
+    # Access user ID from request object (added by verify_jwt decorator)
+    user_id = request.user_id
+
+    # Retrieve user information from database based on user_id
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    # Example usage: Return basic user information (modify as needed)
+    user_data = {
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+    }
+    return jsonify(user_data)
 
 
 @app.route('/api/login', methods=['POST'])
@@ -166,6 +491,7 @@ def login():
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and user.password == password:
+        token = generate_token(user)
         return jsonify(user.serialize()), 200
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
@@ -202,6 +528,9 @@ def register():
         password=password,
         phoneNumber=phoneNumber,
     )
+
+    # Generate JWT token for the newly created user
+    # token = generate_token(newUser)
 
     # source:
     # https://stackoverflow.com/a/16336401/11449502
@@ -262,7 +591,7 @@ def updateUserToStaff():
 @app.route('/api/updateUserToAdmin', methods=['POST'])
 @cross_origin()
 def updateUserToAdmin():
-    """
+    """ 
     Update a user's role to admin.
     Args:
         email (str): The email of the user to update.
@@ -278,6 +607,26 @@ def updateUserToAdmin():
     user.isAdmin = True
     db.session.commit()
     return jsonify({'message': 'User updated to admin'}), 200
+
+
+# Source: https://github.com/Vuka951/tutorial-code/tree/master/react-flask-stripe/payment-and-hooks
+@app.route('/api/create-payment-intent', methods=['POST'])
+def pay():
+    email = request.json.get('email', None)
+
+    if not email:
+        print("email is blank")
+        return {'message': 'You need to send an Email!', 'error': True}, 400
+
+    print(f"email is: {email}")
+
+    intent = stripe.PaymentIntent.create(
+        amount=500,
+        currency='gbp',
+        receipt_email=email
+    )
+
+    return {"client_secret": intent['client_secret']}, 200
 
 
 @app.route('/api/deleteUser', methods=['POST'])
@@ -338,7 +687,7 @@ def move_device_classification():
         return jsonify({'error': 'Invalid request data'}), 400
 
     # Check if the staff user is authenticated
-    staff_user = User.query.filter_by(email='staff@example.com').first()  # Adjust the email as per your staff user
+    staff_user = User.query.filter_by(email='rani@gmail.com').first()  # Adjust the email as per your staff user
 
     if not staff_user or not staff_user.isStaff:
         return jsonify({'message': 'Unauthorized access'}), 403
@@ -348,7 +697,7 @@ def move_device_classification():
 
     if user:
         # Retrieve the user's device for classification update
-        user_device = UserDevice.query.filter_by(user_id=user.id).first()
+        user_device = UserDevice.query.filter_by(userID=user.id).first()
 
         if user_device:
             # Update the device classification
@@ -372,31 +721,87 @@ def createDevice():
         A JSON response with a success message if the device is successfully created; A JSON response with an error message if the device model already exists in the database.
         A JSON response with a success message if the device is successfully associated with the user; A JSON response with an error message if any problems arrives.
     """
-    data = request.json
-    userID = data.get('userID')
-    deviceType = data.get('deviceType')
-    deviceID = data.get('deviceID')
-    brand = data.get('brand')
-    model = data.get('model')
-    deviceClassification = data.get('deviceClassification')
-    deviceColor = data.get('deviceColor')
-    deviceStorage = data.get('deviceStorage')
-    deviceCondition = data.get('deviceCondition')
-    imageUrl = data.get('imageUrl')
-    qrCodeUrl = data.get('qrCodeUrl')
-    dateOfRelease = data.get('dateofRelease')
-    dateOfPurchase = data.get('dateofPurchase')
+    userID = request.form.get('userID')
+    deviceID = request.form.get('deviceID')
+    brand = request.form.get('brand')
+    model = request.form.get('model')
+    deviceClassification = request.form.get('deviceClassification')
+    deviceColor = request.form.get('deviceColor')
+    deviceStorage = request.form.get('deviceStorage')
+    deviceCondition = request.form.get('deviceCondition')
+    qrCodeUrl = request.form.get('qrCodeUrl')
+    dateOfRelease = request.form.get('dateofRelease')
+    dateOfPurchase = request.form.get('dateofPurchase')
+    # print("here")
+    # print(data)
+    dataRetieval = data.get('dataRetieval')
+    duration = data.get('duration')
+    estimatedValue = getEstimatedValue(model, deviceCondition)
 
-    """Need to finalize if the isVerified is added in the device or userDevice table"""
-    if not all([dateOfPurchase, imageUrl]):
-        isVerified = False
+    imageFile = request.files.get('image')
+    filepath = None
+    if (imageFile):
+        filename = secure_filename(imageFile.filename)
+        upload_folder = app.config['UPLOAD_FOLDER']
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
+        filepath = os.path.join(upload_folder, filename)
+        imageFile.save(filepath)
+
+    # Convert dateOfRelease to datetime object or set to None if not provided
+    if dateOfRelease:
+        try:
+            dateOfRelease = datetime.strptime(dateOfRelease, "%Y-%m-%d").date()
+        except ValueError:
+            return jsonify({'error': 'Invalid date format for dateOfRelease. Use format YYYY-MM-DD'}), 400
     else:
-        isVerified = True
+        dateOfRelease = None
 
-    if (deviceID is None):
+    # Convert dateOfPurchase to datetime object or set to None if not provided
+    if dateOfPurchase:
+        try:
+            dateOfPurchase = datetime.strptime(dateOfPurchase, "%Y-%m-%d").date()
+        except ValueError:
+            return jsonify({'error': 'Invalid date format for dateOfPurchase. Use format YYYY-MM-DD'}), 400
+    else:
+        dateOfPurchase = None
+
+    # Check if the device with the provided model already exists in the Device table
+    existing_device = Device.query.filter_by(model=model).first()
+
+    # Get the current date
+    current_date = datetime.now().date()
+
+    # If the device already exists, skip populating the Device table
+    if existing_device:
+        # Create an entry in the userDevice table
+        user_device = UserDevice(
+            userID=userID,
+            deviceID=existing_device.deviceID,
+            deviceClassification=deviceClassification,
+            dateOfPurchase=dateOfPurchase,
+            deviceColor=deviceColor,
+            deviceStorage=deviceStorage,
+            deviceCondition=deviceCondition,
+            imageUrl=filepath,
+            qrCodeUrl=qrCodeUrl,
+            dateOfCreation=current_date.strftime("%Y-%m-%d"),
+            estimatedValue=estimatedValue
+        )
+        try:
+            db.session.add(user_device)
+            db.session.commit()
+            return jsonify({'message': 'Device already exists. Entry created in userDevice table only.'}), 200
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+            db.session.flush()
+            return jsonify({'message': 'User device creation error'}), 500
+
+    # If the device does not exist, populate the Device table first
+    else:
         try:
             newDeviceAdded = Device(
-                deviceType=deviceType,
                 brand=brand,
                 model=model,
                 dateOfRelease=dateOfRelease,
@@ -406,38 +811,99 @@ def createDevice():
             db.session.commit()
 
             # Read the device ID from the database for the newly inserted device
-
             deviceID = newDeviceAdded.deviceID
             print('deviceID', deviceID)
+
+            # Create an entry in the userDevice table
+            newUserDeviceAdded = UserDevice(
+                userID=userID,
+                deviceID=deviceID,
+                deviceClassification=deviceClassification,
+                dateOfPurchase=dateOfPurchase,
+                deviceColor=deviceColor,
+                deviceStorage=deviceStorage,
+                deviceCondition=deviceCondition,
+                imageUrl=filepath,
+                qrCodeUrl=qrCodeUrl,
+                dateOfCreation=current_date.strftime("%Y-%m-%d"),
+                estimatedValue=estimatedValue
+            )
+            db.session.add(newUserDeviceAdded)
+            db.session.commit()
+            return jsonify({'message': 'User Device creation successful'}), 200
         except Exception as e:
+            print("error at create Device")
             print(e)
             db.session.rollback()
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
 
-    newUserDeviceAdded = UserDevice(
-        userID=userID,
-        deviceID=deviceID,
-        deviceClassification=deviceClassification,
-        dateOfPurchase=dateOfPurchase,
-        deviceColor=deviceColor,
-        deviceStorage=deviceStorage,
-        deviceCondition=deviceCondition,
-        imageUrl=imageUrl,
-        qrCodeUrl=qrCodeUrl,
-        dateOfCreation=dateOfRelease,
-        dataRetrievalID=0,
-        estimatedValue=""
-    )
+
+@app.route('/api/create-data-retrieval', methods=['POST'])
+@cross_origin()
+def createRetrievalData():
+    data = request.json
+    dataRetrieval = data.get('dataRetrieval')
+    duration = 3  # data.get('duration')
+    userDeviceID = data.get('userDeviceID')
+
+    if dataRetrieval:
+        print("retrieving data has been selected")
+        print(f"duation: {duration}")
+        newDataRetrieval = DataRetrieval(
+            userDeviceId=userDeviceID,
+            dataUrl="https://google.com",
+            dateOfCreation=datetime.now(),
+            duration=3,
+            password="122"
+                     """
+                     userDeviceID
+                     dataUrl
+                     dateOfCreation
+                     duration
+                     password
+                     """
+        )
+
     try:
-        db.session.add(newUserDeviceAdded)
+        db.session.add(newDataRetrieval)
         db.session.commit()
-        return jsonify({'message': 'User Device creation successful'}), 200
+        return jsonify({'message': 'Data Retrieval creation successful'}), 200
     except Exception as e:
         print(e)
         db.session.rollback()
         db.session.flush()
-        return jsonify({'message': 'User device creation error'}), 500
+        return jsonify({'message': 'Data Retrieval creation error'}), 500
+
+
+@app.route('/api/update-data-retrieval-url', methods=['POST'])
+@cross_origin()
+def updateRetrievalData():
+    print("here")
+    data = request.json
+
+    userDeviceID = data.get('userDeviceID')
+    url = data.get('dataRetrievalUrl')
+
+    # userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
+
+    # if not userDevice:
+    #     return jsonify({'message': 'User Device not found'}), 400
+
+    dataRetrieval = DataRetrieval.query.filter_by(userDeviceID=userDeviceID).first()
+    if not dataRetrieval:
+        return jsonify({'message': 'DR with that device not found'}), 400
+
+    dataRetrieval.dataUrl = url
+    try:
+        db.session.commit()
+        # TODO
+        # SEND EMAIL HERE
+        return jsonify({'message': 'Url updated'}), 200
+    except Exception as e:
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'message': 'Error updating url'}), 500
 
 
 @app.route('/api/customer_device', methods=['POST'])
@@ -461,50 +927,79 @@ def create_customer_device():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        # Assuming you have a one-to-many relationship between User and UserDeviceTable
-        customer_device = UserDevice(
-            user_id=user.id,
-            device_type=device_info.get('device_type'),
-            brand=device_info.get('brand'),
-            model=device_info.get('model'),
-        )
+        # Fetch the device based on the model
+        model = device_info.get('model')
+        device = Device.query.filter_by(model=model).first()
 
-        # Input validation: Check if essential device information is present
-        if not customer_device.device_type or not customer_device.brand or not customer_device.model:
-            return jsonify({'error': 'Incomplete device information'}), 400
+        if device:
+            # Assuming you have a one-to-many relationship between User and UserDeviceTable
+            customer_device = UserDevice(
+                userID=user.id,
+                deviceID=device.deviceID,
+                deviceClassification=device_info.get('device_classification'),
+                dateOfPurchase=device_info.get('date_of_purchase'),
+                deviceColor=device_info.get('device_color'),
+                deviceStorage=device_info.get('device_storage'),
+                deviceCondition=device_info.get('device_condition'),
+                imageUrl=device_info.get('image_url'),
+                qrCodeUrl=device_info.get('qr_code_url'),
+                dateOfCreation=datetime.now(),
+                estimatedValue=device_info.get('estimated_value'),
+                device_status=Device_Status.DEV_REGISTERED
+            )
 
-        db.session.add(customer_device)
-        db.session.commit()
+            # Input validation: Check if essential device information is present
+            if not customer_device.deviceClassification:
+                return jsonify({'error': 'Incomplete device information'}), 400
 
-        return jsonify({'message': 'Device information saved successfully'}), 200
+            db.session.add(customer_device)
+            db.session.commit()
+
+            return jsonify({'message': 'Device information saved successfully'}), 200
+        else:
+            return jsonify({'error': 'Device not found'}), 404
     else:
         return jsonify({'message': 'User not found'}), 404
 
 
-@app.route('/api/getListOfDevices', methods=['GET'])
+@app.route('/api/getListOfDevices', methods=['POST'])
 @cross_origin()
 def getListOfDevices():
-    # combine the device and UserDevice tables to get the list of devices
-    print('inside get list of devices')
-    userDevice = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
+    data = request.json
+    userID = data.get('userID')
+    if (userID):
+        userDevices = UserDevice.query.filter_by(userID=userID).join(Device,
+                                                                     UserDevice.deviceID == Device.deviceID).all()
+    else:
+        userDevices = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
 
     device_list = []
-    for userDevice in userDevice:
+    for userDevice in userDevices:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
+        estimatedValues = userDevice.estimatedValue
+        if not estimatedValues:
+            estimatedValues = getEstimatedValue(device.model, userDevice.deviceCondition)
+        user = User.query.filter_by(id=userDevice.userID).first()
         device_data = {
             'id': userDevice.deviceID,
             'brand': device.brand,
             'model': device.model,
             'createdAt': userDevice.dateOfCreation.strftime("%Y-%m-%d"),
             'verified': device.isVerified,
-            'image': '',
+            'image': userDevice.imageUrl,
             'storage': userDevice.deviceStorage,
             'color': userDevice.deviceColor,
             'dataRecovered': None,
             'condition': userDevice.deviceCondition,
             'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
-            'dataRetrievalTimeLeft': ''
+            'dataRetrievalTimeLeft': '',
+            'user_name': user.first_name + ' ' + user.last_name,
+            'user_email': user.email,
+            'user_phone': user.phoneNumber,
+            'dataRetrievalTimeLeft': '',
+            'device_status': str(userDevice.device_status),
+            'estimatedValue': userDevice.estimatedValue
         }
 
         device_list.append(device_data)
@@ -518,6 +1013,9 @@ def changeDeviceVerification():
     deviceID = data.get('deviceID')
     isVerified = data.get('isVerified')
     device = Device.query.filter_by(deviceID=deviceID).first()
+    userDevices = UserDevice.query.filter_by(deviceID=deviceID).all()
+    for userDevice in userDevices:
+        userDevice.device_status = Device_Status.DEV_VERIF if isVerified else Device_Status.DEV_REGISTERED
     if not device:
         return jsonify({'message': 'Device not found'}), 404
     device.isVerified = isVerified
@@ -538,15 +1036,14 @@ def update_device_visibility():
 
     # Input Validation
     email = data.get('email')
-    device_id = data.get('device_id')
+    device_id = data.get('deviceID')
     is_visible = data.get('is_visible')
 
     if not email or not device_id or is_visible is None:
         return jsonify({'error': 'Invalid request data'}), 400
 
     # Check if the staff user is authenticated
-    staff_user = User.query.filter_by(email='staff@example.com',
-                                      isStaff=True).first()  # Adjust the email as per your staff user
+    staff_user = User.query.filter_by(email='rani@gmail.com', isStaff=True).first()
 
     if not staff_user:
         return jsonify({'message': 'Unauthorized access'}), 403
@@ -554,7 +1051,7 @@ def update_device_visibility():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        user_device = UserDevice.query.filter_by(user_id=user.id, device_id=device_id).first()
+        user_device = UserDevice.query.filter_by(user=user, deviceID=device_id).first()
 
         if user_device:
             # Update the device visibility
@@ -582,15 +1079,16 @@ def get_device_type():
 
     current_year = datetime.now().year
     release_year = datetime.strptime(releaseDate, "%Y-%m-%d").year
-    purchase_year = datetime.strptime(dateOfPurchase, "%Y-%m-%d").year
+    # purchase_year = datetime.strptime(dateOfPurchase, "%Y-%m-%d").year
     device_age = current_year - release_year
+    # device_age_purchase = current_year - purchase_year
 
-    if device_age > 20:
-        # if classification == "Rare" or classification == "Unknown":
+    isDeviceRare = device_age > 20
+    isDeviceRecycle = device_age < 10 and condition == "Damaged"
+
+    if isDeviceRare:
         return jsonify({'type': 'Rare', 'data': ""}), 200
-    # else:
-    #     return jsonify({'type': 'Recycle', 'data': ""}), 200
-    elif device_age < 10 and (current_year - purchase_year) < 10:
+    elif isDeviceRecycle:
         return jsonify({'type': 'Recycle', 'data': ""}), 200
     else:
         return jsonify({'type': 'Current', 'data': ""}), 200
@@ -608,12 +1106,23 @@ def update_device():
         return jsonify({'message': 'Device ID is required'}), 400
 
     try:
-        device = Device.query.filter_by(deviceID=device_id).first()
+        device = UserDevice.query.filter_by(deviceID=device_id).first()
         if not device:
             return jsonify({'message': 'Device not found'}), 404
 
-        for field in ['brand', 'model', 'storage', 'color', 'condition', 'classification', 'dateOfRelease',
-                      'isVerified', 'dataRecovered']:
+        if 'storage' in data:
+            setattr(device, 'deviceStorage', data['storage'])
+        if 'color' in data:
+            setattr(device, 'deviceColor', data['color'])
+        if 'condition' in data:
+            setattr(device, 'deviceCondition', data['condition'])
+        if 'classification' in data:
+            setattr(device, 'deviceClassification', data['classification'])
+        if 'device_status' in data:
+            setattr(device, 'device_status', Device_Status(data['device_status']))
+
+        for field in ['brand', 'model', 'dateOfRelease',
+                      'isVerified', 'estimatedValue']:
             if field in data:
                 setattr(device, field, data[field])
 
@@ -633,11 +1142,11 @@ def generate_report():
     Generate a report in PDF format for payment transactions and devices input by users within a specified date range.
     """
     data = request.json
-    userId = data.get('userId')
-    start_date = data.get('startDate')
-    end_date = data.get('endDate')
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+    user_id = data.get('userID')
 
-    # Convert start_date and end_date strings to datetime
+    # Convert start_date and end_date strings to datetime 
     # Validate date format
 
     try:
@@ -648,27 +1157,37 @@ def generate_report():
 
     # Fetch payment transactions and devices input by users within the specified date range
     try:
+
         payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
         user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
-
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
     # Generate PDF report
     try:
         pdf_filename = 'report.pdf'
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
         elements = []
 
-        # Get column names for PaymentTable and UserDevice models
-        payment_columns = [column.key for column in PaymentTable.__table__.columns]
-        user_device_columns = [column.key for column in UserDevice.__table__.columns]
+        # Define a style for the heading
+        heading_style = ParagraphStyle(
+            name='Heading1',
+            fontSize=16,
+            textColor='black',
+            alignment=1,  # Center alignment
+            spaceAfter=12  # Space after the heading
+        )
 
-        # Add payments data to PDF with dynamic headers
-        payments_data = [payment_columns]
+        # Add a heading to the PDF report
+        heading_text = "User Report"
+        heading = Paragraph(heading_text, heading_style)
+        elements.append(heading)
+
+        # Add payments data to PDF
+        payments_data = [['Payment ID', 'Data Retrieval ID', 'User ID', 'Date']]
         for payment in payments:
-            payments_data.append([getattr(payment, column) for column in payment_columns])
+            payments_data.append(
+                [payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
         payments_table = Table(payments_data)
         payments_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                                             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -678,12 +1197,13 @@ def generate_report():
                                             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                                             ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
         elements.append(payments_table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(3, 12))
 
-        # Add user devices data to PDF with dynamic headers
-        devices_data = [user_device_columns]
+        # Add user devices data to PDF
+        devices_data = [['User Device ID', 'User ID', 'Device ID', 'Date of Creation']]
         for device in user_devices:
-            devices_data.append([getattr(device, column) for column in user_device_columns])
+            devices_data.append(
+                [device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
         devices_table = Table(devices_data)
         devices_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -693,15 +1213,106 @@ def generate_report():
                                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                                            ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
         elements.append(devices_table)
+        elements.append(Spacer(3, 12))
+
+        # Aggregate payments data by user ID
+        user_payments = defaultdict(int)
+        for payment in payments:
+            user_payments[payment.userID] += 1
+
+        # Extract user IDs and payment counts
+        user_ids = list(user_payments.keys())
+        payment_counts = list(user_payments.values())
+
+        plt.figure(figsize=(10, 6))
+        plt.bar(user_ids, payment_counts, color='skyblue')
+        plt.xlabel('User ID')
+        plt.ylabel('Number of Payments')
+        plt.title('Number of Payments by User')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+
+        # Save the bar graph as an image
+        bar_graph_filename = 'bar_graph.png'
+        plt.savefig(bar_graph_filename)
+
+        # Close the plot to free memory
+        plt.close()
+
+        # Insert the image into the PDF report
+        img = Image(bar_graph_filename, width=400, height=200)
+        img.hAlign = 'CENTER'
+        img.vAlign = 'MIDDLE'
+        img.keepWithNext = True
+        elements.append(img)
 
         # Build PDF document
         doc.build(elements)
 
-        # Get PDF file content
-        pdf = buffer.getvalue()
-        buffer.close()
-
         # Return the PDF file
-        return send_file(BytesIO(pdf), mimetype='application/pdf', as_attachment=True, attachment_filename='report.pdf')
+        return send_file(pdf_filename, as_attachment=True)
     except Exception as e:
         return jsonify({'error': 'Failed to generate PDF report.', 'details': str(e)}), 500
+
+
+@app.route('/api/send-payment-confirmation-mail', methods=['POST'])
+def send_email():
+    # Set up the email message
+    data = request.json
+    receiver_email = data.get('email', "manu1998kj@gmail.com")
+
+    # Create the email body
+    email_body = """
+    Dear User,
+
+    Thank you for your payment. 
+    Best regards,
+    eWaste
+    """
+
+    # Send the email using Flask-Mail
+    try:
+        msg = Message('Payment Confirmation', sender=sender_email, recipients=[receiver_email])
+        msg.body = email_body
+        mail.send(msg)
+        return {'message': 'Email sent successfully!'}, 200
+    except Exception as e:
+        return {'message': 'Failed to send email.', 'error': str(e)}, 500
+
+
+@app.route('/api/send-data-retrieval-link', methods=['POST'])
+def send_email_link():
+    data = request.json
+    receiver_email = data.get('email', "manu1998kj@gmail.com")
+    data_retrieval_link = data.get('urlLink', "https://example.com/data-retrieval")
+
+    if not receiver_email:
+        print("email is blank")
+        return {'message': 'You need to send an Email!', 'error': True}, 400
+
+    if not data_retrieval_link:
+        return {'message': 'You need to send a data retrieval link!', 'error': True}, 400
+
+    # Create the email body
+    email_body = f"""
+    Dear User,
+
+    Great news! The data you requested is now ready for download. 
+    You can access it using the following link:  {data_retrieval_link}
+    
+    If you have any trouble accessing the data, please don't hesitate to contact eWaste for assistance.
+
+    Best regards,
+    eWaste
+    """
+
+    # Send the email using Flask-Mail
+    try:
+        msg = Message('Your Data Retrieval Link', sender=sender_email, recipients=[receiver_email])
+        msg.body = email_body
+        mail.send(msg)
+        print("Email sent successfully!")
+        return {'message': 'Email sent successfully!', 'data_retrieval_link': data_retrieval_link}, 200
+    except Exception as e:
+        print("Failed to send email:", str(e))
+        return {'message': 'Failed to send email.', 'error': True}, 500
