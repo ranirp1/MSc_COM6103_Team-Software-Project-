@@ -587,9 +587,20 @@ const StaffDashboard = () => {
                   >
                     <option value="Device Registered">Device Registered</option>
                     <option value="Device Verified">Device Verified</option>
-                    <option value="Payment Processed">Payment Processed</option>
-                    <option value="Data Retrieved">Data Retrieved</option>
-                    <option value="Link Received">Link Received</option>
+                    {localDevice.classification === "Recycle" ? (
+                      <>
+                        <option value="Payment Processed">Payment Processed</option>
+                        <option value="Data Retrieved">Data Retrieved</option>
+                        <option value="Link Received">Link Received</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="Payment Processed" disabled>Payment Processed</option>
+                        <option value="Data Retrieved" disabled>Data Retrieved</option>
+                        <option value="Link Received" disabled>Link Received</option>
+                      </>  
+                    )
+                  }
                   </select>
                 </div>
                 <div>
