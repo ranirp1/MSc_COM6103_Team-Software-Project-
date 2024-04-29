@@ -34,7 +34,7 @@ from reportlab.graphics.charts.barcharts import VerticalBarChart
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
@@ -146,7 +146,7 @@ class UserDevice(db.Model):
     # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
     device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
-    data_retrieval_opted = db.Column(db.Boolean, default=False)
+    data_retrieval_opted = db.Column(db.String(255))
 
     # Define foreign key relationships
     user = relationship('User', backref='user_device', foreign_keys=[userID])
@@ -729,6 +729,7 @@ def createDevice():
     dataRetieval = data.get('dataRetieval')
     duration = data.get('duration')
     estimatedValue = getEstimatedValue(model, deviceCondition)
+    data_retrieval_opted = request.form.get('data_retrieval_opted')
 
     imageFile = request.files.get('image')
     filepath = None
@@ -778,7 +779,8 @@ def createDevice():
             imageUrl=filepath,
             qrCodeUrl=qrCodeUrl,
             dateOfCreation=current_date.strftime("%Y-%m-%d"),
-            estimatedValue=estimatedValue
+            estimatedValue=estimatedValue,
+            data_retrieval_opted=data_retrieval_opted
         )
         try:
             db.session.add(user_device)
@@ -818,7 +820,8 @@ def createDevice():
                 imageUrl=filepath,
                 qrCodeUrl=qrCodeUrl,
                 dateOfCreation=current_date.strftime("%Y-%m-%d"),
-                estimatedValue=estimatedValue
+                estimatedValue=estimatedValue,
+                data_retrieval_opted=data_retrieval_opted
             )
             db.session.add(newUserDeviceAdded)
             db.session.commit()
@@ -936,7 +939,8 @@ def create_customer_device():
                 qrCodeUrl=device_info.get('qr_code_url'),
                 dateOfCreation=datetime.now(),
                 estimatedValue=device_info.get('estimated_value'),
-                device_status=Device_Status.DEV_REGISTERED
+                device_status=Device_Status.DEV_REGISTERED,
+                data_retrieval_opted=device_info.get('data_retrieval_opted')
             )
 
             # Input validation: Check if essential device information is present
@@ -990,7 +994,8 @@ def getListOfDevices():
             'user_phone':user.phoneNumber,
             'dataRetrievalTimeLeft': '',
             'device_status': str(userDevice.device_status),
-            'estimatedValue': userDevice.estimatedValue
+            'estimatedValue': userDevice.estimatedValue,
+            'data_retrieval_opted': userDevice.data_retrieval_opted
         }
 
         device_list.append(device_data)

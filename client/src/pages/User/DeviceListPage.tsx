@@ -35,6 +35,7 @@ class Device {
   cexLink?: string;
   device_status?: string;
   estimatedValue?: String;
+  data_retrieval_opted: string;
 
   constructor(
     id: number,
@@ -50,6 +51,7 @@ class Device {
     classification: string,
     dataRetrievalRequested: boolean | null,
     dataRetrievalTimeLeft: string,
+    data_retrieval_opted: string,
     cexLink?: string,
     device_status?: string,
     estimatedValue?: String
@@ -70,6 +72,7 @@ class Device {
     this.cexLink = cexLink;
     this.device_status = device_status;
     this.estimatedValue = estimatedValue;
+    this.data_retrieval_opted = data_retrieval_opted;
   }
 
   static fromJson(json: any): Device {
@@ -89,7 +92,8 @@ class Device {
       json.dataRetrievalTimeLeft,
       json.cexLink,
       json.device_status,
-      json.estimatedValue
+      json.estimatedValue,
+      json.data_retrieval_opted
     );
   }
 }
@@ -132,10 +136,11 @@ const UserDashboard = () => {
   const [model, setModel] = useState("");
   const [deviceColor, setDeviceColor] = useState("");
   const [deviceCondition, setDeviceCondition] = useState("");
-  const [deviceStorage, setDeviceStorage] = useState("");
+    const [deviceStorage, setDeviceStorage] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [dateofRelease, setDateofRelease] = useState("");
+  const [data_retrieval_opted, setDataRetreivalOpted] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isOnlyVerified, setIsOnlyVerified] = useState(false);
@@ -166,6 +171,7 @@ const UserDashboard = () => {
     setDeviceClassification(data.classification);
     setDateofPurchase(data.dateofPurchase);
     setDateofRelease(data.dateofRelease);
+    setDataRetreivalOpted(data.data_retrieval_opted);
   }
 
   useEffect(() => {
@@ -212,6 +218,7 @@ const UserDashboard = () => {
     formData.append("dateofPurchase", dateofPurchase);
     formData.append("dateofRelease", dateofRelease);
     formData.append("userID", userID || "");
+    formData.append("data_retrieval_opted", data_retrieval_opted);
 
     const imageInput = (
       e.target as HTMLFormElement
@@ -363,6 +370,7 @@ const UserDashboard = () => {
       device.classification === "Rare" || device.classification === "Current";
     const isVerified = device.verified;
     const isRecycled = device.classification === "Recycle";
+   //const isPayable = device.data_retrieval_opted;
 
     function handlePaymentModal(): void {
       setShowPopup(false);
@@ -419,6 +427,10 @@ const UserDashboard = () => {
                   <KeyValueComponent
                     data="Classification :"
                     value={device.classification}
+                  />
+                  <KeyValueComponent
+                    data="Retrieval :"
+                    value={device.data_retrieval_opted}
                   />
                   <KeyValueComponent
                     data="Created At :"
@@ -481,7 +493,7 @@ const UserDashboard = () => {
                 </div>
               )}
               <div>
-                {isRecycled && isVerified && (
+                {isRecycled && isVerified && (device.device_status !== "Payment Processed")&&(
                   <div className="flex flex-row">
                     <button
                       className="btn btn-primary"
@@ -489,7 +501,9 @@ const UserDashboard = () => {
                     >
                       Proceed for Data Retrieval
                     </button>
-
+                  </div>
+                )}
+                  {device.data_retrieval_opted === "Yes" && device.device_status === "Payment Processed" &&(
                     <div className="dropdown dropdown-right ">
                       <div
                         tabIndex={0}
@@ -510,8 +524,7 @@ const UserDashboard = () => {
                         </li>
                       </ul>
                     </div>
-                  </div>
-                )}
+                    )}
               </div>
               <div className="mt-4">
                 <span className="font-bold text-primary text-xl">
@@ -544,6 +557,7 @@ const UserDashboard = () => {
       </div>
     );
   };
+
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -817,7 +831,6 @@ const UserDashboard = () => {
                         </label>
                       </div>
                     </div>
-
                     <div className="sm:col-span-4 flex  flex-row items-center">
                       <label
                         htmlFor="imageInput"
@@ -825,12 +838,44 @@ const UserDashboard = () => {
                       >
                         Upload Image
                       </label>
-
                       <input
                         type="file"
                         id="imageInput"
                         className="file-input w-full max-w-xs file-input-primary"
                       ></input>
+                    </div>
+                    <div className="sm:col-span-4 flex items-center">
+                      <span className="font-medium leading-6  mr-4 text-black">
+                        Data Retrieval:
+                      </span>
+                      <div className="flex items-center space-x-4">
+                        <label className="label cursor-pointer">
+                          <input
+                            type="radio"
+                            name="data-retrieval"
+                            className="radio radio-primary mr-2"
+                            value={"Yes"}
+                            //checked={dataRetrieval === true}
+                            onChange={(e) => {
+                              setDataRetreivalOpted(e.target.value);
+                            }}
+                          />
+                          <span className="label-text text-black">Yes</span>
+                        </label>
+                        <label className="label cursor-pointer">
+                          <input
+                            type="radio"
+                            name="data-retrieval"
+                            className="radio radio-primary mr-2"
+                            value={"No"}
+                            //checked={dataRetrieval === false}
+                            onChange={(e) => {
+                              setDataRetreivalOpted(e.target.value);
+                            }}
+                          />
+                          <span className="label-text text-black">No</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -915,3 +960,4 @@ const UserDashboard = () => {
   );
 };
 export default UserDashboard;
+
