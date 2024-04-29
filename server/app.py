@@ -352,6 +352,7 @@ with app.app_context():
 
 
 def updateDeviceStatus(user_device, newStatus):
+
     user_device.device_status = newStatus
 
     try:
@@ -1004,8 +1005,7 @@ def getListOfDevices():
             'user_phone': user.phoneNumber,
             'dataRetrievalTimeLeft': '',
             'device_status': str(userDevice.device_status),
-            'estimatedValue': userDevice.estimatedValue,
-            'userDeviceID': userDevice.userDeviceID,
+            'estimatedValue': userDevice.estimatedValue
         }
 
         device_list.append(device_data)
@@ -1107,41 +1107,30 @@ def update_device():
     if not data:
         return jsonify({'message': 'No data provided'}), 400
 
-    userDeviceId = data.get('userDeviceID')
     device_id = data.get('id')
     if not device_id:
         return jsonify({'message': 'Device ID is required'}), 400
 
     try:
-        # updating Device table
-        device = Device.query.filter_by(deviceID=device_id).first()
+        device = UserDevice.query.filter_by(deviceID=device_id).first()
         if not device:
-            return jsonify({'message': 'Device not found'}), 404
-        for field in ['brand', 'model',"dateOfRelease"]:
-            if field in data:
-                setattr(device, field, data[field])
-        db.session.commit()
-        
-        #updating UserDevice table, get all device which matches deviceId and userDeviceId
-        userDevices = UserDevice.query.filter_by(deviceID=device_id, userDeviceID=userDeviceId).first()
-        if not userDevices:
             return jsonify({'message': 'Device not found'}), 404
 
         if 'storage' in data:
-            setattr(userDevices, 'deviceStorage', data['storage'])
+            setattr(device, 'deviceStorage', data['storage'])
         if 'color' in data:
-            setattr(userDevices, 'deviceColor', data['color'])
+            setattr(device, 'deviceColor', data['color'])
         if 'condition' in data:
-            setattr(userDevices, 'deviceCondition', data['condition'])
+            setattr(device, 'deviceCondition', data['condition'])
         if 'classification' in data:
-            setattr(userDevices, 'deviceClassification', data['classification'])
+            setattr(device, 'deviceClassification', data['classification'])
         if 'device_status' in data:
             setattr(device, 'device_status', Device_Status(data['device_status']))
 
         for field in ['brand', 'model', 'dateOfRelease',
                       'isVerified', 'estimatedValue']:
             if field in data:
-                setattr(userDevices, field, data[field])
+                setattr(device, field, data[field])
 
         db.session.commit()
         return jsonify({'message': 'Device updated successfully'}), 200

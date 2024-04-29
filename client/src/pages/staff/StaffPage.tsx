@@ -45,7 +45,6 @@ class Device {
   dataRetrievalLink?: string;
   user_name?: string;
   user_phone?: string;
-  userDeviceID?: number;
 
   constructor(
     id: number,
@@ -67,8 +66,7 @@ class Device {
     user_email?: string,
     dataRetrievalLink?: string,
     user_name?: string,
-    user_phone?: string,
-    userDeviceId?: number
+    user_phone?: string
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -90,7 +88,6 @@ class Device {
     this.dataRetrievalLink = dataRetrievalLink;
     this.user_name = user_name;
     this.user_phone = user_phone;
-    this.userDeviceID = userDeviceId;
   }
 
   static fromJson(json: any): Device {
@@ -114,8 +111,7 @@ class Device {
       json.user_email,
       json.dataRetrievalLink,
       json.user_name,
-      json.user_phone,
-      json.userDeviceId
+      json.user_phone
     );
   }
 }
@@ -415,7 +411,6 @@ const StaffDashboard = () => {
       const data = {
         email: localDevice.user_email,
         urlLink: localDevice.dataRetrievalLink,
-        userDeviceId: localDevice.userDeviceID,
       };
 
       try {
@@ -586,11 +581,11 @@ const StaffDashboard = () => {
                     }
                     className="mt-1 block w-full select select-bordered bg-gray-200 text-black"
                   >
-                    <option value="Device Registered">Device Registered</option>
-                    <option value="Device Verified">Device Verified</option>
-                    <option value="Payment Processed">Payment Processed</option>
-                    <option value="Data Retrieved">Data Retrieved</option>
-                    <option value="Link Received">Link Received</option>
+                    <option value="DEV_REGISTERED">Device Registered</option>
+                    <option value="DEV_VERIF">Device Verified</option>
+                    <option value="PAYMENT_DONE">Payment Processed</option>
+                    <option value="DATA_RETRIEVED">Data Retrieved</option>
+                    <option value="URL_READY">Link Received</option>
                   </select>
                 </div>
                 <div>
@@ -671,13 +666,13 @@ const StaffDashboard = () => {
         {renderCexLink()}
         {editMode && (
           <button
-            className="btn btn-primary  w-full "
+            className="btn btn-primary  w-full mb-10"
             onClick={saveDeviceUpdates}
           >
             Save Changes
           </button>
         )}
-        <div className=" h-4"></div>
+
         <div className="text-bold text-primary text-lg font-bold pt-5 border-t-2">
           User Contact Information
         </div>
