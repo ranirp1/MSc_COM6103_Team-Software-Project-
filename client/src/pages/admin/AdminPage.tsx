@@ -317,8 +317,7 @@ const AdminDashboard = () => {
             {filteredAndSortedUsers.length == 0 ? (
               <div className="flex flex-col  w-full h-full items-center mt-16">
                 <h3 className="text-4xl font-bold text-center mb-5 ">
-                  No {getUserType()}
-                  Found
+                  No {getUserType()} Found
                 </h3>
                 <img src={emptyListImage} className="h-80 w-80" />
               </div>
