@@ -23,8 +23,6 @@ import KeyValueComponent from "../../components/KeyValueComponent";
 import { IoSend } from "react-icons/io5";
 import { DeviceClassification } from "../landing/CheckNow";
 import DeviceClassificationComponent from "./DeviceClassificationComponent";
-import ReportDialog from "./component/ReportDialog";
-
 class Device {
   id: number;
   brand: string;
@@ -703,203 +701,193 @@ const StaffDashboard = () => {
   };
 
   return (
-      <>
-        <div className="flex h-screen bg-gray-100 shadow-2xl">
-          {/* Content area */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center p-4 shadow bg-primary ">
-              <img
-                  src={EWasteHubImage}
-                  alt="E-Waste Hub Logo"
-                  className=" w-16 h-16 rounded-full shadow-2xl  "/>
-              <h3 className="text-white text-3xl font-medium flex-1 text-center">
-                Staff Dashboard
-              </h3>
-              <button
-                  className="btn btn-accent   ml-4"
-                  onClick={() => setShowLogoutModal(true)}
-              >
-                <RiLogoutBoxRLine className="text-lg mr-2"/> Logout
-              </button>
-            </div>
+    <div className="flex h-screen bg-gray-100 shadow-2xl">
+      {/* Content area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex justify-between items-center p-4 shadow bg-primary ">
+          <img
+            src={EWasteHubImage}
+            alt="E-Waste Hub Logo"
+            className=" w-16 h-16 rounded-full shadow-2xl  "
+          />
+          <h3 className="text-white text-3xl font-medium flex-1 text-center">
+            Staff Dashboard
+          </h3>
+          <button
+            className="btn btn-accent   ml-4"
+            onClick={() => setShowLogoutModal(true)}
+          >
+            <RiLogoutBoxRLine className="text-lg mr-2" /> Logout
+          </button>
+        </div>
 
-            {/* Header and other components remain the same */}
-            {/* Filter and search input */}
-            <header className="flex justify-between items-center p-4 shadow bg-gray-100">
-              <form className="flex-1" onSubmit={(e) => e.preventDefault()}>
-                <input
-                    type="search"
-                    placeholder="Search Devices"
-                    className="input input-bordered bg-white text-black w-full border-2 border-primary"
-                    value={searchQuery}
-                    onChange={handleSearchChange}/>
-              </form>
-              <StaffFilterComponent onFilterChange={handleFilterChange}/>
-            </header>
+        {/* Header and other components remain the same */}
+        {/* Filter and search input */}
+        <header className="flex justify-between items-center p-4 shadow bg-gray-100">
+          <form className="flex-1" onSubmit={(e) => e.preventDefault()}>
+            <input
+              type="search"
+              placeholder="Search Devices"
+              className="input input-bordered bg-white text-black w-full border-2 border-primary"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </form>
+          <StaffFilterComponent onFilterChange={handleFilterChange} />
+        </header>
 
-            {/* Devices Table */}
-            <div className="main-content flex-grow px-10 pt-5 ">
-              <h5 className="text-black text-3xl font-medium mb-6">Device List</h5>
-              <div
-                  className="overflow-y-auto"
-                  style={{
-                    maxHeight: "calc(100vh - 200px)",
-                    scrollbarWidth: "thin",
-                    scrollbarColor: "white grey",
-                  }}
-              >
-                {filteredDevices.length == 0 ? (
-                    <div className="flex flex-col  w-full h-full items-center mt-16">
-                      <h3 className="text-3xl font-bold text-center mb-5 ">
-                        No Devices Found
-                      </h3>
-                      <img src={emptyListImage} className="h-80 w-80"/>
-                    </div>
-                ) : (
-                    <table className="table w-full text-black ">
-                      <thead>
-                      <tr>
-                        <th className="text-black text-lg font-bold min-w-[200px] ">
-                          Image
-                        </th>
-                        <th className="text-black text-lg font-bold min-w-[250px]">
-                          Name
-                        </th>
-                        <th className="text-black text-lg font-bold min-w-[250px]">
-                          Model
-                        </th>
-                        <th className="text-black text-lg font-bold min-w-[200px]">
-                          Created At
-                        </th>
-                        <th className="text-black text-lg font-bold min-w-[250px]">
-                          Status
-                        </th>
-                        <th className="text-black text-lg font-bold min-w-[250px]">
-                          Classification
-                        </th>
-                      </tr>
-                      </thead>
-                      <tbody>
-                      {filteredDevices.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="text-center">
-                              No Devices Found
-                            </td>
-                          </tr>
-                      ) : (
-                          filteredDevices.map((device) => (
-                              <tr
-                                  key={device.id}
-                                  onClick={() => toggleDeviceDetails(device.id)}
-                                  className="cursor-pointer hover:bg-gray-200"
-                              >
-                                <td>
-                                  {device.image ? (
-                                      <img
-                                          src={device.image.replace(
-                                              "../client/public/",
-                                              ""
-                                          )}
-                                          alt={device.image}
-                                          className="object-contain h-24 w-16 fel flex-col place-content-center place-items-center items-center bg-white  rounded shadow"/>
-                                  ) : (
-                                      <div
-                                          className="h-24 w-16 felx flex-col place-content-center place-items-center items-center bg-primary bg-opacity-90 rounded shadow">
-                                        <GrImage
-                                            size={50}
-                                            color="white"
-                                            className="w-full"/>
-                                      </div>
-                                  )}
-                                </td>
-                                <td className="text-lg">{device.brand}</td>
-                                <td className="text-lg">{device.model}</td>
-                                <td className="text-lg">{device.createdAt}</td>
-                                <td>
-                                  <div className="flex">
-                                    <DeviceStatusBadge
-                                        status={device.device_status ?? ""}/>
-                                  </div>
-                                </td>
-                                <td>
-                                  <DeviceClassificationComponent
-                                      deviceClassification={device.classification || "Not Classified"}/>
-                                </td>
-                              </tr>
-                          ))
-                      )}
-                      </tbody>
-                    </table>
-                )}
+        {/* Devices Table */}
+        <div className="main-content flex-grow px-10 pt-5 ">
+          <h5 className="text-black text-3xl font-medium mb-6">Device List</h5>
+          <div
+            className="overflow-y-auto"
+            style={{
+              maxHeight: "calc(100vh - 200px)",
+              scrollbarWidth: "thin",
+              scrollbarColor: "white grey",
+            }}
+          >
+            {filteredDevices.length == 0 ? (
+              <div className="flex flex-col  w-full h-full items-center mt-16">
+                <h3 className="text-3xl font-bold text-center mb-5 ">
+                  No Devices Found
+                </h3>
+                <img src={emptyListImage} className="h-80 w-80" />
               </div>
-            </div>
-
-            {renderDeviceModal()}
-
-            {/* Logout Confirmation Modal */}
-            {showLogoutModal && (
-                <div className="modal modal-open">
-                  <div className="modal-box">
-                    <h3 className="font-bold text-lg">
-                      Are you sure you want to logout?
-                    </h3>
-                    <div className="modal-action flex flex-row">
-                      <button
-                          className="btn btn-primary w-1/2 mr-1"
-                          onClick={() => {
-                            window.location.href = "/login";
-                          }} // Close modal on 'Yes'
+            ) : (
+              <table className="table w-full text-black ">
+                <thead>
+                  <tr>
+                    <th className="text-black text-lg font-bold min-w-[200px] ">
+                      Image
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[250px]">
+                      Name
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[250px]">
+                      Model
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[200px]">
+                      Created At
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[250px]">
+                      Status
+                    </th>
+                    <th className="text-black text-lg font-bold min-w-[250px]">
+                      Classification
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDevices.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center">
+                        No Devices Found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredDevices.map((device) => (
+                      <tr
+                        key={device.id}
+                        onClick={() => toggleDeviceDetails(device.id)}
+                        className="cursor-pointer hover:bg-gray-200"
                       >
-                        Yes
-                      </button>
-                      <button
-                          className="btn btn-ghost w-1/2  border-primary border-2"
-                          onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
-                      >
-                        No
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                        <td>
+                          {device.image ? (
+                            <img
+                              src={device.image.replace(
+                                "../client/public/",
+                                ""
+                              )}
+                              alt={device.image}
+                              className="object-contain h-24 w-16 fel flex-col place-content-center place-items-center items-center bg-white  rounded shadow"
+                            />
+                          ) : (
+                            <div className="h-24 w-16 felx flex-col place-content-center place-items-center items-center bg-primary bg-opacity-90 rounded shadow">
+                              <GrImage
+                                size={50}
+                                color="white"
+                                className="w-full"
+                              />
+                            </div>
+                          )}
+                        </td>
+                        <td className="text-lg">{device.brand}</td>
+                        <td className="text-lg">{device.model}</td>
+                        <td className="text-lg">{device.createdAt}</td>
+                        <td>
+                          <div className="flex">
+                            <DeviceStatusBadge
+                              status={device.device_status ?? ""}
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <DeviceClassificationComponent
+                            deviceClassification={
+                              device.classification || "Not Classified"
+                            }
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             )}
           </div>
-
-          <div className="fixed bottom-4 right-4 flex flex-col ">
-            {isAdminAndStaff ? (
-                <button
-                    className="btn  shadow-2xl btn-ghost text-primary h-20 mb-3 rounded-full border-primary border-2"
-                    onClick={() => (window.location.href = "/admin?isAdminAndStaff=true")}
-                >
-                  <AiOutlineUserSwitch size={40}/>
-                  <div className="pl-2 text-lg  ">
-                    Switch to Admin
-                  </div>
-                </button>
-            ) : null}
-            <button className="btn    shadow-2xl bg-primary text-white h-20 rounded-full">
-              <BiSolidReport size={40}/>
-              <div className="pl-2 text-lg ">Check Reports</div>
-            </button>
-          </div>
         </div>
-        <button
-            className="btn fixed bottom-4 right-4 shadow-2xl bg-primary text-white h-20 rounded-full"
-            onClick={() => {
-              const modal = document.getElementById(
-                  "my_modal_1"
-              ) as HTMLDialogElement;
-              if (modal) {
-                modal.showModal();
-              }
-            }}
-        >
-          <BiSolidReport size={40}/>
+
+        {renderDeviceModal()}
+
+        {/* Logout Confirmation Modal */}
+        {showLogoutModal && (
+          <div className="modal modal-open">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">
+                Are you sure you want to logout?
+              </h3>
+              <div className="modal-action flex flex-row">
+                <button
+                  className="btn btn-primary w-1/2 mr-1"
+                  onClick={() => {
+                    window.location.href = "/login";
+                  }} // Close modal on 'Yes'
+                >
+                  Yes
+                </button>
+                <button
+                  className="btn btn-ghost w-1/2  border-primary border-2"
+                  onClick={() => setShowLogoutModal(false)} // Close modal on 'No'
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="fixed bottom-4 right-4 flex flex-col ">
+        {isAdminAndStaff ? (
+          <button
+            className="btn  shadow-2xl btn-ghost text-primary h-20 mb-3 rounded-full border-primary border-2"
+            onClick={() =>
+              (window.location.href = "/admin?isAdminAndStaff=true")
+            }
+          >
+            <AiOutlineUserSwitch size={40} />
+            <div className="pl-2 text-lg  ">
+              Switch to Admin
+            </div>
+          </button>
+        ) : null}
+        <button className="btn    shadow-2xl bg-primary text-white h-20 rounded-full">
+          <BiSolidReport size={40} />
           <div className="pl-2 text-lg ">Check Reports</div>
         </button>
-        <dialog id="my_modal_1" className="modal">
-          <ReportDialog/>
-        </dialog>
-      </>
+      </div>
+    </div>
   );
 };
 export default StaffDashboard;
