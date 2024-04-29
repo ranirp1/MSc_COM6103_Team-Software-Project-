@@ -23,7 +23,7 @@ import KeyValueComponent from "../../components/KeyValueComponent";
 import { IoSend } from "react-icons/io5";
 import { DeviceClassification } from "../landing/CheckNow";
 import DeviceClassificationComponent from "./DeviceClassificationComponent";
-import ReportDialog from "./Component/ReportDialog";
+import ReportDialog from "./component/ReportDialog";
 class Device {
   id: number;
   brand: string;
