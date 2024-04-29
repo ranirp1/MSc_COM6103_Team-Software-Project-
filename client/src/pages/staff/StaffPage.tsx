@@ -44,7 +44,7 @@ class Device {
   dataRetrievalLink?: string;
   user_name?: string;
   user_phone?: string;
-  userDeviceId?: number;
+  userDeviceID?: number;
 
   constructor(
     id: number,
@@ -89,7 +89,7 @@ class Device {
     this.dataRetrievalLink = dataRetrievalLink;
     this.user_name = user_name;
     this.user_phone = user_phone;
-    this.userDeviceId = userDeviceId;
+    this.userDeviceID = userDeviceId;
   }
 
   static fromJson(json: any): Device {
@@ -414,7 +414,7 @@ const StaffDashboard = () => {
       const data = {
         email: localDevice.user_email,
         urlLink: localDevice.dataRetrievalLink,
-        userDeviceId: localDevice.userDeviceId,
+        userDeviceId: localDevice.userDeviceID,
       };
 
       try {
