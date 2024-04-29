@@ -36,8 +36,8 @@ from reportlab.graphics.charts.barcharts import VerticalBarChart
 
 
 app = Flask(__name__)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
 
@@ -869,13 +869,16 @@ def createRetrievalData():
 def updateRetrievalData():
     print("here")
     data = request.json
-
+    
+    receiver_email = data.get('email', "manu1998kj@gmail.com")
+    url = data.get('urlLink', "https://example.com/data-retrieval")
     userDeviceID = data.get('userDeviceID')
-    url = data.get('dataRetrievalUrl')
 
 
     # if not userDevice:
     #     return jsonify({'message': 'User Device not found'}), 400
+
+    print(f"userDeviceID: {userDeviceID}")
 
     dataRetrieval = DataRetrieval.query.filter_by(userDeviceId=userDeviceID).first()
     userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
@@ -891,10 +894,9 @@ def updateRetrievalData():
         user = User.query.filter_by(id=userDevice.userID).first()
         userEmail = user.email
         print(f"User email: {userEmail}")
-        payload = {'email': userEmail, 'urlLink':url}
-        response = requests.post('', data=payload, headers={'Content-Type': 'application/json'})
-        if response.status_code != 200:
-            raise Exception("Error sending email")
+        res, code = send_email_link(userEmail, url)
+        if code != 200:
+            raise Exception(f"Error sending email: {res['message']}")
         return jsonify({'message': 'Url updated'}), 200
     except Exception as e:
         print(e)
@@ -1252,13 +1254,13 @@ def send_email():
 
 
 @app.route('/api/send-data-retrieval-link', methods=['POST'])
-def send_email_link():
+def send_email_link(email_in="manu1998kj@gmail", link_in="https://example.com/data-retrieval"):
     data = request.json
     print("############")
     print(data)
     print("############")
-    receiver_email = data.get('email', "manu1998kj@gmail.com")
-    data_retrieval_link = data.get('urlLink', "https://example.com/data-retrieval")
+    receiver_email = data.get('email', email_in)
+    data_retrieval_link = data.get('urlLink', link_in)
     
     if not receiver_email:
         print("email is blank")
