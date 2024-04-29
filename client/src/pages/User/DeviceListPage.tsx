@@ -15,7 +15,7 @@ import { createCexSearchUrl } from "../landing/DeviceTypeDialog";
 import DeviceStatusComponent, {
   DeviceStatusConstant,
 } from "./DeviceStatusComponent";
-import { BsCartFill } from "react-icons/bs";
+import { GiShoppingCart } from "react-icons/gi";
 import KeyValueComponent from "../../components/KeyValueComponent";
 
 class Device {
@@ -372,63 +372,64 @@ const UserDashboard = () => {
 
     return (
       <div className="card w-94 bg-base-100 shadow-xl h-74">
-        <div className=" p-4">
-          <figure>
-            {device.image ? (
-              <img
-                src={device.image.replace("../client/public/", "")}
-                alt={device.image}
-                className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
-              />
-            ) : (
-              <div className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90">
-                <GrImage size={100} color="White" />
-              </div>
-            )}
-          </figure>
-          {/* Rest of the code */}
-          <div className="card-body gap-0">
-            <div className="flex flex-row justify-between my-2">
-              <h2 className="card-title text-primary font-bold text-2xl">
-                {device.brand} {device.model}
-              </h2>
-              <span
-                className={`px-3  py-1 text-sm font-semibold inline-block ${
-                  device.verified
-                    ? "badge badge-success gap-2 flex justify-content: center"
-                    : "badge badge-error gap-2 flex justify-content: center"
-                }`}
-              >
-                {device.verified ? "Verified" : "Not Verified"}
-              </span>
-            </div>
-            <div className="border-y-2 py-4 my-2">
-              <div className="mb-2">
-                <span className="font-bold text-primary text-xl">
-                  Specifications
+        <div className="flex flex-row">
+          <div className="w-full rounded-xl">
+            <figure>
+              {device.image ? (
+                <img
+                  src={device.image.replace("../client/public/", "")}
+                  alt={device.image}
+                  className=" object-contain w-full h-64 flex items-center place-content-center bg-transparent bg-opacity-90 shadow-b-2xl"
+                />
+              ) : (
+                <div className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90">
+                  <GrImage size={100} color="White" />
+                </div>
+              )}
+            </figure>
+            {/* Rest of the code */}
+            <div className="card-body gap-0">
+              <div className="flex flex-row justify-between my-2">
+                <h2 className="card-title text-primary font-bold text-2xl">
+                  {device.brand} {device.model}
+                </h2>
+                <span
+                  className={`px-3  py-1 text-sm font-semibold inline-block ${
+                    device.verified
+                      ? "badge badge-success gap-2 flex justify-content: center"
+                      : "badge badge-error gap-2 flex justify-content: center"
+                  }`}
+                >
+                  {device.verified ? "Verified" : "Not Verified"}
                 </span>
               </div>
-              <div className="opacity-70 text-opacity-80">
-                <KeyValueComponent data="Storage :" value={device.storage} />
-                <KeyValueComponent data="Color : " value={device.color} />
-                <KeyValueComponent
-                  data="Condition :"
-                  value={device.condition}
-                />
-                <KeyValueComponent
-                  data="Classification :"
-                  value={device.classification}
-                />
-                <KeyValueComponent
-                  data="Created At :"
-                  value={device.createdAt}
-                />
-                <KeyValueComponent
-                  data="Data Retrieval Time Left :"
-                  value={calculateDataRetrievalTimeLeft()}
-                />
-              </div>
-              {/* <div className="p-1">
+              <div className="border-y-2 py-4 my-2">
+                <div className="mb-2">
+                  <span className="font-bold text-primary text-xl">
+                    Specifications
+                  </span>
+                </div>
+                <div className="opacity-70 text-opacity-80">
+                  <KeyValueComponent data="Storage :" value={device.storage} />
+                  <KeyValueComponent data="Color : " value={device.color} />
+                  <KeyValueComponent
+                    data="Condition :"
+                    value={device.condition}
+                  />
+                  <KeyValueComponent
+                    data="Classification :"
+                    value={device.classification}
+                  />
+                  <KeyValueComponent
+                    data="Created At :"
+                    value={device.createdAt}
+                  />
+                  <KeyValueComponent
+                    data="Data Retrieval Time Left :"
+                    value={calculateDataRetrievalTimeLeft()}
+                  />
+                </div>
+                {/* <div className="p-1">
               <span className="text-black">
                 Data Recovery:{" "}
                 {device.classification === "Current" ||
@@ -439,84 +440,89 @@ const UserDashboard = () => {
                   : "No"}
               </span>
             </div> */}
-            </div>
-            {isDeviceRareOrCurrent && (
-              <div className="flex flex-col">
-                <KeyValueComponent
-                  data="Estimated Price : "
-                  value={
-                    device.estimatedValue && device.estimatedValue !== "NA"
-                      ? device.estimatedValue.toString()
-                      : "Still calculating"
-                  }
-                />
-                {renderCexLink()}
-                <div className="w-full items-center flex place-content-center">
-                  <div className="shadow-xl w-52 h-52 flex place-content-center items-center border">
-                    {
-                      <QRCode
-                        size={150}
-                        value={
-                          "Brand: " +
-                          device.brand +
-                          "\nModel: " +
-                          device.model +
-                          "\nColor: " +
-                          device.color +
-                          "\nStorage: " +
-                          device.storage +
-                          "\nClassification: " +
-                          device.classification +
-                          "\nCondition: " +
-                          device.condition +
-                          "\nEstimated Price: " +
-                          device.estimatedValue
-                        }
-                        className=""
-                      />
-                    }
-                  </div>
-                </div>
               </div>
-            )}
-            <div>
-              {isRecycled && isVerified && (
-                <div className="flex flex-row">
-                  <button
-                    className="btn btn-primary"
-                    onClick={handlePaymentModal}
-                  >
-                    Proceed for Data Retrieval
-                  </button>
-
-                  <div className="dropdown dropdown-right ">
-                    <div tabIndex={0} role="button" className="btn btn-primary">
-                      Extend Retrieval
+              {isDeviceRareOrCurrent && (
+                <div className="flex flex-col">
+                  <KeyValueComponent
+                    data="Estimated Price : "
+                    value={
+                      device.estimatedValue && device.estimatedValue !== "NA"
+                        ? device.estimatedValue.toString()
+                        : "Still calculating"
+                    }
+                  />
+                  {renderCexLink()}
+                  <div className="w-full items-center flex place-content-center">
+                    <div className="shadow-xl w-52 h-52 flex place-content-center items-center border">
+                      {
+                        <QRCode
+                          size={150}
+                          value={
+                            "Brand: " +
+                            device.brand +
+                            "\nModel: " +
+                            device.model +
+                            "\nColor: " +
+                            device.color +
+                            "\nStorage: " +
+                            device.storage +
+                            "\nClassification: " +
+                            device.classification +
+                            "\nCondition: " +
+                            device.condition +
+                            "\nEstimated Price: " +
+                            device.estimatedValue
+                          }
+                          className=""
+                        />
+                      }
                     </div>
-                    <ul
-                      tabIndex={0}
-                      className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
-                    >
-                      <li>
-                        <a onClick={handlePaymentModal}>3 months</a>
-                      </li>
-                      <li>
-                        <a onClick={handlePaymentModal}>6 months</a>
-                      </li>
-                    </ul>
                   </div>
                 </div>
               )}
-            </div>
-            <div className="mt-4">
-              <span className="font-bold text-primary text-xl">
-                Data Status :
-              </span>
-              {/* Subsequent list items with improved logic */}
-              <DeviceStatusComponent
-                deviceStatus={device.device_status ?? ""}
-                isDeviceRareOrCurrent={isDeviceRareOrCurrent}
-              />
+              <div>
+                {isRecycled && isVerified && (
+                  <div className="flex flex-row">
+                    <button
+                      className="btn btn-primary"
+                      onClick={handlePaymentModal}
+                    >
+                      Proceed for Data Retrieval
+                    </button>
+
+                    <div className="dropdown dropdown-right ">
+                      <div
+                        tabIndex={0}
+                        role="button"
+                        className="btn btn-primary"
+                      >
+                        Extend Retrieval
+                      </div>
+                      <ul
+                        tabIndex={0}
+                        className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+                      >
+                        <li>
+                          <a onClick={handlePaymentModal}>3 months</a>
+                        </li>
+                        <li>
+                          <a onClick={handlePaymentModal}>6 months</a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="mt-4">
+                <span className="font-bold text-primary text-xl">
+                  Data Status :
+                </span>
+                {/* Subsequent list items with improved logic */}
+                <DeviceStatusComponent
+                  deviceStatus={device.device_status ?? ""}
+                  isDeviceRareOrCurrent={isDeviceRareOrCurrent}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -563,8 +569,8 @@ const UserDashboard = () => {
               }
             }}
           >
-            <BsCartFill className="text-lg mr-2 text-primary" size={30} /> Place
-            Order
+            <GiShoppingCart className="text-lg mr-2 text-primary" size={30} />{" "}
+            Place Order
           </button>
 
           <button
