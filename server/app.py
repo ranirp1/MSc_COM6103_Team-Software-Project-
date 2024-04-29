@@ -24,11 +24,11 @@ from enum import Enum as PyEnum
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from collections import defaultdict
-
 from flask_mail import Mail
 from flask_mail import Message
 
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -38,11 +38,6 @@ from functools import wraps
 from os import environ
 
 SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
-
-from enum import Enum as PyEnum
-from reportlab.graphics.shapes import Drawing
-from reportlab.graphics.charts.barcharts import VerticalBarChart
-
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -56,18 +51,21 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = 'com6103team03@gmail.com'  # Your Gmail address
 app.config['MAIL_PASSWORD'] = 'nqfm kpqv dprj zfqd'  # Your Gmail password or app-specific password
-sender_email = 'com6103team03@gmail.com' 
+sender_email = 'com6103team03@gmail.com'
 mail = Mail(app)
 
 blueprint = Blueprint('blueprint', __name__)
+
+
 # put this sippet ahead of all your bluprints
 # blueprint can also be app~~
-@blueprint.after_request 
+@blueprint.after_request
 def after_request(response):
     header = response.headers
     header['Access-Control-Allow-Origin'] = '*'
     # Other headers can be added here if needed
     return response
+
 
 load_dotenv()
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
@@ -104,6 +102,7 @@ class User(db.Model):
             'isAdmin': self.isAdmin
         }
 
+
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
@@ -121,6 +120,7 @@ class Device(db.Model):
             'isVerified': self.isVerified,
         }
 
+
 class _DATA_RETRIEVED(PyEnum):
     SENT = 'Sent for Processing'
     RECEIVED = 'Received for Processing'
@@ -133,7 +133,7 @@ class _DATA_RETRIEVED(PyEnum):
 class Device_Status(PyEnum):
     DEV_REGISTERED = 'Device Registered'
     DEV_VERIF = 'Device Verified'
-    PAYMENT_DONE = 'Payment Processed' #Payment done
+    PAYMENT_DONE = 'Payment Processed'  # Payment done
     DATA_RETRIEVED = _DATA_RETRIEVED
     URL_READY = 'Link Received'
 
@@ -157,7 +157,6 @@ class UserDevice(db.Model):
     # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
     device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
-    data_retrieval_opted = db.Column(db.Boolean, default=False)
 
     # Define foreign key relationships
     user = relationship('User', backref='user_device', foreign_keys=[userID])
@@ -347,8 +346,8 @@ with app.app_context():
     # Commit changes
     db.session.commit()
 
-def updateDeviceStatus(user_device, newStatus):
 
+def updateDeviceStatus(user_device, newStatus):
     user_device.device_status = newStatus
 
     try:
@@ -358,6 +357,7 @@ def updateDeviceStatus(user_device, newStatus):
         db.session.rollback()
         db.session.flush()
         raise e
+
 
 @app.route('/api/updateDeviceStatus', methods=['POST'])
 @cross_origin()
@@ -371,7 +371,6 @@ def updateDeviceStatus_api():
     if not userDevice:
         return jsonify({'message': 'user device not found'}), 400
 
-
     try:
         userDevice.device_status = statusEnum
         db.session.commit()
@@ -381,7 +380,6 @@ def updateDeviceStatus_api():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'error updating device status'}), 500
-
 
 
 def getEstimatedValue(model, condition):
@@ -401,7 +399,7 @@ def getEstimatedValue(model, condition):
     elif condition == 'used':
         return str(estimated_value.usedDeviceEstimatedPrice)
     elif condition == 'damaged':
-        return  str(estimated_value.damagedDeviceEstimatedPrice)
+        return str(estimated_value.damagedDeviceEstimatedPrice)
     else:
         return str(estimated_value.usedDeviceEstimatedPrice)
 
@@ -594,7 +592,7 @@ def updateUserToStaff():
 @app.route('/api/updateUserToAdmin', methods=['POST'])
 @cross_origin()
 def updateUserToAdmin():
-    """ 
+    """
     Update a user's role to admin.
     Args:
         email (str): The email of the user to update.
@@ -735,7 +733,7 @@ def createDevice():
     qrCodeUrl = request.form.get('qrCodeUrl')
     dateOfRelease = request.form.get('dateofRelease')
     dateOfPurchase = request.form.get('dateofPurchase')
-   # print("here")
+    # print("here")
     # print(data)
     dataRetieval = data.get('dataRetieval')
     duration = data.get('duration')
@@ -841,21 +839,22 @@ def createDevice():
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
 
+
 @app.route('/api/create-data-retrieval', methods=['POST'])
 @cross_origin()
 def createRetrievalData():
     data = request.json
     dataRetrieval = data.get('dataRetrieval')
-    duration = 3 # data.get('duration')
+    duration = 3  # data.get('duration')
     userDeviceID = data.get('userDeviceID')
 
     if dataRetrieval:
         print("retrieving data has been selected")
         print(f"duation: {duration}")
         newDataRetrieval = DataRetrieval(
-            userDeviceId = userDeviceID,
-            dataUrl = "https://google.com",
-            dateOfCreation = datetime.now(),
+            userDeviceId=userDeviceID,
+            dataUrl="https://google.com",
+            dateOfCreation=datetime.now(),
             duration=3,
             password="122"
                      """
@@ -964,21 +963,21 @@ def create_customer_device():
         return jsonify({'message': 'User not found'}), 404
 
 
-
 @app.route('/api/getListOfDevices', methods=['POST'])
 @cross_origin()
 def getListOfDevices():
     data = request.json
     userID = data.get('userID')
-    if(userID):
-        userDevices = UserDevice.query.filter_by(userID=userID).join(Device, UserDevice.deviceID == Device.deviceID).all()
+    if (userID):
+        userDevices = UserDevice.query.filter_by(userID=userID).join(Device,
+                                                                     UserDevice.deviceID == Device.deviceID).all()
     else:
         userDevices = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
-    
+
     device_list = []
     for userDevice in userDevices:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
-        estimatedValues =  userDevice.estimatedValue
+        estimatedValues = userDevice.estimatedValue
         if not estimatedValues:
             estimatedValues = getEstimatedValue(device.model, userDevice.deviceCondition)
         user = User.query.filter_by(id=userDevice.userID).first()
@@ -996,9 +995,9 @@ def getListOfDevices():
             'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
             'dataRetrievalTimeLeft': '',
-            'user_name':user.first_name + ' ' + user.last_name,
-            'user_email':user.email,
-            'user_phone':user.phoneNumber,
+            'user_name': user.first_name + ' ' + user.last_name,
+            'user_email': user.email,
+            'user_phone': user.phoneNumber,
             'dataRetrievalTimeLeft': '',
             'device_status': str(userDevice.device_status),
             'estimatedValue': userDevice.estimatedValue
@@ -1111,7 +1110,7 @@ def update_device():
         device = UserDevice.query.filter_by(deviceID=device_id).first()
         if not device:
             return jsonify({'message': 'Device not found'}), 404
-        
+
         if 'storage' in data:
             setattr(device, 'deviceStorage', data['storage'])
         if 'color' in data:
@@ -1122,9 +1121,9 @@ def update_device():
             setattr(device, 'deviceClassification', data['classification'])
         if 'device_status' in data:
             setattr(device, 'device_status', Device_Status(data['device_status']))
-        
-        for field in ['brand', 'model',  'dateOfRelease',
-                      'isVerified','estimatedValue']:
+
+        for field in ['brand', 'model', 'dateOfRelease',
+                      'isVerified', 'estimatedValue']:
             if field in data:
                 setattr(device, field, data[field])
 
@@ -1227,7 +1226,7 @@ def generate_report():
         payment_counts = list(user_payments.values())
 
         plt.figure(figsize=(10, 6))
-        plt.bar(user_ids, payment_counts, color='white')
+        plt.bar(user_ids, payment_counts, color='skyblue')
         plt.xlabel('User ID')
         plt.ylabel('Number of Payments')
         plt.title('Number of Payments by User')
@@ -1287,11 +1286,11 @@ def send_email_link():
     data = request.json
     receiver_email = data.get('email', "manu1998kj@gmail.com")
     data_retrieval_link = data.get('urlLink', "https://example.com/data-retrieval")
-    
+
     if not receiver_email:
         print("email is blank")
         return {'message': 'You need to send an Email!', 'error': True}, 400
-    
+
     if not data_retrieval_link:
         return {'message': 'You need to send a data retrieval link!', 'error': True}, 400
 
@@ -1301,7 +1300,7 @@ def send_email_link():
 
     Great news! The data you requested is now ready for download. 
     You can access it using the following link:  {data_retrieval_link}
-    
+
     If you have any trouble accessing the data, please don't hesitate to contact eWaste for assistance.
 
     Best regards,
