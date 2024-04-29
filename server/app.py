@@ -15,11 +15,28 @@ from flask_cors import CORS, cross_origin
 from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image
 from werkzeug.utils import secure_filename
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.units import mm
+from reportlab.graphics.shapes import Drawing, String
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from collections import defaultdict
 
+from enum import Enum as PyEnum
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from collections import defaultdict
 from flask_mail import Mail
 from flask_mail import Message
+
+import matplotlib
+
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.backends.backend_pdf as pdf
+import io
 
 # pip install python-jose to work with JWT tokens
 from jose import JWTError, jwt
@@ -34,7 +51,7 @@ from reportlab.graphics.charts.barcharts import VerticalBarChart
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:3306/test_db'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
@@ -117,6 +134,7 @@ class Device_Status(PyEnum):
     PAYMENT_DONE = 'Payment Processed' #Payment done
     DATA_RETRIEVED = 'Data Retrieved'
     URL_READY = 'Link Received'
+    DATA_WIPED = 'Data Wiped'
 
     def __str__(self):
         return self.value
@@ -138,7 +156,7 @@ class UserDevice(db.Model):
     # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
     device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
-    # data_retrieval_opted = db.Column(db.Boolean, default=False)
+    data_retrieval_opted = db.Column(db.String(255))
 
     # Define foreign key relationships
     user = relationship('User', backref='user_device', foreign_keys=[userID])
@@ -721,6 +739,7 @@ def createDevice():
     dataRetieval = data.get('dataRetieval')
     duration = data.get('duration')
     estimatedValue = getEstimatedValue(model, deviceCondition)
+    data_retrieval_opted = request.form.get('data_retrieval_opted')
 
     imageFile = request.files.get('image')
     filepath = None
@@ -770,7 +789,8 @@ def createDevice():
             imageUrl=filepath,
             qrCodeUrl=qrCodeUrl,
             dateOfCreation=current_date.strftime("%Y-%m-%d"),
-            estimatedValue=estimatedValue
+            estimatedValue=estimatedValue,
+            data_retrieval_opted=data_retrieval_opted
         )
         try:
             db.session.add(user_device)
@@ -810,7 +830,8 @@ def createDevice():
                 imageUrl=filepath,
                 qrCodeUrl=qrCodeUrl,
                 dateOfCreation=current_date.strftime("%Y-%m-%d"),
-                estimatedValue=estimatedValue
+                estimatedValue=estimatedValue,
+                data_retrieval_opted=data_retrieval_opted
             )
             db.session.add(newUserDeviceAdded)
             db.session.commit()
@@ -928,7 +949,8 @@ def create_customer_device():
                 qrCodeUrl=device_info.get('qr_code_url'),
                 dateOfCreation=datetime.now(),
                 estimatedValue=device_info.get('estimated_value'),
-                device_status=Device_Status.DEV_REGISTERED
+                device_status=Device_Status.DEV_REGISTERED,
+                data_retrieval_opted=device_info.get('data_retrieval_opted')
             )
 
             # Input validation: Check if essential device information is present
@@ -983,6 +1005,7 @@ def getListOfDevices():
             'dataRetrievalTimeLeft': '',
             'device_status': str(userDevice.device_status),
             'estimatedValue': userDevice.estimatedValue,
+            'data_retrieval_opted': userDevice.data_retrieval_opted,
             'userDeviceID': userDevice.userDeviceID,
         }
 
@@ -1138,8 +1161,9 @@ def generate_report():
     data = request.json
     start_date = data.get('start_date')
     end_date = data.get('end_date')
+    user_id = data.get('userID')
 
-    # Convert start_date and end_date strings to datetime 
+    # Convert start_date and end_date strings to datetime
     # Validate date format
 
     try:
@@ -1153,7 +1177,6 @@ def generate_report():
 
         payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
         user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
-
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
@@ -1162,6 +1185,20 @@ def generate_report():
         pdf_filename = 'report.pdf'
         doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
         elements = []
+
+        # Define a style for the heading
+        heading_style = ParagraphStyle(
+            name='Heading1',
+            fontSize=16,
+            textColor='black',
+            alignment=1,  # Center alignment
+            spaceAfter=12  # Space after the heading
+        )
+
+        # Add a heading to the PDF report
+        heading_text = "User Report"
+        heading = Paragraph(heading_text, heading_style)
+        elements.append(heading)
 
         # Add payments data to PDF
         payments_data = [['Payment ID', 'Data Retrieval ID', 'User ID', 'Date']]
@@ -1177,7 +1214,7 @@ def generate_report():
                                             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                                             ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
         elements.append(payments_table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(3, 12))
 
         # Add user devices data to PDF
         devices_data = [['User Device ID', 'User ID', 'Device ID', 'Date of Creation']]
@@ -1193,6 +1230,49 @@ def generate_report():
                                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                                            ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
         elements.append(devices_table)
+        elements.append(Spacer(3, 12))
+
+        # Aggregate payments data by user ID
+        user_payments = defaultdict(int)
+        for payment in payments:
+            user_payments[payment.userID] += 1
+
+        # Extract user IDs and payment counts
+        user_ids = list(user_payments.keys())
+        payment_counts = list(user_payments.values())
+
+        if not user_ids or not payment_counts:
+            message_text = "No payment data found for this date range and user."
+            message = Paragraph(message_text, heading_style)
+            elements.append(message)
+        else:
+            elements.append(Spacer(3, 80))
+
+            # Handle case where there's data
+            chart = VerticalBarChart()
+            chart.data = [payment_counts]
+            chart.categoryAxis.categoryNames = [str(user_id) for user_id in user_ids]
+            chart.width = 400
+            chart.height = 200
+            chart.x = 50
+            chart.y = 50
+            chart.valueAxis.valueMin = 0
+            chart.valueAxis.valueMax = max(payment_counts) + 1
+            chart.valueAxis.valueStep = 1
+            chart.barSpacing = 5
+            chart.barWidth = 3
+
+            # Add the chart name below x-axis label
+            chart_name = "Payment Data Chart"
+
+            drawing = Drawing(400, 300)
+            drawing.add(chart)
+
+            # Add labels manually
+            drawing.add(String(200, 10, 'User IDs', fontSize=12))
+            drawing.add(String(0, 180, 'Payment Counts', fontSize=12, angle=-90, textAnchor="middle"))
+
+            elements.append(drawing)
 
         # Build PDF document
         doc.build(elements)

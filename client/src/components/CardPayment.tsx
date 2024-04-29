@@ -99,6 +99,39 @@ function CardPayment({
   };
   return (
     <div className="modal-box ">
+      <div
+        className={`card-body ${
+          status == PaymentStatus.NOT_INITATED ? "visible" : "hidden"
+        }  `}
+      >
+        <h2 className={"card-title pb-5 text-primary"}>
+          Payment for {amount}{" "}
+        </h2>
+        <input
+          type="text"
+          placeholder={"Name"}
+          className="input input-bordered w-full bg-gray-50 text-primary my-1"
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder={"Email"}
+          className="input input-bordered w-full bg-gray-50 text-primary my-1"
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <div className="border p-3 my-1 bg-gray-50 w-96">
+          <CardElement options={CARD_ELEMENT_OPTIONS} />
+        </div>
+        <div>
+          <button
+            className="btn btn-primary w-full my-1"
+            onClick={handleSubmitPay}
+          >
+            Pay Now
+          </button>
+        </div>
+      </div>
+
       {status == PaymentStatus.INTRODUCTION ? (
         <div className="card-body flex items-center text-black ">
           <div className=" w-64">
@@ -121,34 +154,7 @@ function CardPayment({
           </button>
         </div>
       ) : status === PaymentStatus.NOT_INITATED ? (
-        <div className="card-body">
-          <h2 className={"card-title pb-5 text-primary"}>
-            Payment for {amount}{" "}
-          </h2>
-          <input
-            type="text"
-            placeholder={"Name"}
-            className="input input-bordered w-full bg-gray-50 text-primary my-1"
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder={"Email"}
-            className="input input-bordered w-full bg-gray-50 text-primary my-1"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <div className="border p-3 my-1 bg-gray-50 w-96">
-            <CardElement options={CARD_ELEMENT_OPTIONS} />
-          </div>
-          <div>
-            <button
-              className="btn btn-primary w-full my-1"
-              onClick={handleSubmitPay}
-            >
-              Pay Now
-            </button>
-          </div>
-        </div>
+        <></>
       ) : (
         <div className="card-body flex items-center ">
           <h2
