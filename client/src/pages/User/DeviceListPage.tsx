@@ -135,7 +135,7 @@ const UserDashboard = () => {
   const [model, setModel] = useState("");
   const [deviceColor, setDeviceColor] = useState("");
   const [deviceCondition, setDeviceCondition] = useState("");
-    const [deviceStorage, setDeviceStorage] = useState("");
+  const [deviceStorage, setDeviceStorage] = useState("");
   const [dateofPurchase, setDateofPurchase] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [dateofRelease, setDateofRelease] = useState("");
@@ -172,9 +172,6 @@ const UserDashboard = () => {
       setDateofPurchase(data.dateofPurchase);
       setDateofRelease(data.dateofRelease);
     }
-  });
-
-  useEffect(() => {
     fetchDevices();
   }, []);
 
@@ -214,7 +211,7 @@ const UserDashboard = () => {
     formData.append("deviceStorage", deviceStorage);
     formData.append("deviceColor", deviceColor);
     formData.append("deviceCondition", deviceCondition);
-    formData.append("deviceClassification", deviceClassification);
+    formData.append("deviceClassification", deviceClassification ?? "Unknown");
     formData.append("dateofPurchase", dateofPurchase);
     formData.append("dateofRelease", dateofRelease);
     formData.append("userID", userID || "");
@@ -238,6 +235,9 @@ const UserDashboard = () => {
 
       if (response.ok) {
         console.log("Creation Successful");
+        const url = new URL(window.location.href);
+        url.searchParams.delete("deviceData");
+        window.history.replaceState({}, "", url.toString());
         window.location.reload();
       } else {
         console.log("Creation Error");
@@ -329,7 +329,8 @@ const UserDashboard = () => {
 
       if (
         device.classification === "Recycle" &&
-        device.data_retrieval_opted === "Yes" && device.device_status == "Payment Processed"
+        device.data_retrieval_opted === "Yes" &&
+        device.device_status == "Payment Processed"
       ) {
         const creationDate = new Date(device.createdAt);
         const endTime = new Date(
@@ -357,10 +358,10 @@ const UserDashboard = () => {
       return "Not applicable";
     };
 
-    const isDeviceRareOrCurrent = device.classification === "Rare" || device.classification === "Current";
+    const isDeviceRareOrCurrent =
+      device.classification === "Rare" || device.classification === "Current";
     const isVerified = device.verified;
     const isRecycled = device.classification === "Recycle";
-    
 
     function handlePaymentModal(): void {
       setShowPopup(false);
@@ -416,7 +417,7 @@ const UserDashboard = () => {
                   />
                   <KeyValueComponent
                     data="Classification :"
-                    value={device.classification}
+                    value={device.classification ?? "Unknown"}
                   />
                   <KeyValueComponent
                     data="Created At :"
@@ -479,17 +480,21 @@ const UserDashboard = () => {
                 </div>
               )}
               <div>
-                {isRecycled && isVerified && (device.device_status !== "Payment Processed")&&(
-                  <div className="flex flex-row">
-                    <button
-                      className="btn btn-primary"
-                      onClick={handlePaymentModal}
-                    >
-                      Proceed for Data Retrieval
-                    </button>
-                  </div>
-                )}
-                  {device.data_retrieval_opted === "Yes" && device.device_status === "Payment Processed" && isRecycled &&(
+                {isRecycled &&
+                  isVerified &&
+                  device.device_status !== "Payment Processed" && (
+                    <div className="flex flex-row">
+                      <button
+                        className="btn btn-primary"
+                        onClick={handlePaymentModal}
+                      >
+                        Proceed for Data Retrieval
+                      </button>
+                    </div>
+                  )}
+                {device.data_retrieval_opted === "Yes" &&
+                  device.device_status === "Payment Processed" &&
+                  isRecycled && (
                     <div className="dropdown dropdown-right ">
                       <div
                         tabIndex={0}
@@ -510,7 +515,7 @@ const UserDashboard = () => {
                         </li>
                       </ul>
                     </div>
-                    )}
+                  )}
               </div>
               <div className="mt-4">
                 <span className="font-bold text-primary text-xl">
@@ -543,7 +548,6 @@ const UserDashboard = () => {
       </div>
     );
   };
-
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -952,4 +956,3 @@ const UserDashboard = () => {
   );
 };
 export default UserDashboard;
-

@@ -510,7 +510,7 @@ const StaffDashboard = () => {
                 <img
                   src={device.image.replace("../client/public/", "")}
                   alt={device.image}
-                  className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90"
+                  className="w-full h-64 object-contain flex items-center place-content-center bg-transparent bg-opacity-90"
                 />
               ) : (
                 <div className="w-full h-64 flex items-center place-content-center bg-primary bg-opacity-90">
@@ -613,7 +613,7 @@ const StaffDashboard = () => {
                   <input
                     type="text"
                     value={localDevice.estimatedValue?.toString() || ""}
-                    onChange={(e) => handleInputChange("color", e.target.value)}
+                    onChange={(e) => handleInputChange("estimatedValue", e.target.value)}
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>

@@ -44,8 +44,9 @@ const CreateAccount = ({ fullScreen = true }) => {
         console.log("Registration Successful");
         if (deviceData) {
           window.location.href = `/login?register=success&deviceData=${deviceData}`;
+        } else {
+          window.location.href = "/login?register=success";
         }
-        window.location.href = "/login?register=success";
       } else {
         setShowToast(2);
         setTimeout(() => {
