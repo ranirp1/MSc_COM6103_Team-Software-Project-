@@ -1391,7 +1391,7 @@ def updatePayment():
             # Return response first
             response = jsonify({'Message': 'Added payment'}), 200
             # Then wait for 400ms
-            time.sleep(0.4)
+            time.sleep(10)
             # Update the device status to 'Data Retrieved'
             setattr(userDevice, 'device_status', Device_Status.DATA_RETRIEVED)
             db.session.commit()

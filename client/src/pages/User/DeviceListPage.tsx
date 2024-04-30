@@ -16,6 +16,7 @@ import DeviceStatusComponent, {
 } from "./DeviceStatusComponent";
 import { GiShoppingCart } from "react-icons/gi";
 import KeyValueComponent from "../../components/KeyValueComponent";
+import { shouldShowExtend, shouldShowProccedForDataRetrieval } from "./util";
 
 class Device {
   id: number;
@@ -334,9 +335,10 @@ const UserDashboard = () => {
       }
 
       if (
-        device.classification === "Recycle" &&
-        device.data_retrieval_opted === "Yes" &&
-        device.device_status == "Payment Processed" || device.device_status == "Data Wiped"
+        (device.classification === "Recycle" &&
+          device.data_retrieval_opted === "Yes" &&
+          device.device_status == "Payment Processed") ||
+        device.device_status == "Data Wiped"
       ) {
         const creationDate = new Date(device.createdAt);
         const endTime = new Date(
@@ -488,7 +490,7 @@ const UserDashboard = () => {
               <div>
                 {isRecycled &&
                   isVerified &&
-                  device.device_status !== "Payment Processed" && (
+                  shouldShowProccedForDataRetrieval(device.device_status) && (
                     <div className="flex flex-row">
                       <button
                         className="btn btn-primary"
@@ -499,7 +501,7 @@ const UserDashboard = () => {
                     </div>
                   )}
                 {device.data_retrieval_opted === "Yes" &&
-                  device.device_status === "Payment Processed" &&
+                  shouldShowExtend(device.device_status) &&
                   isRecycled && (
                     <div className="dropdown dropdown-right ">
                       <div
@@ -958,7 +960,7 @@ const UserDashboard = () => {
         status={paymentStatus}
         setPaymentStatus={setPaymentStatus}
         userDeviceID={selectedUserDeviceID ?? 1}
-        userID={userID??''}
+        userID={userID ?? ""}
       ></CardPaymentModel>
     </div>
   );
