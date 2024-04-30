@@ -31,6 +31,7 @@ from enum import Enum as PyEnum
 from flask_mail import Mail
 from flask_mail import Message
 
+import requests
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -862,14 +863,10 @@ def createRetrievalData():
             dateOfCreation=datetime.now(),
             duration=3,
             password="122"
-                     """
-                     userDeviceID
-                     dataUrl
-                     dateOfCreation
-                     duration
-                     password
-                     """
         )
+        userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
+        if userDevice:
+            userDevice.device_status = Device_Status.DATA_RETRIEVED
 
     try:
         db.session.add(newDataRetrieval)
@@ -887,26 +884,47 @@ def createRetrievalData():
 def updateRetrievalData():
     print("here")
     data = request.json
-
+    
+    receiver_email = data.get('email', "manu1998kj@gmail.com")
+    url = data.get('urlLink', "https://example.com/data-retrieval")
     userDeviceID = data.get('userDeviceID')
-    url = data.get('dataRetrievalUrl')
 
-    # userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
 
     # if not userDevice:
     #     return jsonify({'message': 'User Device not found'}), 400
 
-    dataRetrieval = DataRetrieval.query.filter_by(userDeviceID=userDeviceID).first()
+    print(f"userDeviceID: {userDeviceID}")
+
+    dataRetrieval = DataRetrieval.query.filter_by(userDeviceId=userDeviceID).first()
+    userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
     if not dataRetrieval:
-        return jsonify({'message': 'DR with that device not found'}), 400
+        newDataRetrieval = DataRetrieval(
+            userDeviceId=userDeviceID,
+            dataUrl="https://google.com",
+            dateOfCreation=datetime.now(),
+            duration=3,
+            password="122"
+        )
+        db.session.add(newDataRetrieval)
+        db.session.commit()
+        dataRetrieval = newDataRetrieval
+        # return jsonify({'message': 'DR with that device not found'}), 400
+
+    if userDevice:
+        userDevice.device_status = Device_Status.URL_READY
 
     dataRetrieval.dataUrl = url
     try:
         db.session.commit()
-        # TODO
-        # SEND EMAIL HERE
+        user = User.query.filter_by(id=userDevice.userID).first()
+        userEmail = user.email
+        print(f"User email: {userEmail}")
+        res, code = send_email_link(userEmail, url)
+        if code != 200:
+            raise Exception(f"Error sending email: {res['message']}")
         return jsonify({'message': 'Url updated'}), 200
     except Exception as e:
+        print(e)
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'Error updating url'}), 500
@@ -1028,6 +1046,15 @@ def changeDeviceVerification():
     if not device:
         return jsonify({'message': 'Device not found'}), 404
     device.isVerified = isVerified
+    userDevice = UserDevice.query.filter_by(deviceID=deviceID).first()
+    if userDevice:
+        userDevice.device_status = Device_Status.DEV_VERIF
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            db.session.flush()
+            print(f"Could not update device status device {deviceID}")
     db.session.commit()
     return jsonify({'message': 'Device verification status updated'}), 200
 
@@ -1394,11 +1421,14 @@ def send_email():
 
 
 @app.route('/api/send-data-retrieval-link', methods=['POST'])
-def send_email_link():
+def send_email_link(email_in="manu1998kj@gmail", link_in="https://example.com/data-retrieval"):
     data = request.json
-    receiver_email = data.get('email', "manu1998kj@gmail.com")
-    data_retrieval_link = data.get('urlLink', "https://example.com/data-retrieval")
-
+    # print("############")
+    # print(data)
+    # print("############")
+    receiver_email = data.get('email', email_in)
+    data_retrieval_link = data.get('urlLink', link_in)
+    
     if not receiver_email:
         print("email is blank")
         return {'message': 'You need to send an Email!', 'error': True}, 400

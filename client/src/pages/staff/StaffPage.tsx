@@ -416,12 +416,12 @@ const StaffDashboard = () => {
       const data = {
         email: localDevice.user_email,
         urlLink: localDevice.dataRetrievalLink,
-        userDeviceId: localDevice.userDeviceID,
+        userDeviceID: localDevice.userDeviceID,
       };
 
       try {
         const response = await fetch(
-          `${API_URL}/api/send-data-retrieval-link`,
+          `${API_URL}/api/update-data-retrieval-url`,
           {
             method: "POST",
             headers: {
