@@ -183,7 +183,6 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        alert("User deleted successfully!");
         // Filter out the deleted user from the local state to update the UI
         setUsers(users.filter((user) => user.email !== email));
       } else {
@@ -379,8 +378,11 @@ const AdminDashboard = () => {
                           )}
                         </td>
                         <td>
-                          <button className="btn btn-circle bg-red-700 text-white ">
-                            <MdOutlineDelete size={35}/>
+                          <button
+                            className="btn btn-circle bg-red-700 text-white "
+                            onClick={() => handleDeleteUser(user.email)}
+                          >
+                            <MdOutlineDelete size={35} />
                           </button>
                         </td>
                       </tr>

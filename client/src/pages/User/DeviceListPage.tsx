@@ -17,6 +17,8 @@ import DeviceStatusComponent, {
 import { GiShoppingCart } from "react-icons/gi";
 import KeyValueComponent from "../../components/KeyValueComponent";
 import { shouldShowExtend, shouldShowProccedForDataRetrieval } from "./util";
+import Lottie from "lottie-react";
+import recycleAnimation from "../../animation/recycle.json";
 
 class Device {
   id: number;
@@ -450,6 +452,15 @@ const UserDashboard = () => {
               </span>
             </div> */}
               </div>
+              {isRecycled && (
+                <div className="w-full flex items-center place-content-center ">
+                  <Lottie
+                    animationData={recycleAnimation}
+                    loop={true}
+                    className="h-52 w-40"
+                  />
+                </div>
+              )}
               {isDeviceRareOrCurrent && (
                 <div className="flex flex-col">
                   <KeyValueComponent
@@ -493,9 +504,9 @@ const UserDashboard = () => {
                 {isRecycled &&
                   isVerified &&
                   shouldShowProccedForDataRetrieval(device.device_status) && (
-                    <div className="flex flex-row">
+                    <div className="flex flex-row w-full">
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-primary w-full"
                         onClick={handlePaymentModal}
                       >
                         Proceed for Data Retrieval
@@ -505,11 +516,11 @@ const UserDashboard = () => {
                 {device.data_retrieval_opted === "Yes" &&
                   shouldShowExtend(device.device_status) &&
                   isRecycled && (
-                    <div className="dropdown dropdown-right ">
+                    <div className="dropdown dropdown-right w-full ">
                       <div
                         tabIndex={0}
                         role="button"
-                        className="btn btn-primary"
+                        className="btn btn-primary w-full"
                       >
                         Extend Retrieval
                       </div>

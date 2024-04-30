@@ -70,7 +70,7 @@ const ReportDialog = () => {
             htmlFor="userID"
             className="block font-medium leading-6 text-black"
           >
-            User ID
+            User ID (optional)
           </label>
           <div className="mt-2">
             <input
