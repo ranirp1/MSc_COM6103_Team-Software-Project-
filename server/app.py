@@ -863,13 +863,6 @@ def createRetrievalData():
             dateOfCreation=datetime.now(),
             duration=3,
             password="122"
-                     """
-                     userDeviceID
-                     dataUrl
-                     dateOfCreation
-                     duration
-                     password
-                     """
         )
         userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
         if userDevice:
@@ -905,7 +898,17 @@ def updateRetrievalData():
     dataRetrieval = DataRetrieval.query.filter_by(userDeviceId=userDeviceID).first()
     userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
     if not dataRetrieval:
-        return jsonify({'message': 'DR with that device not found'}), 400
+        newDataRetrieval = DataRetrieval(
+            userDeviceId=userDeviceID,
+            dataUrl="https://google.com",
+            dateOfCreation=datetime.now(),
+            duration=3,
+            password="122"
+        )
+        db.session.add(newDataRetrieval)
+        db.session.commit()
+        dataRetrieval = newDataRetrieval
+        # return jsonify({'message': 'DR with that device not found'}), 400
 
     if userDevice:
         userDevice.device_status = Device_Status.URL_READY
