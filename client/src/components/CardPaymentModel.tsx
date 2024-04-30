@@ -8,11 +8,13 @@ function CardPaymentModel({
   status = PaymentStatus.NOT_INITATED,
   setPaymentStatus,
   userDeviceID,
+  userID,
 }: {
   amount?: string;
   status?: PaymentStatus;
   setPaymentStatus: React.Dispatch<React.SetStateAction<PaymentStatus>>;
   userDeviceID?: number;
+  userID?: string;
 }) {
   const publicKey =
     "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN";
@@ -27,6 +29,7 @@ function CardPaymentModel({
             status={status}
             setPaymentStatus={setPaymentStatus}
             userDeviceID={userDeviceID}
+            userID={userID}
           />
         </Elements>
       </dialog>

@@ -958,6 +958,7 @@ const UserDashboard = () => {
         status={paymentStatus}
         setPaymentStatus={setPaymentStatus}
         userDeviceID={selectedUserDeviceID ?? 1}
+        userID={userID??''}
       ></CardPaymentModel>
     </div>
   );

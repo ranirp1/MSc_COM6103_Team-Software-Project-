@@ -22,11 +22,13 @@ function CardPayment({
   status = PaymentStatus.NOT_INITATED,
   setPaymentStatus,
   userDeviceID,
+  userID,
 }: {
   amount?: string;
   status?: PaymentStatus;
   setPaymentStatus: React.Dispatch<React.SetStateAction<PaymentStatus>>;
   userDeviceID?: number;
+  userID?: string;
 }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -85,6 +87,7 @@ function CardPayment({
           const result = await axios.post(`${API_URL}/api/add-payment`, {
             dataRetrievalID: 1, // hardcoded
             userDeviceID: userDeviceID,
+            userID:userID,
           });
           setPaymentStatus(PaymentStatus.SUCCESS);
           // after 300 ms reload the page 
