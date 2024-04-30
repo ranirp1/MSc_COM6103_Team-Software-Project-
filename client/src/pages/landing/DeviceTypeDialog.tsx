@@ -94,7 +94,22 @@ const DeviceTypeDialog = ({
           {isDeviceRareOrCurrent && (
             <div className="flex flex-1 flex-col place-content-center items-center">
               <QRCode
-                value={request.brand + "\n" + request.model}
+                value={
+                  "Brand: " +
+                  request.brand +
+                  "\nModel: " +
+                  request.model +
+                  "\nColor: " +
+                  request.color +
+                  "\nStorage: " +
+                  request.storage +
+                  "\nClassification: " +
+                  deviceType +
+                  "\nCondition: " +
+                  request.condition +
+                  "\nEstimated Price: " +
+                  "£200"
+                }
                 className="w-1/2"
               />
               <a
@@ -107,7 +122,7 @@ const DeviceTypeDialog = ({
                 className="btn btn-link text-lg"
                 target="_blank"
               >
-                Estimated Price : £{700}
+                Estimated Price : £{200}
               </a>
             </div>
           )}
