@@ -603,7 +603,7 @@ const StaffDashboard = () => {
                       </>  
                     )
                   }
-                  <option value="Data Wiped" disabled>Data Wiped</option>
+                  <option value="Data Wiped">Data Wiped</option>
                   </select>
                 </div>
                 <div>
