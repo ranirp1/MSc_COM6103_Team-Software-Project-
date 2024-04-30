@@ -4,6 +4,7 @@ export const DeviceStatusConstant = {
   PaymentProcessed: "Payment Processed",
   DataRetrieved: "Data Retrieved",
   LinkReceived: "Link Received",
+  DataWiped: "Data Wiped"
 };
 
 enum DeviceStatusIndex {
@@ -12,8 +13,8 @@ enum DeviceStatusIndex {
   PaymentProcessed,
   DataRetrieved,
   LinkReceived,
+  DataWiped
 }
-
 interface DeviceStatusComponentProps {
   deviceStatus: string;
   isDeviceRareOrCurrent: boolean;
@@ -21,7 +22,7 @@ interface DeviceStatusComponentProps {
 
 const DeviceStatusComponent: React.FC<DeviceStatusComponentProps> = ({
   deviceStatus,
-  isDeviceRareOrCurrent,
+  isDeviceRareOrCurrent
 }) => {
   const deviceStatusIndex =
     Object.values(DeviceStatusConstant).indexOf(deviceStatus);
@@ -39,8 +40,7 @@ const DeviceStatusComponent: React.FC<DeviceStatusComponentProps> = ({
                 {status}
               </li>
             ))
-          : Object.values(DeviceStatusConstant)
-              .slice(0, 2)
+          : Object.values([DeviceStatusConstant.DeviceRegistered, DeviceStatusConstant.DeviceVerified, DeviceStatusConstant.DataWiped])
               .map((status, index) => (
                 <li
                   key={status}

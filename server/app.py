@@ -10,18 +10,33 @@ from flask import Blueprint
 import os
 from dotenv import load_dotenv
 import stripe
-from datetime import datetime
 from flask_cors import CORS, cross_origin
 from datetime import datetime, timedelta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image
 from werkzeug.utils import secure_filename
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.units import mm
+from reportlab.graphics.shapes import Drawing, String
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from reportlab.lib.colors import Color
+from reportlab.graphics.shapes import Drawing
+from collections import defaultdict
+from itertools import product
+
+from enum import Enum as PyEnum
 
 from flask_mail import Mail
 from flask_mail import Message
 
 import requests
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.backends.backend_pdf as pdf
+import io
 
 # pip install python-jose to work with JWT tokens
 from jose import JWTError, jwt
@@ -33,7 +48,6 @@ SECRET_KEY = environ.get('JWT_SECRET_KEY', 'atyehdchjuiikkdlfueghfbvh')
 from enum import Enum as PyEnum
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
-
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
@@ -47,18 +61,21 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = 'com6103team03@gmail.com'  # Your Gmail address
 app.config['MAIL_PASSWORD'] = 'nqfm kpqv dprj zfqd'  # Your Gmail password or app-specific password
-sender_email = 'com6103team03@gmail.com' 
+sender_email = 'com6103team03@gmail.com'
 mail = Mail(app)
 
 blueprint = Blueprint('blueprint', __name__)
+
+
 # put this sippet ahead of all your bluprints
 # blueprint can also be app~~
-@blueprint.after_request 
+@blueprint.after_request
 def after_request(response):
     header = response.headers
     header['Access-Control-Allow-Origin'] = '*'
     # Other headers can be added here if needed
     return response
+
 
 load_dotenv()
 app.config['STRIPE_SECRET_KEY'] = os.getenv('STRIPE_SECRET_KEY')
@@ -95,6 +112,7 @@ class User(db.Model):
             'isAdmin': self.isAdmin
         }
 
+
 class Device(db.Model):
     __tablename__ = 'device'
     deviceID = db.Column(db.Integer, primary_key=True, unique=True)
@@ -116,9 +134,10 @@ class Device(db.Model):
 class Device_Status(PyEnum):
     DEV_REGISTERED = 'Device Registered'
     DEV_VERIF = 'Device Verified'
-    PAYMENT_DONE = 'Payment Processed' #Payment done
+    PAYMENT_DONE = 'Payment Processed'  #Payment done
     DATA_RETRIEVED = 'Data Retrieved'
     URL_READY = 'Link Received'
+    DATA_WIPED = 'Data Wiped'
 
     def __str__(self):
         return self.value
@@ -140,7 +159,7 @@ class UserDevice(db.Model):
     # dataRetrievalID = db.Column(db.Integer, nullable=True)
     estimatedValue = db.Column(db.String(255))
     device_status = db.Column(Enum(Device_Status), default=Device_Status.DEV_REGISTERED)
-    # data_retrieval_opted = db.Column(db.Boolean, default=False)
+    data_retrieval_opted = db.Column(db.String(255))
 
     # Define foreign key relationships
     user = relationship('User', backref='user_device', foreign_keys=[userID])
@@ -192,7 +211,7 @@ class PaymentTable(db.Model):
     paymentID = db.Column(db.Integer, primary_key=True)
     dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
     userID = db.Column(db.Integer, nullable=False)
-    date = db.Column(db.Date, nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
 
     def serialize(self):
         return {
@@ -330,8 +349,8 @@ with app.app_context():
     # Commit changes
     db.session.commit()
 
-def updateDeviceStatus(user_device, newStatus):
 
+def updateDeviceStatus(user_device, newStatus):
     user_device.device_status = newStatus
 
     try:
@@ -341,6 +360,7 @@ def updateDeviceStatus(user_device, newStatus):
         db.session.rollback()
         db.session.flush()
         raise e
+
 
 @app.route('/api/updateDeviceStatus', methods=['POST'])
 @cross_origin()
@@ -354,7 +374,6 @@ def updateDeviceStatus_api():
     if not userDevice:
         return jsonify({'message': 'user device not found'}), 400
 
-
     try:
         userDevice.device_status = statusEnum
         db.session.commit()
@@ -364,7 +383,6 @@ def updateDeviceStatus_api():
         db.session.rollback()
         db.session.flush()
         return jsonify({'message': 'error updating device status'}), 500
-
 
 
 def getEstimatedValue(model, condition):
@@ -384,7 +402,7 @@ def getEstimatedValue(model, condition):
     elif condition == 'used':
         return str(estimated_value.usedDeviceEstimatedPrice)
     elif condition == 'damaged':
-        return  str(estimated_value.damagedDeviceEstimatedPrice)
+        return str(estimated_value.damagedDeviceEstimatedPrice)
     else:
         return str(estimated_value.usedDeviceEstimatedPrice)
 
@@ -718,11 +736,12 @@ def createDevice():
     qrCodeUrl = request.form.get('qrCodeUrl')
     dateOfRelease = request.form.get('dateofRelease')
     dateOfPurchase = request.form.get('dateofPurchase')
-   # print("here")
+    # print("here")
     # print(data)
     dataRetieval = data.get('dataRetieval')
     duration = data.get('duration')
     estimatedValue = getEstimatedValue(model, deviceCondition)
+    data_retrieval_opted = request.form.get('data_retrieval_opted')
 
     imageFile = request.files.get('image')
     filepath = None
@@ -772,7 +791,8 @@ def createDevice():
             imageUrl=filepath,
             qrCodeUrl=qrCodeUrl,
             dateOfCreation=current_date.strftime("%Y-%m-%d"),
-            estimatedValue=estimatedValue
+            estimatedValue=estimatedValue,
+            data_retrieval_opted=data_retrieval_opted
         )
         try:
             db.session.add(user_device)
@@ -812,7 +832,8 @@ def createDevice():
                 imageUrl=filepath,
                 qrCodeUrl=qrCodeUrl,
                 dateOfCreation=current_date.strftime("%Y-%m-%d"),
-                estimatedValue=estimatedValue
+                estimatedValue=estimatedValue,
+                data_retrieval_opted=data_retrieval_opted
             )
             db.session.add(newUserDeviceAdded)
             db.session.commit()
@@ -824,21 +845,22 @@ def createDevice():
             db.session.flush()
             return jsonify({'message': 'Device creation error'}), 500
 
+
 @app.route('/api/create-data-retrieval', methods=['POST'])
 @cross_origin()
 def createRetrievalData():
     data = request.json
     dataRetrieval = data.get('dataRetrieval')
-    duration = 3 # data.get('duration')
+    duration = 3  # data.get('duration')
     userDeviceID = data.get('userDeviceID')
 
     if dataRetrieval:
         print("retrieving data has been selected")
         print(f"duation: {duration}")
         newDataRetrieval = DataRetrieval(
-            userDeviceId = userDeviceID,
-            dataUrl = "https://google.com",
-            dateOfCreation = datetime.now(),
+            userDeviceId=userDeviceID,
+            dataUrl="https://google.com",
+            dateOfCreation=datetime.now(),
             duration=3,
             password="122"
                      """
@@ -944,7 +966,8 @@ def create_customer_device():
                 qrCodeUrl=device_info.get('qr_code_url'),
                 dateOfCreation=datetime.now(),
                 estimatedValue=device_info.get('estimated_value'),
-                device_status=Device_Status.DEV_REGISTERED
+                device_status=Device_Status.DEV_REGISTERED,
+                data_retrieval_opted=device_info.get('data_retrieval_opted')
             )
 
             # Input validation: Check if essential device information is present
@@ -961,21 +984,21 @@ def create_customer_device():
         return jsonify({'message': 'User not found'}), 404
 
 
-
 @app.route('/api/getListOfDevices', methods=['POST'])
 @cross_origin()
 def getListOfDevices():
     data = request.json
     userID = data.get('userID')
-    if(userID):
-        userDevices = UserDevice.query.filter_by(userID=userID).join(Device, UserDevice.deviceID == Device.deviceID).all()
+    if (userID):
+        userDevices = UserDevice.query.filter_by(userID=userID).join(Device,
+                                                                     UserDevice.deviceID == Device.deviceID).all()
     else:
         userDevices = UserDevice.query.join(Device, UserDevice.deviceID == Device.deviceID).all()
-    
+
     device_list = []
     for userDevice in userDevices:
         device = Device.query.filter_by(deviceID=userDevice.deviceID).first()
-        estimatedValues =  userDevice.estimatedValue
+        estimatedValues = userDevice.estimatedValue
         if not estimatedValues:
             estimatedValues = getEstimatedValue(device.model, userDevice.deviceCondition)
         user = User.query.filter_by(id=userDevice.userID).first()
@@ -993,12 +1016,13 @@ def getListOfDevices():
             'classification': userDevice.deviceClassification,
             'dataRetrievalRequested': None,
             'dataRetrievalTimeLeft': '',
-            'user_name':user.first_name + ' ' + user.last_name,
-            'user_email':user.email,
-            'user_phone':user.phoneNumber,
+            'user_name': user.first_name + ' ' + user.last_name,
+            'user_email': user.email,
+            'user_phone': user.phoneNumber,
             'dataRetrievalTimeLeft': '',
             'device_status': str(userDevice.device_status),
             'estimatedValue': userDevice.estimatedValue,
+            'data_retrieval_opted': userDevice.data_retrieval_opted,
             'userDeviceID': userDevice.userDeviceID,
         }
 
@@ -1120,16 +1144,16 @@ def update_device():
         device = Device.query.filter_by(deviceID=device_id).first()
         if not device:
             return jsonify({'message': 'Device not found'}), 404
-        for field in ['brand', 'model',"dateOfRelease"]:
+        for field in ['brand', 'model', "dateOfRelease"]:
             if field in data:
                 setattr(device, field, data[field])
         db.session.commit()
-        
+
         #updating UserDevice table, get all device which matches deviceId and userDeviceId
         userDevices = UserDevice.query.filter_by(deviceID=device_id, userDeviceID=userDeviceId).first()
         if not userDevices:
             return jsonify({'message': 'Device not found'}), 404
-        
+
         if 'storage' in data:
             setattr(userDevices, 'deviceStorage', data['storage'])
         if 'color' in data:
@@ -1140,8 +1164,8 @@ def update_device():
             setattr(userDevices, 'deviceClassification', data['classification'])
         if 'device_status' in data:
             setattr(userDevices, 'device_status', Device_Status(data['device_status']).name)
-        
-        for field in ['isVerified','estimatedValue']:
+
+        for field in ['isVerified', 'estimatedValue']:
             if field in data:
                 setattr(userDevices, field, data[field])
 
@@ -1163,10 +1187,9 @@ def generate_report():
     data = request.json
     start_date = data.get('start_date')
     end_date = data.get('end_date')
+    user_id = data.get('userID')
 
-    # Convert start_date and end_date strings to datetime 
-    # Validate date format
-
+    # Convert start_date and end_date strings to datetime
     try:
         start_date = datetime.strptime(start_date, '%Y-%m-%d')
         end_date = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
@@ -1175,10 +1198,8 @@ def generate_report():
 
     # Fetch payment transactions and devices input by users within the specified date range
     try:
-
         payments = PaymentTable.query.filter(PaymentTable.date.between(start_date, end_date)).all()
         user_devices = UserDevice.query.filter(UserDevice.dateOfCreation.between(start_date, end_date)).all()
-
     except Exception as e:
         return jsonify({'error': 'Failed to retrieve data from the database.', 'details': str(e)}), 500
 
@@ -1188,36 +1209,155 @@ def generate_report():
         doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
         elements = []
 
+        # Add a heading to the PDF report
+        heading_text = "USER REPORT"
+        heading_style = ParagraphStyle(
+            name='Heading1',
+            fontSize=30,
+            textColor=colors.black,
+            alignment=1,
+            fontName='Helvetica-Bold',
+            spaceAfter=60,
+        )
+        heading = Paragraph(heading_text, heading_style)
+        elements.append(heading)
+
+        # Add a heading for payments table
+        payments_heading_text = "Payment Table:"
+        payments_heading_style = ParagraphStyle(
+            name='Heading2',
+            fontSize=15,
+            textColor=colors.grey,
+            alignment=0,
+            fontName='Helvetica-Bold',
+            leftIndent=-50,
+            spaceBefore=20,
+            spaceAfter=20,
+        )
+        payments_heading = Paragraph(payments_heading_text, payments_heading_style)
+        elements.append(payments_heading)
+
         # Add payments data to PDF
         payments_data = [['Payment ID', 'Data Retrieval ID', 'User ID', 'Date']]
         for payment in payments:
             payments_data.append(
                 [payment.paymentID, payment.dataRetrievalID, payment.userID, payment.date.strftime('%Y-%m-%d')])
-        payments_table = Table(payments_data)
-        payments_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        payments_table = Table(payments_data,
+                               colWidths=[doc.width * 1.2 / len(payments_data[0])] * len(payments_data[0]))
+        payments_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+                                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
                                             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                                             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
                                             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                                            ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+                                            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                                            ]))
         elements.append(payments_table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(3, 12))
+
+        # Add a heading for devices table
+        devices_heading_text = "User Device Table:"
+        devices_heading_style = ParagraphStyle(
+            name='Heading2',
+            fontSize=15,
+            textColor=colors.grey,
+            alignment=0,
+            fontName='Helvetica-Bold',
+            leftIndent=-50,
+            spaceBefore=20,
+            spaceAfter=20,
+        )
+        devices_heading = Paragraph(devices_heading_text, devices_heading_style)
+        elements.append(devices_heading)
 
         # Add user devices data to PDF
         devices_data = [['User Device ID', 'User ID', 'Device ID', 'Date of Creation']]
         for device in user_devices:
             devices_data.append(
                 [device.userDeviceID, device.userID, device.deviceID, device.dateOfCreation.strftime('%Y-%m-%d')])
-        devices_table = Table(devices_data)
-        devices_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                                           ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        devices_table = Table(devices_data,
+                              colWidths=[doc.width * 1.2 / len(payments_data[0])] * len(payments_data[0]))
+        devices_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+                                           ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
                                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                                            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
                                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                                           ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+                                           ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                                           ]))
         elements.append(devices_table)
+        elements.append(Spacer(3, 12))
+
+        # Aggregate payments data by user ID
+        user_payments = defaultdict(int)
+        for payment in payments:
+            user_payments[payment.userID] += 1
+
+        # Add a heading for the chart
+        chart_heading_text = "User Payment Frequency:"
+        chart_heading_style = ParagraphStyle(
+            name='Heading2',
+            fontSize=15,
+            textColor=colors.grey,
+            alignment=0,
+            fontName='Helvetica-Bold',
+            leftIndent=-50,
+            spaceBefore=14,
+            spaceAfter=68
+        )
+        chart_heading = Paragraph(chart_heading_text, chart_heading_style)
+        elements.append(chart_heading)
+
+        # Extract user IDs and payment counts
+        user_ids = list(user_payments.keys())
+        payment_counts = list(user_payments.values())
+
+        # Check if there is any data
+        if not user_ids or not payment_counts:
+            message_text = "No payment data found for this date range and user."
+            message = Paragraph(message_text, heading_style)
+            elements.append(message)
+        else:
+            message_text = "Payment data found for this date range and user."
+
+        # Handle case where there's data
+        chart = VerticalBarChart()
+        chart.data = [payment_counts]
+        chart.categoryAxis.categoryNames = [str(user_id) for user_id in user_ids]
+        chart.width = 400
+        chart.height = 200
+        chart.x = 50
+        chart.y = 50
+        chart.valueAxis.valueMin = 0
+        chart.valueAxis.valueMax = max(payment_counts) + 1
+        chart.valueAxis.valueStep = 1
+        chart.barSpacing = 5
+        chart.barWidth = 1
+
+        # Define a list of distinct colors to represent the gradient
+        distinct_colors = [colors.blue,colors.red, colors.green, colors.orange, colors.purple]
+
+        # Create a list of unique combinations of payment count and user ID
+        unique_combinations = list(product(payment_counts, user_ids))
+
+        # Create a color map to store colors for each unique combination
+        color_map = {}
+        for index, combination in enumerate(unique_combinations):
+            color_map[combination] = distinct_colors[index % len(distinct_colors)]
+
+        # Modify the colors of the bars in the chart using the color map
+        for i, (payment_count, user_id) in enumerate(zip(payment_counts, user_ids)):
+            bar_color = color_map[(payment_count, user_id)]
+            chart.bars[i].fillColor = bar_color
+
+        drawing = Drawing(400, 200)
+
+        # Add labels manually
+        drawing.add(String(200, 10, 'User IDs', fontSize=12, fontName='Helvetica-Bold'))
+        drawing.add(String(-20, 150, 'Payment Counts', fontSize=12, fontName='Helvetica-Bold', angle=-90, textAnchor="middle"))
+
+        drawing.add(chart)
+        elements.append(drawing)
 
         # Build PDF document
         doc.build(elements)
@@ -1226,6 +1366,26 @@ def generate_report():
         return send_file(pdf_filename, as_attachment=True)
     except Exception as e:
         return jsonify({'error': 'Failed to generate PDF report.', 'details': str(e)}), 500
+
+@app.route('/api/add-payment', methods=['POST'])
+def updatePayment():
+    data = request.get_json()
+
+    dataRetrievalID = data.get('dataRetrievalID')
+    userID = data.get('userID')
+    date = datetime.now()
+
+    new_payment = PaymentTable(dataRetrievalID=dataRetrievalID, userID=userID, date=date)
+    try:
+        db.session.add(new_payment)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'Message': f'Error adding payment: {e}'}), 500
+
+    return jsonify({'Message': 'Added payment'}), 200
 
 
 @app.route('/api/send-payment-confirmation-mail', methods=['POST'])
@@ -1256,16 +1416,16 @@ def send_email():
 @app.route('/api/send-data-retrieval-link', methods=['POST'])
 def send_email_link(email_in="manu1998kj@gmail", link_in="https://example.com/data-retrieval"):
     data = request.json
-    print("############")
-    print(data)
-    print("############")
+    # print("############")
+    # print(data)
+    # print("############")
     receiver_email = data.get('email', email_in)
     data_retrieval_link = data.get('urlLink', link_in)
     
     if not receiver_email:
         print("email is blank")
         return {'message': 'You need to send an Email!', 'error': True}, 400
-    
+
     if not data_retrieval_link:
         return {'message': 'You need to send a data retrieval link!', 'error': True}, 400
 
