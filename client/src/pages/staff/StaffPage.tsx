@@ -25,7 +25,7 @@ import { DeviceClassification } from "../landing/CheckNow";
 import DeviceClassificationComponent from "./DeviceClassificationComponent";
 import ReportDialog from "./component/ReportDialog";
 
-class Device {
+export class Device {
   id: number;
   brand: string;
   model: string;
@@ -648,7 +648,7 @@ const StaffDashboard = () => {
             </div>
             <div>
               <br></br>
-              <div
+              {device.device_status == DeviceStatusConstant.PaymentProcessed && (<div
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -677,7 +677,7 @@ const StaffDashboard = () => {
                 >
                   <IoSend />
                 </button>
-              </div>
+              </div>)}
             </div>
           </div>
         </div>
@@ -695,7 +695,7 @@ const StaffDashboard = () => {
           User Contact Information
         </div>
         <div className=" flex flex-col p-5 w-full bg-primary bg-opacity-15 rounded-lg card shadow-xl">
-          <div className="flex flex-row w-full place-content-between ">
+          <div className="flex flex-row w-full place-content-between gap-24 ">
             <KeyValueComponent
               data="User Full Name :"
               value={localDevice.user_name}

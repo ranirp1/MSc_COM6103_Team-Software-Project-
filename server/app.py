@@ -208,7 +208,7 @@ class DataRetrieval(db.Model):
 class PaymentTable(db.Model):
     __tablename__ = 'paymenttable'
     paymentID = db.Column(db.Integer, primary_key=True)
-    dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
+    dataRetrievalID = db.Column(db.Integer, nullable=False)
     userID = db.Column(db.Integer, nullable=False)
     date = db.Column(db.DateTime, nullable=False)
 
@@ -1348,11 +1348,15 @@ def updatePayment():
     data = request.get_json()
 
     dataRetrievalID = data.get('dataRetrievalID')
-    userID = data.get('userID')
+    userDeviceID = data.get('userDeviceID')
     date = datetime.now()
+    
 
-    new_payment = PaymentTable(dataRetrievalID=dataRetrievalID, userID=userID, date=date)
     try:
+        new_payment = PaymentTable(dataRetrievalID=dataRetrievalID, userID=userDeviceID, date=date)
+        userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
+        if not userDevice:
+            setattr(userDevice, 'device_status', Device_Status.PAYMENT_DONE)
         db.session.add(new_payment)
         db.session.commit()
     except Exception as e:

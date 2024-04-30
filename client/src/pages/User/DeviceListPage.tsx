@@ -35,6 +35,7 @@ class Device {
   device_status?: string;
   estimatedValue?: String;
   data_retrieval_opted: string;
+  userDeviceID?: number;
 
   constructor(
     id: number,
@@ -53,7 +54,8 @@ class Device {
     data_retrieval_opted: string,
     cexLink?: string,
     device_status?: string,
-    estimatedValue?: String
+    estimatedValue?: String,
+    userDeviceId?: number
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -72,6 +74,7 @@ class Device {
     this.device_status = device_status;
     this.estimatedValue = estimatedValue;
     this.data_retrieval_opted = data_retrieval_opted;
+    this.userDeviceID = userDeviceId;
   }
 
   static fromJson(json: any): Device {
@@ -92,7 +95,8 @@ class Device {
       json.cexLink,
       json.device_status,
       json.estimatedValue,
-      json.data_retrieval_opted
+      json.data_retrieval_opted,
+      json.userDeviceId
     );
   }
 }
@@ -108,18 +112,6 @@ const UserDashboard = () => {
   const [paymentStatus, setPaymentStatus] = useState(
     PaymentStatus.INTRODUCTION
   );
-
-  function openPaymentModel(): void {
-    setPaymentStatus(PaymentStatus.INTRODUCTION);
-
-    const modal = document.getElementById(
-      "card_payment_model"
-    ) as HTMLDialogElement | null;
-
-    if (modal) {
-      modal.showModal();
-    }
-  }
 
   const urlParams = new URLSearchParams(window.location.search);
   const userID = urlParams.get("userID");
@@ -150,9 +142,23 @@ const UserDashboard = () => {
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
   const [open, setOpen] = useState<Boolean>(false);
+  const [selectedUserDeviceID, setSelectedUserDeviceID] = useState<number>();
 
   const [selectedValues, setSelectedValues] = useState([]); // Array to store selected values
   const [showInputs, setShowInputs] = useState(false); // Flag to control input display
+
+  function openPaymentModel(userDeviceID: number | undefined): void {
+    setPaymentStatus(PaymentStatus.INTRODUCTION);
+    setSelectedUserDeviceID(userDeviceID);
+
+    const modal = document.getElementById(
+      "card_payment_model"
+    ) as HTMLDialogElement | null;
+
+    if (modal) {
+      modal.showModal();
+    }
+  }
 
   useEffect(() => {
     if (deviceData) {
@@ -365,7 +371,7 @@ const UserDashboard = () => {
 
     function handlePaymentModal(): void {
       setShowPopup(false);
-      openPaymentModel();
+      openPaymentModel(device.userDeviceID);
       return;
     }
 
@@ -951,6 +957,7 @@ const UserDashboard = () => {
       <CardPaymentModel
         status={paymentStatus}
         setPaymentStatus={setPaymentStatus}
+        userDeviceID={selectedUserDeviceID ?? 1}
       ></CardPaymentModel>
     </div>
   );

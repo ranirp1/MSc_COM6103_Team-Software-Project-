@@ -4,13 +4,15 @@ import { Elements } from "@stripe/react-stripe-js";
 import { useState } from "react";
 
 function CardPaymentModel({
-  amount = "$100",
+  amount = "£5",
   status = PaymentStatus.NOT_INITATED,
   setPaymentStatus,
+  userDeviceID,
 }: {
   amount?: string;
   status?: PaymentStatus;
   setPaymentStatus: React.Dispatch<React.SetStateAction<PaymentStatus>>;
+  userDeviceID?: number;
 }) {
   const publicKey =
     "pk_test_51OrgFjIVN70bvUYCC4WUSwxYMeBWIQfc7A4rToYj6aDG0KzxHW1WLqvqpOycFM5ldApdqxFobn2LoiReJClOVwT400L7Q7ADBN";
@@ -24,6 +26,7 @@ function CardPaymentModel({
             amount={amount}
             status={status}
             setPaymentStatus={setPaymentStatus}
+            userDeviceID={userDeviceID}
           />
         </Elements>
       </dialog>

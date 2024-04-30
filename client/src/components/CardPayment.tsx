@@ -18,13 +18,15 @@ export enum PaymentStatus {
 }
 
 function CardPayment({
-  amount = "$100",
+  amount = "£5",
   status = PaymentStatus.NOT_INITATED,
   setPaymentStatus,
+  userDeviceID,
 }: {
   amount?: string;
   status?: PaymentStatus;
   setPaymentStatus: React.Dispatch<React.SetStateAction<PaymentStatus>>;
+  userDeviceID?: number;
 }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -81,15 +83,19 @@ function CardPayment({
         // post-payment actions.
         try {
           const result = await axios.post(`${API_URL}/api/add-payment`, {
-            dataRetrievalID:1, // hardcoded
-            userID:1,
+            dataRetrievalID: 1, // hardcoded
+            userDeviceID: userDeviceID,
           });
+          setPaymentStatus(PaymentStatus.SUCCESS);
+          // after 300 ms reload the page 
+          setTimeout(() => {
+            window.location.reload();
+          }, 300);
         } catch (error) {
           console.log(error);
           setPaymentStatus(PaymentStatus.FAILURE);
           return;
         }
-        setPaymentStatus(PaymentStatus.SUCCESS);
       }
     }
   };
