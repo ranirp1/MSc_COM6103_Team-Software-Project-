@@ -797,6 +797,17 @@ def createDevice():
         try:
             db.session.add(user_device)
             db.session.commit()
+            if data_retrieval_opted == "Yes":
+                newDataRetrieval = DataRetrieval(
+                    userDeviceId=user_device.userDeviceID,
+                    dataUrl="Not provided",
+                    dateOfCreation=datetime.now(),
+                    duration=3,
+                    password="122"
+                )
+                db.session.add(newDataRetrieval)
+                db.session.commit()
+
             return jsonify({'message': 'Device already exists. Entry created in userDevice table only.'}), 200
         except Exception as e:
             print(e)
@@ -837,6 +848,17 @@ def createDevice():
             )
             db.session.add(newUserDeviceAdded)
             db.session.commit()
+            if data_retrieval_opted == "Yes":
+                newDataRetrieval = DataRetrieval(
+                    userDeviceId=newUserDeviceAdded.userDeviceID,
+                    dataUrl="Not provided",
+                    dateOfCreation=datetime.now(),
+                    duration=3,
+                    password="122"
+                )
+                db.session.add(newDataRetrieval)
+                db.session.commit()
+
             return jsonify({'message': 'User Device creation successful'}), 200
         except Exception as e:
             print("error at create Device")
@@ -859,7 +881,7 @@ def createRetrievalData():
         print(f"duation: {duration}")
         newDataRetrieval = DataRetrieval(
             userDeviceId=userDeviceID,
-            dataUrl="https://google.com",
+            dataUrl="Not provided",
             dateOfCreation=datetime.now(),
             duration=3,
             password="122"
@@ -1374,16 +1396,20 @@ def generate_report():
 def updatePayment():
     data = request.get_json()
 
-    dataRetrievalID = data.get('dataRetrievalID')
+    # dataRetrievalID = data.get('dataRetrievalID')
     userDeviceID = data.get('userDeviceID')
     date = datetime.now()
-    
+
+    dataRetrieval = DataRetrieval.query.filter_by(userDeviceId=userDeviceID).first()
+    dataRetrievalID = dataRetrieval.dataRetrievalID
 
     try:
         new_payment = PaymentTable(dataRetrievalID=dataRetrievalID, userID=userDeviceID, date=date)
         userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
-        if not userDevice:
+        if userDevice:
             setattr(userDevice, 'device_status', Device_Status.PAYMENT_DONE)
+        else:
+            raise Exception(f"user device with id {userDeviceID} not found")
         db.session.add(new_payment)
         db.session.commit()
     except Exception as e:
