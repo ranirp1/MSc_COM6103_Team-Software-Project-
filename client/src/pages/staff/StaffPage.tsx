@@ -282,6 +282,9 @@ const StaffDashboard = () => {
   };
 
   const DeviceDetails = ({ device }: { device: Device }) => {
+    const isDeviceRareOrCurrent =
+      device.classification === "Rare" || device.classification === "Current";
+
     const [localDevice, setLocalDevice] = useState<Device>(device);
 
     const handleInputChange = (
@@ -348,9 +351,10 @@ const StaffDashboard = () => {
       }
 
       if (
-        device.classification === "Recycle" &&
-        device.data_retrieval_opted === "Yes" &&
-        device.device_status == "Payment Processed" || device.device_status == "Data Wiped"
+        (device.classification === "Recycle" &&
+          device.data_retrieval_opted === "Yes" &&
+          device.device_status == "Payment Processed") ||
+        device.device_status == "Data Wiped"
       ) {
         const creationDate = new Date(device.createdAt);
         const endTime = new Date(
@@ -596,19 +600,26 @@ const StaffDashboard = () => {
                     <option value="Device Verified">Device Verified</option>
                     {localDevice.classification === "Recycle" ? (
                       <>
-                        <option value="Payment Processed">Payment Processed</option>
+                        <option value="Payment Processed">
+                          Payment Processed
+                        </option>
                         <option value="Data Retrieved">Data Retrieved</option>
                         <option value="Link Received">Link Received</option>
                       </>
                     ) : (
                       <>
-                        <option value="Payment Processed" disabled>Payment Processed</option>
-                        <option value="Data Retrieved" disabled>Data Retrieved</option>
-                        <option value="Link Received" disabled>Link Received</option>
-                      </>  
-                    )
-                  }
-                  <option value="Data Wiped">Data Wiped</option>
+                        <option value="Payment Processed" disabled>
+                          Payment Processed
+                        </option>
+                        <option value="Data Retrieved" disabled>
+                          Data Retrieved
+                        </option>
+                        <option value="Link Received" disabled>
+                          Link Received
+                        </option>
+                      </>
+                    )}
+                    <option value="Data Wiped">Data Wiped</option>
                   </select>
                 </div>
                 <div>
@@ -618,7 +629,9 @@ const StaffDashboard = () => {
                   <input
                     type="text"
                     value={localDevice.estimatedValue?.toString() || ""}
-                    onChange={(e) => handleInputChange("estimatedValue", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("estimatedValue", e.target.value)
+                    }
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
@@ -653,36 +666,41 @@ const StaffDashboard = () => {
             </div>
             <div>
               <br></br>
-              {device.device_status == DeviceStatusConstant.PaymentProcessed && (<div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginTop: "1rem",
-                }}
-              >
-                <label
-                  className="text-lg font-medium text-black"
-                  style={{ marginRight: "1rem" }}
-                >
-                  Data Retrieval Link:
-                </label>
-                <input
-                  type="text"
-                  value={localDevice.dataRetrievalLink || ""}
-                  onChange={(e) =>
-                    handleInputChange("dataRetrievalLink", e.target.value)
-                  }
-                  className="input input-bordered bg-gray-200 text-black"
-                  placeholder="Enter data retrieval link"
-                  style={{ flexGrow: 1, marginRight: "1rem" }}
-                />
-                <button
-                  className="btn btn-primary text-white"
-                  onClick={sendEmailWithDataLink}
-                >
-                  <IoSend />
-                </button>
-              </div>)}
+              {!isDeviceRareOrCurrent &&
+                (device.device_status ==
+                  DeviceStatusConstant.PaymentProcessed ||
+                  device.device_status == DeviceStatusConstant.DataWiped) && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      marginTop: "1rem",
+                    }}
+                  >
+                    <label
+                      className="text-lg font-medium text-black"
+                      style={{ marginRight: "1rem" }}
+                    >
+                      Data Retrieval Link:
+                    </label>
+                    <input
+                      type="text"
+                      value={localDevice.dataRetrievalLink || ""}
+                      onChange={(e) =>
+                        handleInputChange("dataRetrievalLink", e.target.value)
+                      }
+                      className="input input-bordered bg-gray-200 text-black"
+                      placeholder="Enter data retrieval link"
+                      style={{ flexGrow: 1, marginRight: "1rem" }}
+                    />
+                    <button
+                      className="btn btn-primary text-white"
+                      onClick={sendEmailWithDataLink}
+                    >
+                      <IoSend />
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
         </div>
