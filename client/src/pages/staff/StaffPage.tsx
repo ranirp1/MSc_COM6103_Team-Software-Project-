@@ -47,6 +47,7 @@ export class Device {
   user_name?: string;
   user_phone?: string;
   userDeviceID?: number;
+  data_retrieval_opted?: string;
 
   constructor(
     id: number,
@@ -69,7 +70,8 @@ export class Device {
     dataRetrievalLink?: string,
     user_name?: string,
     user_phone?: string,
-    userDeviceId?: number
+    userDeviceId?: number,
+    data_retrieval_opted?: string
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -92,6 +94,7 @@ export class Device {
     this.user_name = user_name;
     this.user_phone = user_phone;
     this.userDeviceID = userDeviceId;
+    this.data_retrieval_opted = data_retrieval_opted;
   }
 
   static fromJson(json: any): Device {
@@ -116,7 +119,8 @@ export class Device {
       json.dataRetrievalLink,
       json.user_name,
       json.user_phone,
-      json.userDeviceId
+      json.userDeviceId,
+      json.data_retrieval_opted
     );
   }
 }
@@ -345,7 +349,8 @@ const StaffDashboard = () => {
 
       if (
         device.classification === "Recycle" &&
-        device.dataRetrievalRequested
+        device.data_retrieval_opted === "Yes" &&
+        device.device_status == "Payment Processed" || device.device_status == "Data Wiped"
       ) {
         const creationDate = new Date(device.createdAt);
         const endTime = new Date(
@@ -360,11 +365,11 @@ const StaffDashboard = () => {
           const daysLeft = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
 
           if (daysLeft > 30) {
-            return `More than 1 month left`;
+            return "More than 1 month left";
           } else if (daysLeft > 7) {
-            return `More than 1 week left`;
+            return "More than 1 week left";
           } else {
-            return `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`;
+            return '${daysLeft} day${daysLeft > 1 ? "s" : ""} left';
           }
         } else {
           return "Expired";
