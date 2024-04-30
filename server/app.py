@@ -900,7 +900,7 @@ def updateRetrievalData():
     if not dataRetrieval:
         newDataRetrieval = DataRetrieval(
             userDeviceId=userDeviceID,
-            dataUrl="https://google.com",
+            dataUrl=url,
             dateOfCreation=datetime.now(),
             duration=3,
             password="122"
