@@ -8,6 +8,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Enum
 from flask import Blueprint
 import os
+import time
 from dotenv import load_dotenv
 import stripe
 from flask_cors import CORS, cross_origin
@@ -50,8 +51,8 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
 
@@ -1406,19 +1407,30 @@ def updatePayment():
     try:
         new_payment = PaymentTable(dataRetrievalID=dataRetrievalID, userID=userDeviceID, date=date)
         userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
+        
         if userDevice:
             setattr(userDevice, 'device_status', Device_Status.PAYMENT_DONE)
+            db.session.add(new_payment)
+            db.session.commit()
+            
+            # Return response first
+            response = jsonify({'Message': 'Added payment'}), 200
+            # Then wait for 400ms
+            time.sleep(0.4)
+            # Update the device status to 'Data Retrieved'
+
+            # These two lines break the DR, so commenting out
+            # setattr(userDevice, 'device_status', Device_Status.DATA_RETRIEVED)
+            # db.session.commit()
+            return response
         else:
-            raise Exception(f"user device with id {userDeviceID} not found")
-        db.session.add(new_payment)
-        db.session.commit()
+            return jsonify({'Message': 'User device not found'}), 404
+        
     except Exception as e:
         print(e)
         db.session.rollback()
         db.session.flush()
         return jsonify({'Message': f'Error adding payment: {e}'}), 500
-
-    return jsonify({'Message': 'Added payment'}), 200
 
 
 @app.route('/api/send-payment-confirmation-mail', methods=['POST'])

@@ -433,7 +433,6 @@ const StaffDashboard = () => {
 
         const result = await response.json();
         if (response.ok) {
-          alert("Email sent successfully!");
           window.location.reload();
         } else {
           throw new Error(result.message);
@@ -604,7 +603,7 @@ const StaffDashboard = () => {
                       </>  
                     )
                   }
-                  <option value="Data Wiped" disabled>Data Wiped</option>
+                  <option value="Data Wiped">Data Wiped</option>
                   </select>
                 </div>
                 <div>
