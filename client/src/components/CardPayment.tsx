@@ -161,8 +161,7 @@ function CardPayment({
             />
           </div>
           <h2 className={`tex-black pb-5  font-extrabold `}>
-            In Order to procced with data retrieval, please make a payment of of
-            100$
+            In order to proceed with data retrieval, please make a payment of £5.00
           </h2>
 
           <button
