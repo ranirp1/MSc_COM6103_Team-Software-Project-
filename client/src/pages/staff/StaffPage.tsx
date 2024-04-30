@@ -433,7 +433,6 @@ const StaffDashboard = () => {
 
         const result = await response.json();
         if (response.ok) {
-          alert("Email sent successfully!");
           window.location.reload();
         } else {
           throw new Error(result.message);
