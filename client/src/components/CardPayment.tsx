@@ -87,10 +87,19 @@ function CardPayment({
           const result = await axios.post(`${API_URL}/api/add-payment`, {
             dataRetrievalID: 1, // hardcoded
             userDeviceID: userDeviceID,
-            userID:userID,
+            userID: userID,
           });
           setPaymentStatus(PaymentStatus.SUCCESS);
-          // after 300 ms reload the page 
+
+          fetch(`${API_URL}/api/send-payment-confirmation-mail`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: email }),
+          });
+
+          // after 300 ms reload the page
           setTimeout(() => {
             window.location.reload();
           }, 300);
@@ -161,7 +170,8 @@ function CardPayment({
             />
           </div>
           <h2 className={`tex-black pb-5  font-extrabold `}>
-            In order to proceed with data retrieval, please make a payment of £5.00
+            In order to proceed with data retrieval, please make a payment of
+            £5.00
           </h2>
 
           <button

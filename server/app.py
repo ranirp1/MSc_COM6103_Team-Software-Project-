@@ -1391,7 +1391,7 @@ def updatePayment():
             # Return response first
             response = jsonify({'Message': 'Added payment'}), 200
             # Then wait for 400ms
-            time.sleep(10)
+            
             # Update the device status to 'Data Retrieved'
             setattr(userDevice, 'device_status', Device_Status.DATA_RETRIEVED)
             db.session.commit()
@@ -1409,8 +1409,8 @@ def updatePayment():
 @app.route('/api/send-payment-confirmation-mail', methods=['POST'])
 def send_email():
     # Set up the email message
-    data = request.json
-    receiver_email = data.get('email', "manu1998kj@gmail.com")
+    data = request.get_json()
+    receiver_email = data.get('email')
 
     # Create the email body
     email_body = """

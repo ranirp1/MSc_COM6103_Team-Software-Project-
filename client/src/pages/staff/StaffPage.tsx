@@ -353,8 +353,10 @@ const StaffDashboard = () => {
       if (
         (device.classification === "Recycle" &&
           device.data_retrieval_opted === "Yes" &&
-          device.device_status == "Payment Processed") ||
-        device.device_status == "Data Wiped"
+          device.device_status == DeviceStatusConstant.PaymentProcessed) ||
+        device.device_status == DeviceStatusConstant.DataWiped ||
+        device.device_status == DeviceStatusConstant.DataRetrieved ||
+        device.device_status == DeviceStatusConstant.LinkReceived
       ) {
         const creationDate = new Date(device.createdAt);
         const endTime = new Date(
