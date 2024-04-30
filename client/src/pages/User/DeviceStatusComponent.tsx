@@ -40,7 +40,7 @@ const DeviceStatusComponent: React.FC<DeviceStatusComponentProps> = ({
                 {status}
               </li>
             ))
-          : Object.values([DeviceStatusConstant.DeviceRegistered, DeviceStatusConstant.DeviceVerified, DeviceStatusConstant.DataWiped])
+          : Object.values([DeviceStatusConstant.DeviceRegistered, DeviceStatusConstant.DeviceVerified])
               .map((status, index) => (
                 <li
                   key={status}

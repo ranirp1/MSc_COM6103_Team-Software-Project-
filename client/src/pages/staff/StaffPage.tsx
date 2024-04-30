@@ -669,7 +669,10 @@ const StaffDashboard = () => {
               {!isDeviceRareOrCurrent &&
                 (device.device_status ==
                   DeviceStatusConstant.PaymentProcessed ||
-                  device.device_status == DeviceStatusConstant.DataWiped) && (
+                  device.device_status == DeviceStatusConstant.DataRetrieved ||
+                  device.device_status == DeviceStatusConstant.DataWiped ||
+                  device.device_status ==
+                    DeviceStatusConstant.LinkReceived) && (
                   <div
                     style={{
                       display: "flex",
