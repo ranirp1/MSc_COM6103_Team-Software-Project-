@@ -47,6 +47,7 @@ export class Device {
   user_name?: string;
   user_phone?: string;
   userDeviceID?: number;
+  data_retrieval_opted?: string;
 
   constructor(
     id: number,
@@ -69,7 +70,8 @@ export class Device {
     dataRetrievalLink?: string,
     user_name?: string,
     user_phone?: string,
-    userDeviceId?: number
+    userDeviceId?: number,
+    data_retrieval_opted?: string
   ) {
     this.id = id;
     this.brand = manufacturer;
@@ -92,6 +94,7 @@ export class Device {
     this.user_name = user_name;
     this.user_phone = user_phone;
     this.userDeviceID = userDeviceId;
+    this.data_retrieval_opted = data_retrieval_opted;
   }
 
   static fromJson(json: any): Device {
@@ -116,7 +119,8 @@ export class Device {
       json.dataRetrievalLink,
       json.user_name,
       json.user_phone,
-      json.userDeviceId
+      json.userDeviceId,
+      json.data_retrieval_opted
     );
   }
 }
@@ -278,6 +282,9 @@ const StaffDashboard = () => {
   };
 
   const DeviceDetails = ({ device }: { device: Device }) => {
+    const isDeviceRareOrCurrent =
+      device.classification === "Rare" || device.classification === "Current";
+
     const [localDevice, setLocalDevice] = useState<Device>(device);
 
     const handleInputChange = (
@@ -344,8 +351,10 @@ const StaffDashboard = () => {
       }
 
       if (
-        device.classification === "Recycle" &&
-        device.dataRetrievalRequested
+        (device.classification === "Recycle" &&
+          device.data_retrieval_opted === "Yes" &&
+          device.device_status == "Payment Processed") ||
+        device.device_status == "Data Wiped"
       ) {
         const creationDate = new Date(device.createdAt);
         const endTime = new Date(
@@ -360,11 +369,11 @@ const StaffDashboard = () => {
           const daysLeft = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
 
           if (daysLeft > 30) {
-            return `More than 1 month left`;
+            return "More than 1 month left";
           } else if (daysLeft > 7) {
-            return `More than 1 week left`;
+            return "More than 1 week left";
           } else {
-            return `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`;
+            return '${daysLeft} day${daysLeft > 1 ? "s" : ""} left';
           }
         } else {
           return "Expired";
@@ -591,19 +600,26 @@ const StaffDashboard = () => {
                     <option value="Device Verified">Device Verified</option>
                     {localDevice.classification === "Recycle" ? (
                       <>
-                        <option value="Payment Processed">Payment Processed</option>
+                        <option value="Payment Processed">
+                          Payment Processed
+                        </option>
                         <option value="Data Retrieved">Data Retrieved</option>
                         <option value="Link Received">Link Received</option>
                       </>
                     ) : (
                       <>
-                        <option value="Payment Processed" disabled>Payment Processed</option>
-                        <option value="Data Retrieved" disabled>Data Retrieved</option>
-                        <option value="Link Received" disabled>Link Received</option>
-                      </>  
-                    )
-                  }
-                  <option value="Data Wiped">Data Wiped</option>
+                        <option value="Payment Processed" disabled>
+                          Payment Processed
+                        </option>
+                        <option value="Data Retrieved" disabled>
+                          Data Retrieved
+                        </option>
+                        <option value="Link Received" disabled>
+                          Link Received
+                        </option>
+                      </>
+                    )}
+                    <option value="Data Wiped">Data Wiped</option>
                   </select>
                 </div>
                 <div>
@@ -613,7 +629,9 @@ const StaffDashboard = () => {
                   <input
                     type="text"
                     value={localDevice.estimatedValue?.toString() || ""}
-                    onChange={(e) => handleInputChange("estimatedValue", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("estimatedValue", e.target.value)
+                    }
                     className="input input-bordered bg-gray-200 text-black w-full"
                   />
                 </div>
@@ -648,36 +666,44 @@ const StaffDashboard = () => {
             </div>
             <div>
               <br></br>
-              {device.device_status == DeviceStatusConstant.PaymentProcessed && (<div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginTop: "1rem",
-                }}
-              >
-                <label
-                  className="text-lg font-medium text-black"
-                  style={{ marginRight: "1rem" }}
-                >
-                  Data Retrieval Link:
-                </label>
-                <input
-                  type="text"
-                  value={localDevice.dataRetrievalLink || ""}
-                  onChange={(e) =>
-                    handleInputChange("dataRetrievalLink", e.target.value)
-                  }
-                  className="input input-bordered bg-gray-200 text-black"
-                  placeholder="Enter data retrieval link"
-                  style={{ flexGrow: 1, marginRight: "1rem" }}
-                />
-                <button
-                  className="btn btn-primary text-white"
-                  onClick={sendEmailWithDataLink}
-                >
-                  <IoSend />
-                </button>
-              </div>)}
+              {!isDeviceRareOrCurrent &&
+                (device.device_status ==
+                  DeviceStatusConstant.PaymentProcessed ||
+                  device.device_status == DeviceStatusConstant.DataRetrieved ||
+                  device.device_status == DeviceStatusConstant.DataWiped ||
+                  device.device_status ==
+                    DeviceStatusConstant.LinkReceived) && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      marginTop: "1rem",
+                    }}
+                  >
+                    <label
+                      className="text-lg font-medium text-black"
+                      style={{ marginRight: "1rem" }}
+                    >
+                      Data Retrieval Link:
+                    </label>
+                    <input
+                      type="text"
+                      value={localDevice.dataRetrievalLink || ""}
+                      onChange={(e) =>
+                        handleInputChange("dataRetrievalLink", e.target.value)
+                      }
+                      className="input input-bordered bg-gray-200 text-black"
+                      placeholder="Enter data retrieval link"
+                      style={{ flexGrow: 1, marginRight: "1rem" }}
+                    />
+                    <button
+                      className="btn btn-primary text-white"
+                      onClick={sendEmailWithDataLink}
+                    >
+                      <IoSend />
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
         </div>

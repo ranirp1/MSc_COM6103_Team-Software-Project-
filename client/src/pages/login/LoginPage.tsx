@@ -45,6 +45,7 @@ const LoginPage = ({ fullScreen = true }) => {
         console.log("Login Successful");
         const data = await response.json();
         const user = UserModel.fromJson(data);
+        console.log('user',user);
         const isAdminAndStaff = user.isAdmin && user.isStaff;
         if (user.isAdmin) {
           if (isAdminAndStaff) {
