@@ -24,6 +24,7 @@ from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.lib.colors import Color
 from reportlab.graphics.shapes import Drawing
 from collections import defaultdict
+from itertools import product
 
 from enum import Enum as PyEnum
 
@@ -1283,15 +1284,6 @@ def generate_report():
         chart_heading = Paragraph(chart_heading_text, chart_heading_style)
         elements.append(chart_heading)
 
-        # Define a function to generate a smooth gradient of colors
-        def generate_gradient_colors(num_colors):
-            gradient_colors = []
-            for i in range(num_colors):
-                hue = i / num_colors  # Adjust this value for different color gradients
-                color = colors.Color(hue, 1, 1)
-                gradient_colors.append(color)
-            return gradient_colors
-
         # Extract user IDs and payment counts
         user_ids = list(user_payments.keys())
         payment_counts = list(user_payments.values())
@@ -1318,19 +1310,27 @@ def generate_report():
         chart.barSpacing = 5
         chart.barWidth = 1
 
-        # Define the number of bars and generate gradient colors
-        num_bars = len(user_ids)
-        gradient_colors = generate_gradient_colors(num_bars)
+        # Define a list of distinct colors to represent the gradient
+        distinct_colors = [colors.blue,colors.red, colors.green, colors.orange, colors.purple]
 
-        # Set the color of each bar based on the gradient
-        for i, color in enumerate(gradient_colors):
-            chart.bars[i].fillColor = color
+        # Create a list of unique combinations of payment count and user ID
+        unique_combinations = list(product(payment_counts, user_ids))
+
+        # Create a color map to store colors for each unique combination
+        color_map = {}
+        for index, combination in enumerate(unique_combinations):
+            color_map[combination] = distinct_colors[index % len(distinct_colors)]
+
+        # Modify the colors of the bars in the chart using the color map
+        for i, (payment_count, user_id) in enumerate(zip(payment_counts, user_ids)):
+            bar_color = color_map[(payment_count, user_id)]
+            chart.bars[i].fillColor = bar_color
 
         drawing = Drawing(400, 200)
 
         # Add labels manually
         drawing.add(String(200, 10, 'User IDs', fontSize=12, fontName='Helvetica-Bold'))
-        drawing.add(String(-20, 150, 'Payment Counts', fontSize=12, fontName='Helvetica-Bold', angle=-90,textAnchor="middle"))
+        drawing.add(String(-20, 150, 'Payment Counts', fontSize=12, fontName='Helvetica-Bold', angle=-90, textAnchor="middle"))
 
         drawing.add(chart)
         elements.append(drawing)
