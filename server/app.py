@@ -51,8 +51,8 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:12345@localhost:3306/test_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:your_password@127.0.0.0:3306/test_db'
 db = SQLAlchemy(app)
 CORS(app)
 
@@ -798,6 +798,17 @@ def createDevice():
         try:
             db.session.add(user_device)
             db.session.commit()
+            if data_retrieval_opted == "Yes":
+                newDataRetrieval = DataRetrieval(
+                    userDeviceId=user_device.userDeviceID,
+                    dataUrl="Not provided",
+                    dateOfCreation=datetime.now(),
+                    duration=3,
+                    password="122"
+                )
+                db.session.add(newDataRetrieval)
+                db.session.commit()
+
             return jsonify({'message': 'Device already exists. Entry created in userDevice table only.'}), 200
         except Exception as e:
             print(e)
@@ -838,6 +849,17 @@ def createDevice():
             )
             db.session.add(newUserDeviceAdded)
             db.session.commit()
+            if data_retrieval_opted == "Yes":
+                newDataRetrieval = DataRetrieval(
+                    userDeviceId=newUserDeviceAdded.userDeviceID,
+                    dataUrl="Not provided",
+                    dateOfCreation=datetime.now(),
+                    duration=3,
+                    password="122"
+                )
+                db.session.add(newDataRetrieval)
+                db.session.commit()
+
             return jsonify({'message': 'User Device creation successful'}), 200
         except Exception as e:
             print("error at create Device")
@@ -860,7 +882,7 @@ def createRetrievalData():
         print(f"duation: {duration}")
         newDataRetrieval = DataRetrieval(
             userDeviceId=userDeviceID,
-            dataUrl="https://google.com",
+            dataUrl="Not provided",
             dateOfCreation=datetime.now(),
             duration=3,
             password="122"
@@ -1375,10 +1397,13 @@ def generate_report():
 def updatePayment():
     data = request.get_json()
 
-    dataRetrievalID = data.get('dataRetrievalID')
+    # dataRetrievalID = data.get('dataRetrievalID')
     userDeviceID = data.get('userDeviceID')
     date = datetime.now()
-    
+
+    dataRetrieval = DataRetrieval.query.filter_by(userDeviceId=userDeviceID).first()
+    dataRetrievalID = dataRetrieval.dataRetrievalID
+
     try:
         new_payment = PaymentTable(dataRetrievalID=dataRetrievalID, userID=userDeviceID, date=date)
         userDevice = UserDevice.query.filter_by(userDeviceID=userDeviceID).first()
@@ -1393,8 +1418,10 @@ def updatePayment():
             # Then wait for 400ms
             
             # Update the device status to 'Data Retrieved'
-            setattr(userDevice, 'device_status', Device_Status.DATA_RETRIEVED)
-            db.session.commit()
+
+            # These two lines break the DR, so commenting out
+            # setattr(userDevice, 'device_status', Device_Status.DATA_RETRIEVED)
+            # db.session.commit()
             return response
         else:
             return jsonify({'Message': 'User device not found'}), 404
