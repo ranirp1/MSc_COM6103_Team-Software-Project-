@@ -208,7 +208,7 @@ class PaymentTable(db.Model):
     paymentID = db.Column(db.Integer, primary_key=True)
     dataRetrievalID = db.Column(db.Integer, db.ForeignKey('dataretrieval.dataRetrievalID'), nullable=False)
     userID = db.Column(db.Integer, nullable=False)
-    date = db.Column(db.Date, nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
 
     def serialize(self):
         return {
@@ -1281,6 +1281,26 @@ def generate_report():
         return send_file(pdf_filename, as_attachment=True)
     except Exception as e:
         return jsonify({'error': 'Failed to generate PDF report.', 'details': str(e)}), 500
+
+@app.route('/api/add-payment', methods=['POST'])
+def updatePayment():
+    data = request.get_json()
+
+    dataRetrievalID = data.get('dataRetrievalID')
+    userID = data.get('userID')
+    date = datetime.now()
+
+    new_payment = PaymentTable(dataRetrievalID=dataRetrievalID, userID=userID, date=date)
+    try:
+        db.session.add(new_payment)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        db.session.flush()
+        return jsonify({'Message': f'Error adding payment: {e}'}), 500
+
+    return jsonify({'Message': 'Added payment'}), 200
 
 
 @app.route('/api/send-payment-confirmation-mail', methods=['POST'])
